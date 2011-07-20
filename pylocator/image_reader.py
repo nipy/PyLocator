@@ -178,7 +178,7 @@ class GladeHandlers:
         widgets.preview.Render()
 
 class WidgetsWrapper:
-    gladeFile =  '/home/thorsten/workspace/PyLocator/pylocator/image_reader.glade'
+    gladeFile =  os.path.join(os.path.split(__file__)[0],'image_reader.glade')
     def __init__(self):
     
         #os.system("pwd")
