@@ -12,3 +12,5 @@ pygtk, gtkglext
 
 I hope I forgot none...
 """
+
+__version__ = "0.1"

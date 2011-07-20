@@ -24,7 +24,7 @@ class GtkGLExtVTKRenderWindowInteractor(gtk.gtkgl.DrawingArea):
     vtkGenericRenderWindowInteractor."""
 
     def __init__(self, *args):
-        print "GtkGLExtVTKRenderWindowInteractor.__init__()"
+        #print "GtkGLExtVTKRenderWindowInteractor.__init__()"
         gtk.gtkgl.DrawingArea.__init__(self)
 
         self.set_double_buffered(False)

@@ -3,7 +3,7 @@
 from distutils.core import setup
 import sys
 
-import nipy_ui 
+import pylocator 
 
 
 # For some commands, use setuptools
@@ -20,11 +20,11 @@ if not 'extra_setuptools_args' in globals():
 
 
 setup(name='pylocator',
-      version=nipy_ui.__version__,
+      version=pylocator.__version__,
       summary='Program for the localization of EEG-electrodes.',
       author='Thorsten Kranz',
       author_email='thorstenkranz@gmail.com',
-      url='http://...',
+      url='http://pylocator.thorstenkranz.de',
       description="""
 Program for the localization of EEG-electrodes.
 """,
@@ -43,7 +43,7 @@ Program for the localization of EEG-electrodes.
           'Topic :: Utilities',
       ],
       platforms='any',
-      #package_data={'nipy_ui.data': ['nipy_ui/data/*'],},
+      package_data={'pylocator': ['image_reader.glade'],},
       packages=['pylocator', 'pylocator.test'],
       **extra_setuptools_args)
 

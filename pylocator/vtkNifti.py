@@ -1,6 +1,6 @@
 import nifti
 #from nifti import *
-import Numeric
+#from numpy import oldnumeric as Numeric
 import vtk
 import os
 from vtk.util.vtkImageImportFromArray import vtkImageImportFromArray
@@ -9,7 +9,7 @@ class vtkNiftiImageReader(object):
     __defaultFilePattern=""
 
     def __init__(self):
-        self.__vtkimport=vtkImageImportFromArray()
+        self.__vtkimport=vtk.vtkImageImport()
         self.__filePattern=self.__defaultFilePattern
         self.__data = None
 
@@ -35,11 +35,14 @@ class vtkNiftiImageReader(object):
         print "Loading ", self.__filename
         #read in the data after directory was set
         self.__nim=nifti.NiftiImage(self.__filename)
-        self.__data=self.__nim.asarray().astype("f")
+        self.__data=self.__nim.data.astype("f")
+        self.__data_string = self.__data.tostring()
         #del self.__nim
-        #XXX the conversion to Numeric could be very expensive
-        #think about it...
-        self.__vtkimport.SetArray(Numeric.array(self.__data))
+        self.__vtkimport.CopyImportVoidPointer(self.__data_string,len(self.__data_string))
+        self.__vtkimport.SetDataScalarTypeToFloat()
+        self.__vtkimport.SetNumberOfScalarComponents(1)
+        self.__vtkimport.SetDataExtent(0,self.__data.shape[0]-1,0,self.__data.shape[1]-1,0,self.__data.shape[2]-1)
+        self.__vtkimport.SetWholeExtent(0,self.__data.shape[0]-1,0,self.__data.shape[1]-1,0,self.__data.shape[2]-1)
         self.SetDataSpacing(self.__nim.getVoxDims())#to reverse: [::-1]
         #XXX this is all not 100% right...
         #the data in array is z,y,x
