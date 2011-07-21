@@ -3,7 +3,7 @@ import nifti
 #from numpy import oldnumeric as Numeric
 import vtk
 import os
-from vtk.util.vtkImageImportFromArray import vtkImageImportFromArray
+#from vtk.util.vtkImageImportFromArray import vtkImageImportFromArray
 
 class vtkNiftiImageReader(object):
     __defaultFilePattern=""
