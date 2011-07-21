@@ -36,7 +36,7 @@ class SurfParams(Viewer):
     """
 
     label, color  = colorSeq[0]
-    intensity     = 3000
+    intensity     = 80.
 
     useConnect    = True
     useDecimate   = False
@@ -149,3 +149,4 @@ class SurfParams(Viewer):
     def __del__(self):
         if self.isoActor is not None:
             self.renderer.RemoveActor(self.isoActor)
+

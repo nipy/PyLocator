@@ -39,8 +39,8 @@ License
 -------- 
 PyLocator is distributed under a BSD-style license, and
 thus is free software (both in the sense of `free beer and free speech
-<http://en.wikipedia.org/wiki/Gratis_versus_Libre`_). Details can be found in the 
-LICENSE-file distributed with the source code.
+<http://en.wikipedia.org/wiki/Gratis_versus_Libre>`_). Details can be found in the 
+`LICENSE <https://github.com/thorstenkranz/PyLocator/blob/master/LICENSE>`_-file distributed with the source code.
 
 Indices and tables
 ==================
