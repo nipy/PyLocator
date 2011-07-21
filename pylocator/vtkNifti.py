@@ -41,8 +41,8 @@ class vtkNiftiImageReader(object):
         self.__vtkimport.CopyImportVoidPointer(self.__data_string,len(self.__data_string))
         self.__vtkimport.SetDataScalarTypeToFloat()
         self.__vtkimport.SetNumberOfScalarComponents(1)
-        self.__vtkimport.SetDataExtent(0,self.__data.shape[0]-1,0,self.__data.shape[1]-1,0,self.__data.shape[2]-1)
-        self.__vtkimport.SetWholeExtent(0,self.__data.shape[0]-1,0,self.__data.shape[1]-1,0,self.__data.shape[2]-1)
+        self.__vtkimport.SetDataExtent(0,self.__data.shape[2]-1,0,self.__data.shape[1]-1,0,self.__data.shape[0]-1)
+        self.__vtkimport.SetWholeExtent(0,self.__data.shape[2]-1,0,self.__data.shape[1]-1,0,self.__data.shape[0]-1)
         self.SetDataSpacing(self.__nim.getVoxDims())#to reverse: [::-1]
         #XXX this is all not 100% right...
         #the data in array is z,y,x
