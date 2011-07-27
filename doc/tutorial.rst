@@ -183,7 +183,7 @@ for the planes widget (only setting window/level doesn't make sense here).
 We use this subwindow to render iso-surfaces for our volumetric data. [#f2]_  
 This is especially helpful for locating
 
-1. subdural electrodes, like strips and grips, in brain extracted MR images and
+1. subdural electrodes, like strips and grids, in brain extracted MR images and
 2. surface-electrodes in simultaneous EEG / fMRI experiments.
 
 To create a iso-surface, choose the button "Surface" from the main toolbar. 
@@ -193,7 +193,7 @@ a threshold value for the iso surface. For now, you can accept the default value
 .. figure:: _static/tutorial6.png
    :align: center
 
-Click on "Add segment" (we could render more than one is surface, but we won't do 
+Click on "Add segment" (we could render more than one iso surface, but we won't do 
 for now) and then "Render". After a short while, you'll see your iso surface inside 
 the surface widget. You can see the gyri and sulci and - if you search a little bit -
 you can find the locations of the subdural electrodes as additional "bumps".
@@ -207,6 +207,27 @@ Another little sphere appears, just at the point on the surface you were pointin
 
 Again, you can correct the marker locations within the slice widgets, label them in the 
 planes widget or one of the slice widgets, and finally save all markers to disc.
+
+Taking screenshots
+--------------------
+A feature recently added to PyLocator is its ability to take screenshots of the 3d-widgets.
+In contrast to using an external program for doing so, we can achieve a higher quality 
+using VTK.
+
+.. figure:: _static/tutorial8.png
+   :align: center
+
+Click on the button "Screenshot" in the main toolbar. A dialog appears (see above). 
+Here, you can pick a filename pattern (**it is important to keep the %03i within the pattern,
+as an automatically incremented counter is added here**). You can also have a pattern proposed
+by PyLocator, is will be based on the name of the MRI Nifti file.
+
+Next, choose your desired magnification. The currently rendered images in each widget will be 
+resampled accordingly by VTK, resulting in a higher resolution than a-posteriori resizing a 
+normal screenshot.
+
+You can use the buttons in the dialog to take photos of individual widgets or of all widgets.
+
 
 .. rubric:: Footnotes
 

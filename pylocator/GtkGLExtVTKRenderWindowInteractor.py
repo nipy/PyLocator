@@ -14,6 +14,8 @@ from gtk import gdk
 import gtk.gtkgl
 import vtk
 
+from shared import shared
+
 class GtkGLExtVTKRenderWindowInteractor(gtk.gtkgl.DrawingArea):
     """
     CLASS: GtkGLExtVTKRenderWindowInteractor

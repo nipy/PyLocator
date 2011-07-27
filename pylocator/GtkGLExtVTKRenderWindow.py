@@ -15,6 +15,7 @@ import gtk.gtkgl
 from gtk import gdk
 import vtk
 
+from shared import shared
         
 class GtkGLExtVTKRenderWindowBase(gtk.gtkgl.DrawingArea):
     """
