@@ -24,7 +24,7 @@ class GtkGLExtVTKRenderWindowInteractor(gtk.gtkgl.DrawingArea):
     vtkGenericRenderWindowInteractor."""
 
     def __init__(self, *args):
-        #print "GtkGLExtVTKRenderWindowInteractor.__init__()"
+        #if shared.debug: print "GtkGLExtVTKRenderWindowInteractor.__init__()"
         gtk.gtkgl.DrawingArea.__init__(self)
 
         self.set_double_buffered(False)
@@ -141,7 +141,7 @@ class GtkGLExtVTKRenderWindowInteractor(gtk.gtkgl.DrawingArea):
         return ctrl, shift
 
     def OnButtonDown(self, wid, event):
-        print "GtkGLExtVTKRenderWindowInteractor.OnButtonDown()"
+        if shared.debug: print "GtkGLExtVTKRenderWindowInteractor.OnButtonDown()"
         """Mouse button pressed."""
         m = self.get_pointer()
         ctrl, shift = self._GetCtrlShift(event)

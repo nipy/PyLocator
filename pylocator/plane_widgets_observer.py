@@ -5,11 +5,14 @@ import time
 from scipy import array
 from markers import Marker, RingActor
 from events import EventHandler, UndoRegistry, Viewer
+from screenshot_taker import ScreenshotTaker
 
+import numpy as np
 
 from marker_window_interactor import MarkerWindowInteractor
+from shared import shared
 
-INTERACT_CURSOR, MOVE_CURSOR, COLOR_CURSOR, SELECT_CURSOR, DELETE_CURSOR, LABEL_CURSOR = gtk.gdk.ARROW, gtk.gdk.HAND2, gtk.gdk.SPRAYCAN, gtk.gdk.TCROSS, gtk.gdk.X_CURSOR, gtk.gdk.PENCIL
+INTERACT_CURSOR, MOVE_CURSOR, COLOR_CURSOR, SELECT_CURSOR, DELETE_CURSOR, LABEL_CURSOR, SCREENSHOT_CURSOR = gtk.gdk.ARROW, gtk.gdk.HAND2, gtk.gdk.SPRAYCAN, gtk.gdk.TCROSS, gtk.gdk.X_CURSOR, gtk.gdk.PENCIL, gtk.gdk.ICON
 
 
 class PlaneWidgetObserver(MarkerWindowInteractor):
@@ -18,7 +21,7 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
     DESCR: Handles interactions with PlaneWidgets
     """
     def __init__(self, planeWidget, owner, orientation, imageData=None):
-        print "PlaneWidgetObserver.__init__(): orientation=",orientation
+        if shared.debug: print "PlaneWidgetObserver.__init__(): orientation=",orientation
         MarkerWindowInteractor.__init__(self)
         self.interactButtons = (1,2,3)
         self.pw = planeWidget
@@ -41,9 +44,9 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
         if imageData is None: return 
         self.imageData = imageData
         if not self.hasData:
-            print "PlaneWidgetObserver(", self.orientation,").. AddObserver(self.interaction_event)"
+            if shared.debug: print "PlaneWidgetObserver(", self.orientation,").. AddObserver(self.interaction_event)"
             foo = self.pw.AddObserver('InteractionEvent', self.interaction_event)
-            print "PlaneWidgetObserver.set_image_data(): AddObserver call returns ", foo
+            if shared.debug: print "PlaneWidgetObserver.set_image_data(): AddObserver call returns ", foo
             self.connect("scroll_event", self.scroll_widget_slice)
             self.hasData = 1
 
@@ -65,18 +68,19 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
         self.observer.On()
         self.observer.InteractionOff()
         self.update_plane()
-        if self.orientation==0: up = (0,0,1)
-        elif self.orientation==1: up = (0,0,1)
-        elif self.orientation==2: up = (0,-1,0)
+        if self.orientation==0: up = (0,0,-1)
+        elif self.orientation==1: up = (0,0,-1)
+        elif self.orientation==2: up = (-1,0,0)
         else:
             raise ValueError, 'orientation must be in 0,1,2'
 
         center = self.observer.GetCenter()
         normal = self.pw.GetNormal()
         spacing =imageData.GetSpacing()
-        bounds = imageData.GetBounds()
+        bounds = np.array(imageData.GetBounds())
 
-        offset = max(bounds)
+
+        offset = max(bounds[1::2]-bounds[::2])*2
         pos = (center[0] + normal[0]*offset,
                center[1] - normal[1]*offset,
                center[2] - normal[2]*offset)
@@ -86,6 +90,66 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
 
         #self.sliceIncrement = spacing[self.orientation]
         self.sliceIncrement = 0.1
+
+        self._ratio = np.mean(np.abs(spacing)) #For marker sizes
+        shared.ratio = self._ratio
+
+    def add_axes_labels(self):
+        #if shared.debug: print "***Adding axes labels"
+        #if shared.debug: print labels
+        labels = shared.labels
+        #if shared.debug: print "+#äö", labels
+        #labels = list(np.array(labels)[[4,5,2,3,0,1]])
+        self.axes_labels=labels
+        self.axes_labels_actors=[]
+        size = abs(self.imageData.GetSpacing()[0]) * 5
+        #if shared.debug: print "***size", size
+        for i,b in enumerate(self.imageData.GetBounds()):
+            coords = list(self.imageData.GetCenter())
+            coords[i/2] = b*1.12
+            idx_label = 1*i #historical reasons for using this
+            label = labels[idx_label]
+            #if shared.debug: print i,b, coords, label
+            if self.orientation == 0:
+                if label in ["R","L"]:
+                    continue
+            if self.orientation == 1:
+                if label in ["A","P"]:
+                    continue
+            if self.orientation == 2:
+                if label in ["S","I"]:
+                    continue
+
+            #Orientation should be correct due to reading affine in vtkNifti
+            text = vtk.vtkVectorText()
+            text.SetText(label)
+            textMapper = vtk.vtkPolyDataMapper()
+            textMapper.SetInput(text.GetOutput())
+            textActor = vtk.vtkFollower()
+            textActor.SetMapper(textMapper)
+            textActor.SetScale(size, size, size)
+            x,y,z = coords
+            textActor.SetPosition(x, y, z)
+            textActor.GetProperty().SetColor((1,1,0))
+            textActor.SetCamera(self.camera)
+            self.axes_labels_actors.append(textActor)
+            self.renderer.AddActor(textActor)
+
+        #Reorient camera to have head up
+        #center = self.imageData.GetCenter()
+        #spacing = self.imageData.GetSpacing()
+        #bounds = np.array(self.imageData.GetBounds())
+        #if shared.debug: print "***center,spacing,bounds", center,spacing,bounds
+        #idx_left = labels.index("L")
+        #pos = [center[0], center[1], center[2]]
+        #pos[idx_left/2] +=  (1-2*idx_left%2)*max((bounds[1::2]-bounds[0::2]))*2
+        #idx_sup = labels.index("S")
+        #camera_up = [0,0,0]
+        #camera_up[idx_sup/2] = 1-2*idx_sup%2
+        #if shared.debug: print idx_sup, camera_up
+        #fpu = center, pos, tuple(camera_up)
+        #if shared.debug: print "***fpu2:", fpu
+        #self.set_camera(fpu)
 
     def mouse1_mode_change(self, event):
         try: self.moveEvent
@@ -151,28 +215,25 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
 
     def set_select_mode(self):
         return
-
-        self.defaultRingLine = 3
-        actors = self.get_ring_actors_as_list()
-        for actor in actors:
-            actor.set_line_width(self.defaultRingLine)
-            actor.update()
-        self.Render()
+        #self.defaultRingLine = 3
+        #actors = self.get_ring_actors_as_list()
+        #for actor in actors:
+        #    actor.set_line_width(self.defaultRingLine)
+        #    actor.update()
+        #self.Render()
 
     def set_interact_mode(self):
-        
-
         self.interactButtons = (1,2,3)
         self.set_mouse1_to_move()
         return
     
-        self.defaultRingLine = 1
-        actors = self.get_ring_actors_as_list()
-        for actor in actors:
-            actor.set_line_width(self.defaultRingLine)
-            actor.update()
-        self.Render()
-        self.set_mouse1_to_move()
+        #self.defaultRingLine = 1
+        #actors = self.get_ring_actors_as_list()
+        #for actor in actors:
+        #    actor.set_line_width(self.defaultRingLine)
+        #    actor.update()
+        #self.Render()
+        #self.set_mouse1_to_move()
 
 
     def get_marker_at_point(self):
@@ -315,7 +376,7 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
         numActors = self.ringActors.GetNumberOfItems()
         for i in range(numActors):
             actor = self.ringActors.GetNextActor()
-            #print i, actor
+            #if shared.debug: print i, actor
             vis = actor.update()
             textActor = self.textActors[actor.get_marker()]
             if vis and EventHandler().get_labels_on():
@@ -348,7 +409,8 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
             if xyz is None: return 
 
             marker = Marker(xyz=xyz,
-                            rgb=EventHandler().get_default_color())
+                            rgb=EventHandler().get_default_color(),
+                            radius=self._ratio*3)
 
             EventHandler().add_marker(marker)
             return True
@@ -358,6 +420,7 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
             self.set_camera(self.resetCamera)
             return True
         
+        #ScreenshotTaker.OnKeyPress(self, wid, event)
         return MarkerWindowInteractor.OnKeyPress(self, wid, event)
 
 
@@ -389,8 +452,16 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
             textMapper.SetInput(text.GetOutput())
             textActor = self.textActors[marker]
             textActor.SetMapper(textMapper)
+
+        elif event=='color marker':
+            marker, color = args
+            actor = self.get_actor_for_marker(marker)
+            actor.update()
         elif event=='observers update plane':
             self.update_plane()
+        elif event=="set axes directions":
+            self.add_axes_labels()
+            #EventHandler().notify('observers update plane')
             
         self.update_rings()
         self.Render()

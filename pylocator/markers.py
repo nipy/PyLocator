@@ -10,18 +10,17 @@ class Marker(vtk.vtkActor):
     CLASS: Marker
     DESCR: Represents, e.g., an individual grid location as a vtk sphere
     """
-    def __init__(self, xyz, radius=None, rgb=None):
+    def __init__(self, xyz, radius, rgb=None):
         # if radius is not defined, force it to be some percentage of
         # the total dimensions of the scanz..
 
-        if (radius == None):
-            pars = widgets.get_params()
-            print "pars.dfov is ", pars.dfov
-            print "pars.dimensions[0] is" , pars.dimensions[0]
-            ratio = float(pars.dfov)/float(pars.dimensions[0])
-            radius = ratio * 3
-            print "setting radius=", radius
-            
+        #if (radius == None):
+        #    pars = widgets.get_params()
+        #    print "pars.dfov is ", pars.dfov
+        #    print "pars.dimensions[0] is" , pars.dimensions[0]
+        #    ratio = float(pars.dfov)/float(pars.dimensions[0])
+        #    radius = ratio * 3
+        #    print "setting radius=", radius
 
         if rgb is None: rgb = (0,0,1)
 
@@ -101,13 +100,20 @@ class Marker(vtk.vtkActor):
         s = label + ',' + ','.join(map(str, (x,y,z,radius,r,g,b)))
         return s
 
-    def convert_coordinates(self,QForm,spacing):
-        R=QForm[:3,:3]
-        T=QForm[:-1,-1]
+    def convert_coordinates(self,QForm,spacing,shape):
+        #R=QForm[:3,:3]
+        #T=QForm[:-1,-1]
+        #print "convert_coordinates:", QForm,spacing,shape
+        spacing = spacing[::-1]
         x=n.array(self.get_center())
-        x=n.dot(R,x/spacing)+T
+        for i in range(3):
+            if spacing[i]<0:
+                #print "convert_coordinates:", i, QForm,spacing,shape
+                x[i] = shape[i]-1-x[i]
+        x = n.r_[x,[1]]
+        x=n.dot(QForm,x)
         copy_self=self.deep_copy()
-        copy_self.set_center(x)
+        copy_self.set_center(x[:3])
         return copy_self
 
     def from_string(s):

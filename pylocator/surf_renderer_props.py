@@ -38,6 +38,7 @@ class SurfRendererProps(gtk.Window, Viewer):
         self.sr = sr
         self.interactorStyle = self.sr.GetInteractorStyle()
 
+
         self.sr.AddObserver('KeyPressEvent', self.key_press)
         self.pwxyz = pwxyz
         
@@ -115,7 +116,8 @@ class SurfRendererProps(gtk.Window, Viewer):
             pnt = points.GetPoint(0)
 
             marker = Marker(xyz=pnt,
-                            rgb=EventHandler().get_default_color())
+                            rgb=EventHandler().get_default_color(),
+                            radius=shared.ratio*3)
 
             EventHandler().add_marker(marker)
         elif key.lower()=='x':

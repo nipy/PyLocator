@@ -5,6 +5,7 @@ import vtk
 import gtk
 from gtk import gdk
 from GtkGLExtVTKRenderWindowInteractor import GtkGLExtVTKRenderWindowInteractor
+from marker_window_interactor import MarkerWindowInteractor
 
 from gtkutils import error_msg, simple_msg, ButtonAltLabel, \
      str2posint_or_err, str2posnum_or_err, ProgressBarDialog, make_option_menu
@@ -13,16 +14,19 @@ from matplotlib.cbook import Bunch
 from events import EventHandler, UndoRegistry, Viewer
 from markers import Marker
 from shared import shared
+from screenshot_taker import ScreenshotTaker
 
 
-class SurfRenderWindow(GtkGLExtVTKRenderWindowInteractor, Viewer):
+#class SurfRenderWindow(GtkGLExtVTKRenderWindowInteractor, Viewer):
+class SurfRenderWindow(Viewer, ScreenshotTaker):
     """
     CLASS: SurfRenderWindow
     DESCR: Upper right frame in pylocator window
     """
 
     def __init__(self, imageData=None):
-        GtkGLExtVTKRenderWindowInteractor.__init__(self)
+        #GtkGLExtVTKRenderWindowInteractor.__init__(self)
+        ScreenshotTaker.__init__(self)
         EventHandler().attach(self)
 
         self.Initialize()
@@ -126,3 +130,17 @@ class SurfRenderWindow(GtkGLExtVTKRenderWindowInteractor, Viewer):
         self.renderer.RemoveActor(marker)
         self.renderer.RemoveActor(self.textActors[marker])
         del self.textActors[marker]
+
+    #def set_mouse1_to_screenshot(self):
+    #    self.set_select_mode()
+    #    cursor = gtk.gdk.Cursor (SCREENSHOT_CURSOR)
+    #    self.pressHooks[1] = self.take_screenshot
+    #    if self.window is not None:
+    #        self.window.set_cursor (cursor)
+
+    #def OnKeyPress(self, wid, event=None):
+        #if (event.keyval == gdk.keyval_from_name("s") or
+        #    event.keyval == gdk.keyval_from_name("S")):
+        #    if shared.debug: print "KeyPress Screenshot"
+        #    self.take_screenshot()
+    #    return True

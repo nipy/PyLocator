@@ -1,19 +1,20 @@
 import gtk
 import vtk
 from GtkGLExtVTKRenderWindowInteractor import GtkGLExtVTKRenderWindowInteractor
+from screenshot_taker import ScreenshotTaker
 from events import EventHandler, UndoRegistry, Viewer
 import re
 
 
-INTERACT_CURSOR, MOVE_CURSOR, COLOR_CURSOR, SELECT_CURSOR, DELETE_CURSOR, LABEL_CURSOR = gtk.gdk.ARROW, gtk.gdk.HAND2, gtk.gdk.SPRAYCAN, gtk.gdk.TCROSS, gtk.gdk.X_CURSOR, gtk.gdk.PENCIL
+INTERACT_CURSOR, MOVE_CURSOR, COLOR_CURSOR, SELECT_CURSOR, DELETE_CURSOR, LABEL_CURSOR, SCREENSHOT_CURSOR = gtk.gdk.ARROW, gtk.gdk.HAND2, gtk.gdk.SPRAYCAN, gtk.gdk.TCROSS, gtk.gdk.X_CURSOR, gtk.gdk.PENCIL, gtk.gdk.ICON
 
-class MarkerWindowInteractor(GtkGLExtVTKRenderWindowInteractor, Viewer):
+class MarkerWindowInteractor(Viewer, ScreenshotTaker):
     """
     CLASS: MarkerWindowInteractor
     DESCR: 
     """
     def __init__(self):
-        GtkGLExtVTKRenderWindowInteractor.__init__(self)
+        ScreenshotTaker.__init__(self)
         EventHandler().attach(self)
         self.interactButtons = (1,2,3)
         self.renderOn = 1
@@ -78,6 +79,9 @@ class MarkerWindowInteractor(GtkGLExtVTKRenderWindowInteractor, Viewer):
         elif event=='mouse1 move':
             print "MarkerWindowInteractor.set_mouse1_to_move()"
             self.set_mouse1_to_move()
+        #elif event=='mouse1 screenshot':
+        #    print "MarkerWindowInteractor.set_mouse1_to_move()"
+        #    self.set_mouse1_to_screenshot()
         elif event=='render off':
             self.renderOn = 0
         elif event=='render on':
@@ -168,12 +172,17 @@ class MarkerWindowInteractor(GtkGLExtVTKRenderWindowInteractor, Viewer):
             self.window.set_cursor (cursor)
 
     def set_mouse1_to_move(self):
-
         self.set_select_mode()
         cursor = gtk.gdk.Cursor (MOVE_CURSOR)
         if self.window is not None:
             self.window.set_cursor (cursor)
 
+    #def set_mouse1_to_screenshot(self):
+    #    self.set_select_mode()
+    #    cursor = gtk.gdk.Cursor (SCREENSHOT_CURSOR)
+    #    self.pressHooks[1] = self.take_screenshot
+    #    if self.window is not None:
+    #        self.window.set_cursor (cursor)
     
     def set_mouse1_to_delete(self):
         

@@ -1,7 +1,9 @@
 import os
 
 class Shared(object):
+    debug = False
     lastSel = ''
+    labels = ["R","L","P","A","S","I"]
     #lastSel = os.getcwd() + os.sep
     def set_file_selection(self, name):
         """
@@ -15,6 +17,12 @@ class Shared(object):
         """
 
         return os.path.dirname(self.lastSel) + os.sep
+
+
+
+    ratio = 3
+    #screenshot_magnification = 3
+    screenshot_cnt = 1
 
         
 

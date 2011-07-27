@@ -477,105 +477,105 @@ class WidgetsWrapper:
         return self['hscrollbarSlice'].get_value()
 
 
-def get_reader(o):
+#def get_reader(o):
 
-    if o.readerClass=='vtkBMPReader':
-        ReaderClass = vtk.vtkBMPReader
-    elif o.readerClass=='vtkImageReader2':
-        ReaderClass = vtk.vtkImageReader2
-    elif o.readerClass=='vtkDICOMImageReader':
-        ReaderClass = vtk.vtkDICOMImageReader
-    elif o.readerClass=='vtkNiftiImageReader':
-        ReaderClass = vtkNiftiImageReader
-    reader = ReaderClass()
-    
-    if ReaderClass==vtk.vtkImageReader2:
-        reader.SetDataScalarTypeToUnsignedShort()
-        if o.order=='big endian':
-            reader.SetDataByteOrderToBigEndian()
-        else:
-            reader.SetDataByteOrderToLittleEndian()
-        rows, cols = o.dimensions
-        reader.SetFileNameSliceOffset(o.first)
-        reader.SetDataExtent(0, rows-1, 0, cols-1, 0, o.last-o.first)
-        reader.FileLowerLeftOn()
-        if o.mask is not None:
-            reader.SetDataMask(o.mask)
+#    if o.readerClass=='vtkBMPReader':
+#        ReaderClass = vtk.vtkBMPReader
+#    elif o.readerClass=='vtkImageReader2':
+#        ReaderClass = vtk.vtkImageReader2
+#    elif o.readerClass=='vtkDICOMImageReader':
+#        ReaderClass = vtk.vtkDICOMImageReader
+#    elif o.readerClass=='vtkNiftiImageReader':
+#        ReaderClass = vtkNiftiImageReader
+#    reader = ReaderClass()
+#    
+#    if ReaderClass==vtk.vtkImageReader2:
+#        reader.SetDataScalarTypeToUnsignedShort()
+#        if o.order=='big endian':
+#            reader.SetDataByteOrderToBigEndian()
+#        else:
+#            reader.SetDataByteOrderToLittleEndian()
+#        rows, cols = o.dimensions
+#        reader.SetFileNameSliceOffset(o.first)
+#        reader.SetDataExtent(0, rows-1, 0, cols-1, 0, o.last-o.first)
+#        reader.FileLowerLeftOn()
+#        if o.mask is not None:
+#            reader.SetDataMask(o.mask)
 
-        if o.header!=0:
-            reader.SetHeaderSize(o.header)   
+#        if o.header!=0:
+#            reader.SetHeaderSize(o.header)   
 
-    elif ReaderClass==vtk.vtkBMPReader:
-        reader.SetDataExtent(0, o.dimensions[0]-1,
-                             0, o.dimensions[1]-1,
-                             o.first, o.last)
-    elif ReaderClass==vtk.vtkDICOMImageReader:
-        reader.SetDirectoryName(o.dir)
-        reader.Update()
-        
-        #Update Param file from the reader 
-        o.dimensions = [reader.GetWidth() , reader.GetHeight()]
-        
-        if reader.GetDataByteOrder()==1:
-            o.order=='big endian'
-        else:
-            o.order=='little endian'
-            
-        o.spacing = spc[2]
-        o.dfov    = o.dimensions[0] * spc[0]
-    elif ReaderClass==vtkNiftiImageReader:
-        reader.SetDirectoryName(o.dir)
-        pattern = o.pattern 
-        if len(o.extension) > 0:
-            pattern += '.' + o.extension
-        reader.SetFilePattern(pattern)
-        reader.Update()
-        o.dimensions = [reader.GetWidth() , reader.GetHeight()]
+#    elif ReaderClass==vtk.vtkBMPReader:
+#        reader.SetDataExtent(0, o.dimensions[0]-1,
+#                             0, o.dimensions[1]-1,
+#                             o.first, o.last)
+#    elif ReaderClass==vtk.vtkDICOMImageReader:
+#        reader.SetDirectoryName(o.dir)
+#        reader.Update()
+#        
+#        #Update Param file from the reader 
+#        o.dimensions = [reader.GetWidth() , reader.GetHeight()]
+#        
+#        if reader.GetDataByteOrder()==1:
+#            o.order=='big endian'
+#        else:
+#            o.order=='little endian'
+#            
+#        o.spacing = spc[2]
+#        o.dfov    = o.dimensions[0] * spc[0]
+#    elif ReaderClass==vtkNiftiImageReader:
+#        reader.SetDirectoryName(o.dir)
+#        pattern = o.pattern 
+#        if len(o.extension) > 0:
+#            pattern += '.' + o.extension
+#        reader.SetFilePattern(pattern)
+#        reader.Update()
+#        o.dimensions = [reader.GetWidth() , reader.GetHeight()]
 
-        spc = reader.GetDataSpacing()
-        o.spacing = spc[2]
-        o.dfov    = o.dimensions[0] * spc[0]
-        
-    else:
-        raise NotImplementedError, "Can't handle reader %s" % o.readerClass
+#        spc = reader.GetDataSpacing()
+#        o.spacing = spc[2]
+#        o.dfov    = o.dimensions[0] * abs(spc[0])
+#        
+#    else:
+#        raise NotImplementedError, "Can't handle reader %s" % o.readerClass
 
-    if ReaderClass!=vtkNiftiImageReader:
-        progressDlg = ProgressBarDialog(title='Loading files',
-                                        parent=widgets['dlgReader'],
-                                        msg='Almost there....',
-                                        size=(300,40)
-                                        )
-        progressDlg.show()
+#    if ReaderClass!=vtkNiftiImageReader:
+#        progressDlg = ProgressBarDialog(title='Loading files',
+#                                        parent=widgets['dlgReader'],
+#                                        msg='Almost there....',
+#                                        size=(300,40)
+#                                        )
+#        progressDlg.show()
 
-        def progress(r, event):
-            #print 'abort progress', r.GetAbortExecute()
-            val = r.GetProgress()
-            progressDlg.bar.set_fraction(val)            
-            if val==1: progressDlg.destroy()
-            while gtk.events_pending(): gtk.main_iteration()
-        reader.AddObserver('ProgressEvent', progress)
+#        def progress(r, event):
+#            #print 'abort progress', r.GetAbortExecute()
+#            val = r.GetProgress()
+#            progressDlg.bar.set_fraction(val)            
+#            if val==1: progressDlg.destroy()
+#            while gtk.events_pending(): gtk.main_iteration()
+#        reader.AddObserver('ProgressEvent', progress)
 
 
-    if os.path.isdir(o.dir): dir = o.dir
-    else:
-       infopath = widgets['entryInfoFile'].get_text()
-       dir, fname = os.path.split(infopath)
-    
-    if ReaderClass!=vtkNiftiImageReader:
-        reader.SetFilePrefix(dir)
-        pattern = os.path.join( '%s', o.prefix + o.pattern )
-        if len(o.extension) > 0:
-            pattern += '.' + o.extension
-        reader.SetFilePattern(pattern)
-    
-        print "reader.SetDataSpacing(", o.dfov/o.dimensions[0], o.dfov/o.dimensions[1], o.spacing , "). dfov=", o.dfov, "dimensions=", o.dimensions, "spacing=", o.spacing
-                              
-       
-        reader.SetDataSpacing(float(o.dfov)/float(o.dimensions[0]),
-                              float(o.dfov)/float(o.dimensions[1]),
-                              float(o.spacing) )
-    reader.Update()
-    return reader
+#    if os.path.isdir(o.dir): dir = o.dir
+#    else:
+#       infopath = widgets['entryInfoFile'].get_text()
+#       dir, fname = os.path.split(infopath)
+#    
+#    if ReaderClass!=vtkNiftiImageReader:
+#        reader.SetFilePrefix(dir)
+#        pattern = os.path.join( '%s', o.prefix + o.pattern )
+#        if len(o.extension) > 0:
+#            pattern += '.' + o.extension
+#        reader.SetFilePattern(pattern)
+#    
+#        print "reader.SetDataSpacing(", o.dfov/o.dimensions[0], o.dfov/o.dimensions[1], o.spacing , "). dfov=", o.dfov, "dimensions=", o.dimensions, "spacing=", o.spacing
+#                              
+#       
+#        reader.SetDataSpacing(float(o.dfov)/float(o.dimensions[0]),
+#                              float(o.dfov)/float(o.dimensions[1]),
+#                              float(o.spacing) )
+#    reader.Update()
+#    return reader
 
 
 class Params:

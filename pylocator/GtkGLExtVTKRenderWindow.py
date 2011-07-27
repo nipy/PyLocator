@@ -90,13 +90,13 @@ class GtkGLExtVTKRenderWindowBase(gtk.gtkgl.DrawingArea):
         return self._StillUpdateRate
 
     def Render(self):
-        #print 'base render'
+        #if shared.debug: print 'base render'
         if self.__Created:
-            #print 'base created'
+            #if shared.debug: print 'base created'
             self._RenderWindow.Render()
 
     def OnRealize(self, *args):
-        #print 'OnRealize'
+        #if shared.debug: print 'OnRealize'
         if self.__Created == 0:
             # you can't get the xid without the window being realized.
             self.realize()
@@ -113,7 +113,7 @@ class GtkGLExtVTKRenderWindowBase(gtk.gtkgl.DrawingArea):
         return self.__Created
     
     def OnConfigure(self, widget, event):
-        #print 'OnConfigure'
+        #if shared.debug: print 'OnConfigure'
         self.widget=widget
         self._RenderWindow.SetSize(event.width, event.height)
         self.Render()
@@ -121,7 +121,7 @@ class GtkGLExtVTKRenderWindowBase(gtk.gtkgl.DrawingArea):
 
     def OnExpose(self, *args):
         #if self._CurrentRenderer:
-        #    #print 'on expose rendering'
+        #    #if shared.debug: print 'on expose rendering'
         self.Render()
         return True
 
@@ -133,13 +133,13 @@ class GtkGLExtVTKRenderWindowBase(gtk.gtkgl.DrawingArea):
 
     def OnButtonDown(self, wid, event):
         """Mouse button pressed."""
-        #print 'OnButtonDown base'
+        #if shared.debug: print 'OnButtonDown base'
         self._RenderWindow.SetDesiredUpdateRate(self._DesiredUpdateRate)
         return True
     
     def OnButtonUp(self, wid, event):
         """Mouse button released."""
-        #print 'OnButtonUp base'
+        #if shared.debug: print 'OnButtonUp base'
         self._RenderWindow.SetDesiredUpdateRate(self._StillUpdateRate)
         return True
 
@@ -194,13 +194,13 @@ class GtkGLExtVTKRenderWindow(GtkGLExtVTKRenderWindowBase):
         self._LastY = 0
 
     def OnButtonDown(self, wid, event):
-        #print 'derived button down'
+        #if shared.debug: print 'derived button down'
         self._RenderWindow.SetDesiredUpdateRate(self._DesiredUpdateRate)
         return self.StartMotion(wid, event)
         return True
 
     def OnButtonUp(self, wid, event):
-        #print 'derived  button up'
+        #if shared.debug: print 'derived  button up'
         self._RenderWindow.SetDesiredUpdateRate(self._StillUpdateRate)
         return self.EndMotion(wid, event)
         return True
@@ -220,7 +220,7 @@ class GtkGLExtVTKRenderWindow(GtkGLExtVTKRenderWindowBase):
             m = self.get_pointer()
             self.Zoom(m[0], m[1])
         else:
-            #print 'returning false'
+            #if shared.debug: print 'returning false'
             return False
 
         return True
@@ -269,9 +269,9 @@ class GtkGLExtVTKRenderWindow(GtkGLExtVTKRenderWindowBase):
         return self._Picker
 
     def Render(self):
-        #print 'derived render'
+        #if shared.debug: print 'derived render'
         if (self._CurrentLight):
-            #print 'Render current light'
+            #if shared.debug: print 'Render current light'
             light = self._CurrentLight
             light.SetPosition(self._CurrentCamera.GetPosition())
             light.SetFocalPoint(self._CurrentCamera.GetFocalPoint())
@@ -344,7 +344,7 @@ class GtkGLExtVTKRenderWindow(GtkGLExtVTKRenderWindowBase):
 
     def EndMotion(self, wid, event=None):
         if self._CurrentRenderer:
-            #print 'endmotion rendering'
+            #if shared.debug: print 'endmotion rendering'
             self.Render()
         return True
 

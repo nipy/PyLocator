@@ -19,13 +19,14 @@ from events import EventHandler, UndoRegistry, Viewer
 from shared import shared
 from surf_renderer import SurfRenderWindow
 from surf_renderer_props import SurfRendererProps
+from screenshot_taker import ScreenshotProps #ScreenshotTaker
 
 import scipy
 
-INTERACT_CURSOR, MOVE_CURSOR, COLOR_CURSOR, SELECT_CURSOR, DELETE_CURSOR, LABEL_CURSOR = gtk.gdk.ARROW, gtk.gdk.HAND2, gtk.gdk.SPRAYCAN, gtk.gdk.TCROSS, gtk.gdk.X_CURSOR, gtk.gdk.PENCIL
+INTERACT_CURSOR, MOVE_CURSOR, COLOR_CURSOR, SELECT_CURSOR, DELETE_CURSOR, LABEL_CURSOR, SCREENSHOT_CURSOR = gtk.gdk.ARROW, gtk.gdk.HAND2, gtk.gdk.SPRAYCAN, gtk.gdk.TCROSS, gtk.gdk.X_CURSOR, gtk.gdk.PENCIL, gtk.gdk.ICON
         
 
-from plane_widgets_xyz import PlaneWidgetsXYZ
+from plane_widgets_xyz import PlaneWidgetsXYZ, move_pw_to_point
 from plane_widgets_observer import PlaneWidgetObserver
 from plane_widgets_observer_mri import PlaneWidgetObserverMRI
 from plane_widgets_observer_toolbar import ObserverToolbar
@@ -37,11 +38,11 @@ class PlaneWidgetsWithObservers(gtk.VBox):
 
     """
     def translation_changed(self, entry, data):
-        print 'entry=',entry, 'data=', data, 'val=', entry.get_text()
+        if shared.debug: print 'entry=',entry, 'data=', data, 'val=', entry.get_text()
         self.pwxyz.translate_vtk(data, float(entry.get_text()))
 
     def rotation_changed(self, entry, data):
-        print 'entry=',entry, 'data=', data, 'val=', entry.get_text()
+        if shared.debug: print 'entry=',entry, 'data=', data, 'val=', entry.get_text()
         self.pwxyz.rotate_vtk(data, float(entry.get_text()))
     """
 
@@ -58,12 +59,12 @@ class PlaneWidgetsWithObservers(gtk.VBox):
         gtk.VBox.__init__(self, spacing=3)
         self.mainWindow = mainWindow
         border = 5
-        print "PlaneWidgetsWithObservers.__init__(): PlaneWidgetsXYZ()"
+        if shared.debug: print "PlaneWidgetsWithObservers.__init__(): PlaneWidgetsXYZ()"
         self.pwxyz = PlaneWidgetsXYZ()
         self.pwxyz.show()
 
 
-        print "PlaneWidgetsWithObservers.__init__(): SurfRenderWindow()"
+        if shared.debug: print "PlaneWidgetsWithObservers.__init__(): SurfRenderWindow()"
         self.surfRenWin = SurfRenderWindow()
         self.surfRenWin.show()
         
@@ -82,6 +83,8 @@ class PlaneWidgetsWithObservers(gtk.VBox):
 
 
         self.dlgSurf = SurfRendererProps(self.surfRenWin, self.pwxyz)
+
+        self.dlgScreenshots = ScreenshotProps()
 
         vboxTools = gtk.VBox()
         vboxTools.show()
@@ -185,7 +188,7 @@ class PlaneWidgetsWithObservers(gtk.VBox):
 
         vboxObs = gtk.VBox()
         vboxObs.show()
-        print "PlaneWidgetsWithObservers.__init__(): PlaneWidgetObserver(pwx)"
+        if shared.debug: print "PlaneWidgetsWithObservers.__init__(): PlaneWidgetObserver(pwx)"
         self.observerX = PlaneWidgetObserver(pwx, owner=self, orientation=0)
         self.observerX.show()
 
@@ -199,7 +202,7 @@ class PlaneWidgetsWithObservers(gtk.VBox):
 
         vboxObs = gtk.VBox()
         vboxObs.show()
-        print "PlaneWidgetsWithObservers.__init__(): PlaneWidgetObserver(pwy)"
+        if shared.debug: print "PlaneWidgetsWithObservers.__init__(): PlaneWidgetObserver(pwy)"
         self.observerY = PlaneWidgetObserver(pwy, owner=self, orientation=1)
         self.observerY.show()
         vboxObs.pack_start(self.observerY, True, True)
@@ -211,7 +214,7 @@ class PlaneWidgetsWithObservers(gtk.VBox):
 
         vboxObs = gtk.VBox()
         vboxObs.show()
-        print "PlaneWidgetsWithObservers.__init__(): PlaneWidgetObserver(pwz)"
+        if shared.debug: print "PlaneWidgetsWithObservers.__init__(): PlaneWidgetObserver(pwz)"
         self.observerZ = PlaneWidgetObserver(pwz, owner=self, orientation=2)
         self.observerZ.show()
         vboxObs.pack_start(self.observerZ, True, True)
@@ -220,6 +223,17 @@ class PlaneWidgetsWithObservers(gtk.VBox):
         vboxObs.pack_start(toolbarZ, False, False)
         hbox.pack_start(vboxObs, True, True)
 
+        #Register ScreenshotProps for all widgets
+        #for st in [self.surfRenWin,self.pwxyz,self.observerX,self.observerY,self.observerZ]:
+        #for st in [self.pwxyz,self.observerX,self.observerY,self.observerZ]:
+        self.pwxyz.set_screenshot_props(self.dlgScreenshots,"Three planes")
+        self.surfRenWin.set_screenshot_props(self.dlgScreenshots,"Surface")
+        self.observerX.set_screenshot_props(self.dlgScreenshots,"Slice 1")
+        self.observerY.set_screenshot_props(self.dlgScreenshots,"Slice 2")
+        self.observerZ.set_screenshot_props(self.dlgScreenshots,"Slice 3")
+
+        #for pw in self.pwxyz.get_plane_widgets_xyz():
+        #    move_pw_to_point(pw,self.pwxyz.imageData.GetCenter())
 
         ### XXX mcc
         """        
@@ -228,7 +242,7 @@ class PlaneWidgetsWithObservers(gtk.VBox):
         vbox.pack_start(hbox, True, True)
         vboxObsMRI = gtk.VBox()
         vboxObsMRI.show()
-        print "PlaneWidgetsWithObservers.__init__(): PlaneWidgetObserver(pwx)"
+        if shared.debug: print "PlaneWidgetsWithObservers.__init__(): PlaneWidgetObserver(pwx)"
         self.observerX = PlaneWidgetObserverMRI(pwx, owner=self, orientation=0)
         self.observerX.show()
         vboxObsMRI.pack_start(self.observerX, True, True)
@@ -239,7 +253,7 @@ class PlaneWidgetsWithObservers(gtk.VBox):
 
         vboxObsMRI = gtk.VBox()
         vboxObsMRI.show()
-        print "PlaneWidgetsWithObservers.__init__(): PlaneWidgetObserver(pwy)"
+        if shared.debug: print "PlaneWidgetsWithObservers.__init__(): PlaneWidgetObserver(pwy)"
         self.observerY = PlaneWidgetObserverMRI(pwy, owner=self, orientation=1)
         self.observerY.show()
         vboxObsMRI.pack_start(self.observerY, True, True)
@@ -250,7 +264,7 @@ class PlaneWidgetsWithObservers(gtk.VBox):
 
         vboxObsMRI = gtk.VBox()
         vboxObsMRI.show()
-        print "PlaneWidgetsWithObservers.__init__(): PlaneWidgetObserver(pwz)"
+        if shared.debug: print "PlaneWidgetsWithObservers.__init__(): PlaneWidgetObserver(pwz)"
         self.observerZ = PlaneWidgetObserverMRI(pwz, owner=self, orientation=2)
         self.observerZ.show()
         vboxObsMRI.pack_start(self.observerZ, True, True)
@@ -310,7 +324,7 @@ class PlaneWidgetsWithObservers(gtk.VBox):
 
 
     def render_observers(self, *args):
-        #print 'rendering all'
+        #if shared.debug: print 'rendering all'
         self.surfRenWin.Render()        
         self.observerX.Render()
         self.observerY.Render()

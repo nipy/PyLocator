@@ -4,6 +4,7 @@ from markers import Marker
 import pickle
 
 from scipy import array, zeros
+from shared import shared
 
 class Viewer:
     def update_viewer(self, event, *args):
@@ -43,6 +44,7 @@ class EventHandler:
     selected = {}
     __NiftiQForm=None
     __NiftiSpacings=(1.0,1.0,1.0)
+    __NiftiShape=None
 
     def __init__(self):
         self.__dict__ = self.__sharedState            
@@ -65,7 +67,7 @@ class EventHandler:
     def add_marker(self, marker):
         # break undo cycle 
         func, args = UndoRegistry().get_last_pop()
-        #print 'add', func, args
+        #if shared.debug: print 'add', func, args
         if len(args)==0 or \
                (func, args[0]) != (self.add_marker, marker):
             UndoRegistry().push_command(self.remove_marker, marker)
@@ -77,7 +79,7 @@ class EventHandler:
         # break undo cycle
 
         func, args = UndoRegistry().get_last_pop()
-        #print 'remove', func, args
+        #if shared.debug: print 'remove', func, args
         if len(args)==0 or \
                (func, args[0]) != (self.remove_marker, marker):
             UndoRegistry().push_command(self.add_marker, marker)
@@ -111,7 +113,7 @@ class EventHandler:
             else:
                 #XXX if self.__Nifti:
                 if self.__NiftiQForm is not None:
-                    conv_marker=marker.convert_coordinates(self.__NiftiQForm,self.__NiftiSpacings)
+                    conv_marker=marker.convert_coordinates(self.__NiftiQForm,self.__NiftiSpacings,self.__NiftiShape)
                     #XXX conv_marker=marker.convert_coordinates(QForm)
                     conv_lines.append(conv_marker.to_string())
 
@@ -125,16 +127,18 @@ class EventHandler:
             conv_lines.sort()
             fn.write('\n'.join(conv_lines) + '\n')
 
-    def setNifti(self,QForm,spacings):
+    def setNifti(self,QForm,spacings,shape):
+        if shared.debug: print "setNifti:", QForm, spacings, shape
         self.__NiftiQForm=QForm
         self.__NiftiSpacings=spacings
+        self.__NiftiShape=shape
 
     def set_vtkactor(self, vtkactor):
-        print "EventHandler.set_vtkactor()"
+        if shared.debug: print "EventHandler.set_vtkactor()"
         self.vtkactor = vtkactor
 
     def save_registration_as(self, fname):
-        print "EventHandler.save_registration_as(", fname,")"
+        if shared.debug: print "EventHandler.save_registration_as(", fname,")"
         fh = file(fname, 'w')
 
         # XXX mcc: somehow get the transform for the VTK actor. aiieeee
@@ -145,7 +149,7 @@ class EventHandler:
         mat = self.vtkactor.GetMatrix()
         orient = self.vtkactor.GetOrientation()
         
-        print "EventHandler.save_registration_as(): vtkactor has origin, pos, scale, mat, orient=", loc, pos, scale, mat, orient, "!!"
+        if shared.debug: print "EventHandler.save_registration_as(): vtkactor has origin, pos, scale, mat, orient=", loc, pos, scale, mat, orient, "!!"
 
 
         def vtkmatrix4x4_to_array(vtkmat):
@@ -182,7 +186,7 @@ class EventHandler:
 
     def notify(self, event, *args):
         for observer in self.observers.keys():
-            print "EventHandler.notify(", event, "): calling update_viewer for ", observer
+            if shared.debug: print "EventHandler.notify(", event, "): calling update_viewer for ", observer
             observer.update_viewer(event, *args)
 
     def get_labels_on(self):

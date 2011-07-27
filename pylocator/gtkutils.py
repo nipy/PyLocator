@@ -153,7 +153,7 @@ class Dialog_FileSelection(gtk.FileSelection):
         """wrap some of the file selection boilerplate.  okCallback is
         a function that takes a Dialog_FileSelection instance as a
         single arg."""
-        print "Dialog_FileSelection.__init__"
+        if shared.debug: print "Dialog_FileSelection.__init__"
         self.defaultDir = defaultDir
         self.okCallback = okCallback
         gtk.FileSelection.__init__(self, title=title)
@@ -257,11 +257,11 @@ def yes_or_no(msg, title, responseCallback, parent=None):
 
     def response(dialog, response):
         if response==gtk.RESPONSE_YES:
-            print 'yes, yes!'
+            if shared.debug: print 'yes, yes!'
         elif response==gtk.RESPONSE_NO:
-            print 'oh no!'
+            if shared.debug: print 'oh no!'
         else:
-            print 'I am deeply confused'
+            if shared.debug: print 'I am deeply confused'
         dialog.destroy()
     """
 
@@ -400,7 +400,7 @@ def get_num_range(minLabel='Min', maxLabel='Max',
                     minVal = datetime.time(x[0], x[1], x[2])
                 except ValueError:
                     msg = exception_to_str('ValueError: minVal not in HH:MM:SS format')
-                print "get_num_range (as_times=True): minVal = " , str(minVal)
+                if shared.debug: print "get_num_range (as_times=True): minVal = " , str(minVal)
             else:
                 minVal = str2num_or_err(entryMin.get_text(), labelMin, parent)
             if minVal is None: continue
@@ -410,7 +410,7 @@ def get_num_range(minLabel='Min', maxLabel='Max',
                     maxVal = datetime.time(x[0], x[1], x[2])
                 except ValueError:
                     msg = exception_to_str('ValueError: maxVal not in HH:MM:SS format')
-                print "get_num_range (as_times=True): maxVal = " , str(maxVal)
+                if shared.debug: print "get_num_range (as_times=True): maxVal = " , str(maxVal)
             else:
                 maxVal = str2num_or_err(entryMax.get_text(), labelMax, parent)
             if maxVal is None: continue
@@ -477,7 +477,7 @@ def make_option_menu( names, func=None ):
     ...set up dialog ...
     if response==gtk.RESPONSE_OK:
        item = optmenu.get_menu().get_active()
-       print menud[item]  # this is the selected name
+       if shared.debug: print menud[item]  # this is the selected name
 
 
     if func is not None, call func with menuitem and label when
@@ -899,7 +899,11 @@ class MyToolbar(gtk.Toolbar):
                  continue
             
             image = gtk.Image()
-            image.set_from_stock(stock, self.iconSize)
+            if stock.startswith("gtk"): #really stock item
+                image.set_from_stock(stock, self.iconSize)
+            else:
+                image.set_from_file(stock)
+
             w = self.append_item(text,
                                  tooltip_text,
                                  'Private',
@@ -916,7 +920,10 @@ class MyToolbar(gtk.Toolbar):
                 self.insert( gtk.SeparatorToolItem(), -1 )
                 continue
             image = gtk.Image()
-            image.set_from_stock(stock, self.iconSize)
+            if stock.startswith("gtk"): #really stock item
+                image.set_from_stock(stock, self.iconSize)
+            else:
+                image.set_from_file(stock)
             tbutton = gtk.ToolButton(image, text)
             self.insert(tbutton, -1)
             tbutton.connect('clicked', getattr(self, callback))

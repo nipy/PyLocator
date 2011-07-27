@@ -1,16 +1,21 @@
 import gtk
 import os 
+import numpy as np
+
 from shared import shared
 from vtksurface import VTKSurface
 
 from gtkutils import MyToolbar, error_msg
-from image_reader import widgets, GladeHandlers, Params
+#from image_reader import widgets, GladeHandlers, Params
+from image_reader import widgets, Params
 from events import EventHandler, UndoRegistry, Viewer
 from vtkNifti import vtkNiftiImageReader
 
-from afni_read import afni_header_read
+#from afni_read import afni_header_read
 
 import pickle
+
+camera_fn = os.path.join(os.path.split(__file__)[0],"camera.png")
 
 class MainToolbar(MyToolbar):
     """
@@ -35,6 +40,7 @@ class MainToolbar(MyToolbar):
         (None, None, None, None),
         ('Properties', 'Set the plane properties', gtk.STOCK_PROPERTIES, 'set_properties'),
         ('Surface', 'Set the surface rendering properties', gtk.STOCK_PROPERTIES, 'show_surf_props'),
+        ('Screenshot', 'Settings for taking screenshots', camera_fn, 'show_screenshot_props'),
         #('Correlation', 'Display Correlations', gtk.STOCK_PROPERTIES, 'show_correlation_props'),
         )
 
@@ -53,6 +59,9 @@ class MainToolbar(MyToolbar):
                                     
     def show_surf_props(self, button):
         self.owner.dlgSurf.show()
+                                    
+    def show_screenshot_props(self, button):
+        self.owner.dlgScreenshots.show()
 
     def load_correlation_from(fname):
         # opening .mat file with correlation info
@@ -228,8 +237,10 @@ class MainToolbar(MyToolbar):
         #print "pylocator_maintoolbar.load_mri()"
         if self.niftiFilename is not None:
             fname=self.niftiFilename
+            shared.set_file_selection(fname)
         else:
             dialog = gtk.FileSelection('Choose nifti file')
+            #dialog = gtk.FileChooserDialog('Choose nifti file')
             dialog.set_transient_for(widgets['dlgReader'])
             dialog.set_filename(shared.get_last_dir())
             response = dialog.run()
@@ -237,40 +248,22 @@ class MainToolbar(MyToolbar):
             dialog.destroy()
             if response == gtk.RESPONSE_OK:
                 print fname
+                shared.set_file_selection(fname)
             else:
                 return
-        #reader = vtkNiftiImageReader()
-        #reader.SetFileName(fname)
-        #reader.Update()
-
-        pars = Params()
         
-        if fname.endswith(".nii.gz"):
-            pars.extension=".".join(fname.split(".")[-2:])
-            pars.pattern=".".join(fname.split(os.path.sep)[-1].split(".")[:-2])
-        #elif fname.endswith(".nii"):
-        #    pars.extension=".nii"
-        else: 
-            pars.extension=".".join(fname.split(".")[-1:])
-            pars.pattern=".".join(fname.split(os.path.sep)[-1].split(".")[:-1])
-        #print "pars.extension", pars.extension
-        
-        #print "pars.pattern", pars.pattern
-        pars.dir=os.path.dirname(fname)#sep.join(fname.split(os.path.sep)[:-1])
-        #print "pars.dir", pars.dir
+        reader = vtkNiftiImageReader()
+        reader.SetFileName(fname)
+        reader.Update()
 
-        pars.readerClass='vtkNiftiImageReader'
-        reader=widgets.get_reader(pars)
-        pars.first=1
-        pars.last=reader.GetDepth()
-
-        #print "reader=", reader
         if not reader:
             pass
             #print "hit cancel, see if we can survive"
         else:
-            pars=widgets.get_params()
-            pars=widgets.validate(pars)
+            pars=Params()
+            pars.dfov = max(reader.GetDataExtent())#max(abs(reader.vx2q((0,0,0))-reader.vx2q(np.array(reader.shape)-1)))
+            pars.dimensions = reader.GetDataExtent()
+            #pars=widgets.validate(pars)
 
             imageData = reader.GetOutput()
 
@@ -279,41 +272,15 @@ class MainToolbar(MyToolbar):
             imageData.SetExtent(reader.GetDataExtent())
           
             #print "pylocator_maintoolbar.load_mri(): reader.GetOutput() is " , imageData
-            #print "load_mri(): imageData.SetSpacing(", reader.GetDataSpacing(), " )"
-            imageData.SetSpacing(reader.GetDataSpacing())
+        #print "load_mri(): imageData.SetSpacing(", reader.GetDataSpacing(), " )"
+            #imageData.SetOrigin(reader.vx2q((0,0,0)))
+            #imageData.SetSpacing(reader.GetDataSpacing())
             #print "calling EventHandler().notify('set image data', imageData)"
             EventHandler().notify('set image data', imageData)
+            EventHandler().notify("set axes directions")
             #print "calling EventHandler().setNifti()"
-            EventHandler().setNifti(reader.GetQForm(),reader.GetDataSpacing())
-
-        ### #  not currently used
-        ###dialog = gtk.FileSelection('Choose .HEAD file')
-        ###dialog.set_transient_for(widgets['dlgReader'])
-        ###dialog.set_filename(widgets['entryInfoFile'].get_text() or
-        ###                    shared.get_last_dir())
-        ###response = dialog.run()
-        ###fname = dialog.get_filename()
-        ###dialog.destroy()
-        ###if response == gtk.RESPONSE_OK:
-        ###    d = afni_header_read(fname)
-        ###    brik_dimensions = d['DATASET_DIMENSIONS']
-        ###    print "header.ORIGIN: ", d['ORIGIN']
-        ###    print "header.DATASET_DIMENSIONS: ", d['DATASET_DIMENSIONS']
-        ###    print "header.HISTORY_NOTE: ", d['HISTORY_NOTE']
-        ###    print "header.DELTA: ", d['DELTA']
-        ###    brik_xdim = brik_dimensions[0]
-        ###    brik_ydim = brik_dimensions[1]
-        ###    brik_zdim = brik_dimensions[2]
-
-        ###    print fname
-        ###    base, ext = os.path.splitext(fname)
-        ###    brik_fname= "%s.BRIK" % base
-        ###    brikfile = file(brik_fname)
-        ###    brikfile.seek(0,2)
-        ###    brikfile_length = brikfile.tell()
-        ###    print "brikfile_length is " , brikfile_length, "divided by xdim*ydim is " , (float(brikfile_length))/(float(brik_xdim)*float(brik_ydim))
-        ###    print brikfile
-
+            #EventHandler().setNifti(reader.GetQForm(),reader.GetDataSpacing())
+            EventHandler().setNifti(reader.GetQForm(),reader.nifti_voxdim,reader.shape)
             
     def load_vtk(self, *args):
         
