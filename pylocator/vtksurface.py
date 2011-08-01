@@ -1,6 +1,8 @@
 import math
 import vtk
 from events import EventHandler
+from numpy import zeros
+from vtkutils import vtkmatrix4x4_to_array, array_to_vtkmatrix4x4
 
 class VTKSurface(vtk.vtkActor):
     """
@@ -10,19 +12,6 @@ class VTKSurface(vtk.vtkActor):
 
     def set_matrix(self, registration_mat):
         print "VTKSurface.set_matrix(", registration_mat, ")!!"
-        def vtkmatrix4x4_to_array(vtkmat):
-            scipy_array = zeros((4,4), 'd')
-            for i in range(0,4):
-                for j in range(0,4):
-                    scipy_array[i][j] = mat.GetElement(i,j)
-            return scipy_array 
-
-        def array_to_vtkmatrix4x4(scipy_array):
-            mat = vtk.vtkMatrix4x4()
-            for i in range(0,4):
-                for j in range(0,4):
-                    mat.SetElement(i,j, scipy_array[i][j])
-            return mat
 
         #print "calling SetUserMatrix(", array_to_vtkmatrix4x4(registration_mat) , ")"
         mat = array_to_vtkmatrix4x4(registration_mat)

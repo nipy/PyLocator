@@ -3,7 +3,7 @@ import os
 class Shared(object):
     debug = False
     lastSel = ''
-    labels = ["R","L","P","A","S","I"]
+    labels = ["L","R","P","A","I","S"]
     #lastSel = os.getcwd() + os.sep
     def set_file_selection(self, name):
         """

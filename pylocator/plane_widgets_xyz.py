@@ -92,7 +92,7 @@ class PlaneWidgetsXYZ(MarkerWindowInteractor):
         if shared.debug: print "PlaneWidgetsXYZ.set_image_data()!!"
         if imageData is None: return 
         self.imageData = imageData
-        extent = self.imageData.GetExtent()
+        extent = self.imageData.GetBounds()#Extent()
         if shared.debug: print "***Extent:", extent
         frac = 0.3
 
@@ -121,13 +121,13 @@ class PlaneWidgetsXYZ(MarkerWindowInteractor):
         #self.pwZ.SetResliceInterpolateToNearestNeighbour()
         self.camera = self.renderer.GetActiveCamera()
 
-        center = self.imageData.GetCenter()
-        spacing = self.imageData.GetSpacing()
-        bounds = np.array(self.imageData.GetBounds())
-        if shared.debug: print "***center,spacing,bounds", center,spacing,bounds
-        pos = center[0], center[1], center[2] - max((bounds[1::2]-bounds[0::2]))*2
-        fpu = center, pos, (0,-1,0)
-        if shared.debug: print "***fpu1:", fpu
+        #center = self.imageData.GetCenter()
+        #spacing = self.imageData.GetSpacing()
+        #bounds = np.array(self.imageData.GetBounds())
+        #if shared.debug: print "***center,spacing,bounds", center,spacing,bounds
+        #pos = center[0], center[1], center[2] - max((bounds[1::2]-bounds[0::2]))*2
+        #fpu = center, pos, (0,-1,0)
+        #if shared.debug: print "***fpu1:", fpu
         #self.set_camera(fpu)
 
         #if shared.debug: print self.pwX.GetResliceOutput().GetSpacing(), imageData.GetSpacing()
@@ -182,7 +182,7 @@ class PlaneWidgetsXYZ(MarkerWindowInteractor):
         pos[idx_left/2] +=  (1-2*idx_left%2)*max((bounds[1::2]-bounds[0::2]))*2
         idx_sup = labels.index("S")
         camera_up = [0,0,0]
-        camera_up[idx_sup/2] = -1+2*idx_sup%2
+        camera_up[idx_sup/2] = 1-2*idx_sup%2
         if shared.debug: print idx_sup, camera_up
         fpu = center, pos, tuple(camera_up)
         if shared.debug: print "***fpu2:", fpu

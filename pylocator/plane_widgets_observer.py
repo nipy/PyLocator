@@ -74,23 +74,11 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
         else:
             raise ValueError, 'orientation must be in 0,1,2'
 
-        center = self.observer.GetCenter()
-        normal = self.pw.GetNormal()
-        spacing =imageData.GetSpacing()
-        bounds = np.array(imageData.GetBounds())
-
-
-        offset = max(bounds[1::2]-bounds[::2])*2
-        pos = (center[0] + normal[0]*offset,
-               center[1] - normal[1]*offset,
-               center[2] - normal[2]*offset)
-        
-        self.set_camera((center, pos, up))
-        self.resetCamera = (center, pos, up)
 
         #self.sliceIncrement = spacing[self.orientation]
         self.sliceIncrement = 0.1
-
+    
+        spacing = self.imageData.GetSpacing()
         self._ratio = np.mean(np.abs(spacing)) #For marker sizes
         shared.ratio = self._ratio
 
@@ -136,20 +124,20 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
             self.renderer.AddActor(textActor)
 
         #Reorient camera to have head up
-        #center = self.imageData.GetCenter()
-        #spacing = self.imageData.GetSpacing()
-        #bounds = np.array(self.imageData.GetBounds())
+        center = self.imageData.GetCenter()
+        spacing = self.imageData.GetSpacing()
+        bounds = np.array(self.imageData.GetBounds())
         #if shared.debug: print "***center,spacing,bounds", center,spacing,bounds
-        #idx_left = labels.index("L")
-        #pos = [center[0], center[1], center[2]]
-        #pos[idx_left/2] +=  (1-2*idx_left%2)*max((bounds[1::2]-bounds[0::2]))*2
-        #idx_sup = labels.index("S")
-        #camera_up = [0,0,0]
-        #camera_up[idx_sup/2] = 1-2*idx_sup%2
-        #if shared.debug: print idx_sup, camera_up
-        #fpu = center, pos, tuple(camera_up)
+        idx_left = labels.index("L")
+        pos = [center[0], center[1], center[2]]
+        pos[idx_left/2] +=  (1-2*idx_left%2)*max((bounds[1::2]-bounds[0::2]))*2
+        idx_sup = labels.index("S")
+        camera_up = [0,0,0]
+        camera_up[idx_sup/2] = 1-2*idx_sup%2
+        if shared.debug: print idx_sup, camera_up
+        fpu = center, pos, tuple(camera_up)
         #if shared.debug: print "***fpu2:", fpu
-        #self.set_camera(fpu)
+        self.set_camera(fpu)
 
     def mouse1_mode_change(self, event):
         try: self.moveEvent

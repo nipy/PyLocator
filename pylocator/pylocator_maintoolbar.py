@@ -260,16 +260,16 @@ class MainToolbar(MyToolbar):
             pass
             #print "hit cancel, see if we can survive"
         else:
-            pars=Params()
-            pars.dfov = max(reader.GetDataExtent())#max(abs(reader.vx2q((0,0,0))-reader.vx2q(np.array(reader.shape)-1)))
-            pars.dimensions = reader.GetDataExtent()
+            #pars=Params()
+            #pars.dfov = max(reader.GetDataExtent())#max(abs(reader.vx2q((0,0,0))-reader.vx2q(np.array(reader.shape)-1)))
+            #pars.dimensions = reader.GetDataExtent()
             #pars=widgets.validate(pars)
 
             imageData = reader.GetOutput()
 
             #stupid workaround, somehow imageData.Extent is not written. dunno why
             #maybe its in vtkImageImportFromArray
-            imageData.SetExtent(reader.GetDataExtent())
+            #imageData.SetExtent(reader.GetDataExtent())
           
             #print "pylocator_maintoolbar.load_mri(): reader.GetOutput() is " , imageData
         #print "load_mri(): imageData.SetSpacing(", reader.GetDataSpacing(), " )"
