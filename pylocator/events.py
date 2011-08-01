@@ -112,20 +112,20 @@ class EventHandler:
             if marker is None: continue
             else:
                 #XXX if self.__Nifti:
-                if self.__NiftiQForm is not None:
-                    conv_marker=marker.convert_coordinates(self.__NiftiQForm,self.__NiftiSpacings,self.__NiftiShape)
-                    #XXX conv_marker=marker.convert_coordinates(QForm)
-                    conv_lines.append(conv_marker.to_string())
+                #if self.__NiftiQForm is not None:
+                #    conv_marker=marker.convert_coordinates(self.__NiftiQForm,self.__NiftiSpacings,self.__NiftiShape)
+                #    #XXX conv_marker=marker.convert_coordinates(QForm)
+                #    conv_lines.append(conv_marker.to_string())
 
                 lines.append(marker.to_string())
         lines.sort()
 
         fh = file(fname, 'w')
         fh.write('\n'.join(lines) + '\n')
-        if self.__NiftiQForm is not None:
-            fn = file(fname+".conv", 'w') #only needed for nifti, but what the hell
-            conv_lines.sort()
-            fn.write('\n'.join(conv_lines) + '\n')
+        #if self.__NiftiQForm is not None:
+        #    fn = file(fname+".conv", 'w') #only needed for nifti, but what the hell
+        #    conv_lines.sort()
+        #    fn.write('\n'.join(conv_lines) + '\n')
 
     def setNifti(self,QForm,spacings,shape):
         if shared.debug: print "setNifti:", QForm, spacings, shape

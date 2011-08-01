@@ -43,7 +43,7 @@ class vtkNiftiImageReader(object):
         print self.__nim
         self.__data=self.__nim.get_data().astype("f").swapaxes(0,2)
         #self.__vtkimport.SetDataExtent(0,self.__data.shape[2]-1,0,self.__data.shape[1]-1,0,self.__data.shape[0]-1)
-        self.__vtkimport.SetWholeExtent(0,self.__data.shape[0]-1,0,self.__data.shape[1]-1,0,self.__data.shape[2]-1)
+        self.__vtkimport.SetWholeExtent(0,self.__data.shape[2]-1,0,self.__data.shape[1]-1,0,self.__data.shape[0]-1)
         self.__vtkimport.SetDataExtentToWholeExtent()
         voxdim = self.__nim.get_header()['pixdim'][:3].copy()
         #Export data as string
