@@ -128,29 +128,7 @@ Saving markers to file
 Finally, when you want to export the electrode locations, you can save them as a simple text file to 
 disk. Use the **Save to**-button from the main toolbar. Choose a directory and filename and your done.
 
-.. note::
-  Additionally to the file you selected, a second file will be created. If you decided to use 
-  "electrode_locations.txt", the file "electrode_locations.txt.conv" will be in the directory.
-  While the first one contains the voxel-indices where the marks were set (as floats, due to 
-  interpolation) the second one has the coordinates in scanner space [#f1]_ as obtained by the affine 
-  transform stored in the Nifti file.
-
-Here is an example how these files might look like:
-
 electrode_locations.txt::
-
-  TBPR1,67.6955204025,120.890902349,34.1032495236,3.0,0.0,0.0,1.0
-  TBPR2,58.5703026043,115.523127174,34.1032495236,3.0,0.0,0.0,1.0
-  TBPR3,49.9818623237,109.081796963,34.1032495236,3.0,0.0,0.0,1.0
-  TBPR4,40.8566445255,103.17724427,34.1032495236,3.0,0.0,0.0,1.0
-  TL01,115.062664026,119.624185435,42.0111235719,3.0,0.0,0.0,1.0
-  TL02,115.632289616,115.984397122,45.0048508255,3.0,0.0,0.0,1.0
-  TL03,116.63892536,112.698310734,48.319329554,3.0,0.0,0.0,1.0
-  TL04,117.604637459,108.45507919,51.6068504053,3.0,0.0,0.0,1.0
-  TL05,118.415850937,104.890702036,54.8708165645,3.0,0.0,0.0,1.0
-  ...
-
-electrode_locations.txt.conv::
 
   TBPR1,22.3044795975,-5.109097651,-37.8967504764,3.0,0.0,0.0,1.0
   TBPR2,31.4296973957,-10.476872826,-37.8967504764,3.0,0.0,0.0,1.0
@@ -167,12 +145,35 @@ The first column contains the labels you assigned to the markers, the next
 three columns are the indices / coordinates. Columns 5 to 8 can be ignored,
 they contain the marker size and its color.
 
+.. note::
+  In v0.1 of PyLocator, the affine transformation was not applied for visualization. 
+  It was rather used at save time to create a second file. If you decided to use 
+  "electrode_locations.txt", the file "electrode_locations.txt.conv" used to be created in the directory.
+  While the first one contained the voxel-indices where the marks were set (as floats, due to 
+  interpolation) the second one had the coordinates in scanner space [#f1]_ as obtained by the affine 
+  transform stored in the Nifti file.
+
+  Here is an example how the old files might have looked like:
+
+  electrode_locations.txt::
+
+    TBPR1,67.6955204025,120.890902349,34.1032495236,3.0,0.0,0.0,1.0
+    TBPR2,58.5703026043,115.523127174,34.1032495236,3.0,0.0,0.0,1.0
+    TBPR3,49.9818623237,109.081796963,34.1032495236,3.0,0.0,0.0,1.0
+    TBPR4,40.8566445255,103.17724427,34.1032495236,3.0,0.0,0.0,1.0
+    TL01,115.062664026,119.624185435,42.0111235719,3.0,0.0,0.0,1.0
+    TL02,115.632289616,115.984397122,45.0048508255,3.0,0.0,0.0,1.0
+    TL03,116.63892536,112.698310734,48.319329554,3.0,0.0,0.0,1.0
+    TL04,117.604637459,108.45507919,51.6068504053,3.0,0.0,0.0,1.0
+    TL05,118.415850937,104.890702036,54.8708165645,3.0,0.0,0.0,1.0
+    ...
+
 If you reload the same image again sometime later, you can also load these
 files back into the program to recover all markers.
 
 .. note::
-  When loading markers from disk, **do not choose the .conv-file**. This one 
-  is created only for reasons of convenience.
+  When loading markers from disk, be careful with old files: if they where created
+  with PyLocator version < 0.2, **do choose the .conv-file**. Otherwise the locations will be messed up
  
 Rendering 3d-surface
 --------------------
@@ -232,5 +233,5 @@ You can use the buttons in the dialog to take photos of individual widgets or of
 .. rubric:: Footnotes
 
 .. [#f1] If you normalized the MRI image to some standard brain (the tutorial file is normalized to MNI152, T1, 1mm voxel size)
-  these coordinates will be in standard space, e.g. MNI coordinates
+  these coordinates where in standard space, e.g. MNI coordinates
 .. [#f2] Iso surfaces are the 3d analogy to contour plots.
