@@ -1,6 +1,4 @@
-import nibabel
-#import nifti
-#from nifti import *
+from nibabel import load
 #from numpy import oldnumeric as Numeric
 import numpy as np
 import vtk
@@ -39,8 +37,8 @@ class vtkNiftiImageReader(object):
         
     def Update(self):
         if shared.debug: print "Loading ", self.__filename
-        self.__nim=nibabel.load(self.__filename)
-        print self.__nim
+        self.__nim=load(self.__filename)
+        if shared.debug: print self.__nim
         self.__data=self.__nim.get_data().astype("f").swapaxes(0,2)
         #self.__vtkimport.SetDataExtent(0,self.__data.shape[2]-1,0,self.__data.shape[1]-1,0,self.__data.shape[0]-1)
         self.__vtkimport.SetWholeExtent(0,self.__data.shape[2]-1,0,self.__data.shape[1]-1,0,self.__data.shape[0]-1)
@@ -78,9 +76,9 @@ class vtkNiftiImageReader(object):
         #print self.__vtkimport.GetOutput().GetBounds()
         #print self._irs.GetOutput().GetBounds()
 
-        print voxdim, self._irs.GetOutputSpacing()
+        if shared.debug: print voxdim, self._irs.GetOutputSpacing()
         self._irs.SetOutputSpacing(abs(voxdim))
-        print self._irs.GetOutputSpacing()
+        if shared.debug: print self._irs.GetOutputSpacing()
         #print self._irs.GetOutputOrigin()
         #self._irs.SetOutputOrigin((0,0,0))
         # print self._irs.GetOutputOrigin()
@@ -91,7 +89,7 @@ class vtkNiftiImageReader(object):
         #self._irs.SetOutputOrigin(self.__nim.get_affine()[:3,-1])
         
         #self._irs.SetOutputExtent(self.__vtkimport.GetDataExtent())
-        #self._irs.AutoCropOutputOn()
+        self._irs.AutoCropOutputOn()
 
         self._irs.Update()
 

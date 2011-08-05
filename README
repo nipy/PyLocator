@@ -4,17 +4,6 @@ The PyLocator-program
 A little program for localization of EEG-electrodes from MRI-recordings.
 Uses VTK for a neat 3d-interface. 
 
-Running the test suite
-------------------------
-
-To run the test suite, you need nosetests and the coverage modules.
-Run the test suite using::
-
-    nosetests
-
-from the root of the project.
-
-
 Building the docs
 ----------------------
 

@@ -138,7 +138,6 @@ class PlaneWidgetsXYZ(MarkerWindowInteractor):
         #if shared.debug: print "***Adding axes labels"
         #if shared.debug: print labels
         labels = shared.labels
-        #if shared.debug: print "+#äö", labels
         #labels = list(np.array(labels)[[4,5,2,3,0,1]])
         self.axes_labels=labels
         self.axes_labels_actors=[]
@@ -177,12 +176,12 @@ class PlaneWidgetsXYZ(MarkerWindowInteractor):
         spacing = self.imageData.GetSpacing()
         bounds = np.array(self.imageData.GetBounds())
         if shared.debug: print "***center,spacing,bounds", center,spacing,bounds
-        idx_left = labels.index("L")
+        #idx_left = labels.index("L")
         pos = [center[0], center[1], center[2]]
-        pos[idx_left/2] +=  (1-2*idx_left%2)*max((bounds[1::2]-bounds[0::2]))*2
-        idx_sup = labels.index("S")
+        pos[0] +=  max((bounds[1::2]-bounds[0::2]))*2
+        #idx_sup = labels.index("S")
         camera_up = [0,0,0]
-        camera_up[idx_sup/2] = 1-2*idx_sup%2
+        camera_up[2] = 1
         if shared.debug: print idx_sup, camera_up
         fpu = center, pos, tuple(camera_up)
         if shared.debug: print "***fpu2:", fpu

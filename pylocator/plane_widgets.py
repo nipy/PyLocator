@@ -28,7 +28,7 @@ INTERACT_CURSOR, MOVE_CURSOR, COLOR_CURSOR, SELECT_CURSOR, DELETE_CURSOR, LABEL_
 
 from plane_widgets_xyz import PlaneWidgetsXYZ, move_pw_to_point
 from plane_widgets_observer import PlaneWidgetObserver
-from plane_widgets_observer_mri import PlaneWidgetObserverMRI
+#from plane_widgets_observer_mri import PlaneWidgetObserverMRI
 from plane_widgets_observer_toolbar import ObserverToolbar
 from pylocator_maintoolbar import MainToolbar
 from pylocator_interactortoolbar import InteractorToolbar

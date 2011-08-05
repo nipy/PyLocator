@@ -86,7 +86,6 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
         #if shared.debug: print "***Adding axes labels"
         #if shared.debug: print labels
         labels = shared.labels
-        #if shared.debug: print "+#äö", labels
         #labels = list(np.array(labels)[[4,5,2,3,0,1]])
         self.axes_labels=labels
         self.axes_labels_actors=[]
@@ -128,22 +127,20 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
         spacing = self.imageData.GetSpacing()
         bounds = np.array(self.imageData.GetBounds())
         #if shared.debug: print "***center,spacing,bounds", center,spacing,bounds
-        if self.orientation == 0:
-            lb_pos = "L"
-            lb_up = "S"
-        elif self.orientation == 1:
-            lb_pos = "P"
-            lb_up = "S"
-        elif self.orientation == 2:
-            lb_pos = "S"
-            lb_up = "R"
-        idx_pos = labels.index(lb_pos)
         pos = [center[0], center[1], center[2]]
-        pos[idx_pos/2] +=  (1-2*idx_pos%2)*max((bounds[1::2]-bounds[0::2]))*2
-        idx_up = labels.index(lb_up)
         camera_up = [0,0,0]
-        camera_up[idx_up/2] = 1-2*idx_up%2
-        if shared.debug: print idx_sup, camera_up
+        if self.orientation == 0:
+            pos[0] += max((bounds[1::2]-bounds[0::2]))*2
+            camera_up[2] = 1 
+        elif self.orientation == 1:
+            pos[1] += max((bounds[1::2]-bounds[0::2]))*2
+            camera_up[2] = 1
+        elif self.orientation == 2:
+            pos[2] += max((bounds[1::2]-bounds[0::2]))*2
+            camera_up[0] = -1
+        #idx_pos = labels.index(lb_pos)
+        #pos[idx_pos/2] +=  (-1+2*idx_pos%2)*max((bounds[1::2]-bounds[0::2]))*2
+        if shared.debug: print camera_up
         fpu = center, pos, tuple(camera_up)
         #if shared.debug: print "***fpu2:", fpu
         self.set_camera(fpu)
