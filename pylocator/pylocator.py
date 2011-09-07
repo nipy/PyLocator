@@ -1,3 +1,5 @@
+#! /usr/bin/python
+
 import gobject, gtk
 import getopt,sys,os
 

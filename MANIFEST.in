@@ -1,4 +1,5 @@
 include *.txt *.py
+include pylocator/camera.png pylocator/image_reader.glade
 recursive-include pylocator *.rst *.py
 graft doc
 graft doc/_static

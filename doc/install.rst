@@ -6,18 +6,20 @@ Dependencies
 PyLocator relies on a bunch of libraries:
 
 * `VTK <http://www.vtk.org>`_: 3d-visualization
-* `PyNifti <http://niftilib.sourceforge.net/pynifti/>`_: Reading the Nifti-format for MRI data
+* `nibabel <http://nipy.sourceforge.net/nibabel/>`_: Reading the Nifti-format for MRI data
 * `NumPy <http://www.scipy.org>`_: Sophisticated array-types for Python
 * `GTK+ <http://www.pygtk.org/>`_: For the GUI.
 * `GTK+ OpenGL Extension <http://projects.gnome.org/gtkglext/>`_
 
 On a Debian-like environement, these dependencies can usually be resolved via a simple::
 
-  sudo apt-get install python-vtk python-nifti python-numpy python-gtk2 python-gtkglext1
+  sudo apt-get install python-vtk python-nibabel python-numpy python-gtk2 python-gtkglext1
 
 This should prepare your system for PyLocator. On Windows and OS X, things are a little bit 
 more complicated, but Python distributions like `EPD <http://www.enthought.com/products/epd.php>`_
 or `Python(x,y) <http://www.pythonxy.com/>`_ should be helpful here.
+
+Depending on your configuration, nibabel has to be downloaded separately.
 
 Can you help with detailed instructions for these operating systems? Please tell me!
 
@@ -34,7 +36,7 @@ You can simply clone this repository via::
 
 Alternatively, you can download a tarball that is update once in a while from
 
-http://pylocator.thorstenkranz.de/download/PyLocator.tar.gz
+http://pylocator.thorstenkranz.de/download/pylocator-0.2.dev.tar.gz
 
 Extract this archive using your preferred archive manager or in a terminal using something like::
 
