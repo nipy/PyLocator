@@ -14,4 +14,4 @@ pygtk, gtkglext
 
 __version__ = "0.2"
 
-from pylocator import main
+#from pylocator import main

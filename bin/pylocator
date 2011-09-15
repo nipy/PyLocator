@@ -3,8 +3,8 @@
 import gobject, gtk
 import getopt,sys,os
 
-from plane_widgets import PlaneWidgetsWithObservers
-from shared import shared
+from pylocator.plane_widgets import PlaneWidgetsWithObservers
+from pylocator.shared import shared
 
 usage="""usage: %s [options]
 options:
