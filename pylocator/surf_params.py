@@ -41,7 +41,7 @@ class SurfParams(Viewer):
     useConnect    = True
     useDecimate   = False
 
-    def __init__(self, renderer, interactor):
+    def __init__(self, renderers, interactor):
 
         self._color = SurfParams.color_
         self._opacity = 1.0
@@ -73,7 +73,12 @@ class SurfParams(Viewer):
         self.marchingCubes.AddObserver('StartEvent', start)
         self.marchingCubes.AddObserver('ProgressEvent', progress)
         self.marchingCubes.AddObserver('EndEvent', end)
-        self.renderer = renderer
+        #Make sure we have a list ef renderer (even if length 1)
+        try:
+            renderers = list(renderers)
+        except TypeError, te:
+            renderers = [renderers]
+        self.renderers = renderers
         self.interactor = interactor
         self.isoActor = None
         
@@ -82,7 +87,8 @@ class SurfParams(Viewer):
     def update_pipeline(self):
 
         if self.isoActor is not None:
-            self.renderer.RemoveActor(self.isoActor)
+            for renderer in self.renderers:
+                renderer.RemoveActor(self.isoActor)
 
         
         
@@ -126,7 +132,8 @@ class SurfParams(Viewer):
         self.isoActor = vtk.vtkActor()
         self.isoActor.SetMapper(self.isoMapper)
         self.set_lighting()
-        self.renderer.AddActor(self.isoActor)
+        for renderer in self.renderers:
+            renderer.AddActor(self.isoActor)
         self.update_properties()
 
     def set_lighting(self):
@@ -155,7 +162,8 @@ class SurfParams(Viewer):
 
     def __del__(self):
         if self.isoActor is not None:
-            self.renderer.RemoveActor(self.isoActor)
+            for renderer in self.renderers:
+                renderer.RemoveActor(self.isoActor)
 
     def set_color(self,color):
         print color, type(color)
@@ -166,7 +174,8 @@ class SurfParams(Viewer):
         else:
             self._color = color
         self.isoActor.GetProperty().SetColor(self._color)
-        self.renderer.Render()
+        for renderer in self.renderers:
+            renderer.Render()
 
     def get_color(self):
         return self._color
@@ -183,4 +192,5 @@ class SurfParams(Viewer):
 
     def destroy(self):
         if self.isoActor is not None:
-            self.renderer.RemoveActor(self.isoActor)
+            for renderer in self.renderers:
+                renderer.RemoveActor(self.isoActor)

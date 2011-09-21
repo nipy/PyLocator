@@ -82,7 +82,7 @@ class PlaneWidgetsWithObservers(gtk.VBox):
         toolbarInteractor.set_orientation(gtk.ORIENTATION_VERTICAL)        
 
         self.dlgSurf = SurfRendererProps(self.surfRenWin, self.pwxyz)
-        self.dlgRoi = RoiRendererProps(self.surfRenWin)
+        self.dlgRoi = RoiRendererProps(self.surfRenWin, self.pwxyz)
 
         self.dlgScreenshots = ScreenshotProps()
 
