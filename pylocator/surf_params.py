@@ -25,7 +25,7 @@ class SurfParams(Viewer):
 
       Public attrs:
     
-      color       # a normed rgb
+      color_      # a normed rgb
       intensity   # intensity to segment on
       label       # name of segment
       useConnect  # boolean, whether to use ConnectFilter
@@ -35,13 +35,16 @@ class SurfParams(Viewer):
       imageData   # default None
     """
 
-    label, color  = colorSeq[0]
+    label, color_  = colorSeq[0]
     intensity     = 80.
 
     useConnect    = True
     useDecimate   = False
 
     def __init__(self, renderer, interactor):
+
+        self._color = SurfParams.color_
+        self._opacity = 1.0
 
         self.connect = ConnectFilter()
         self.deci = DecimateFilter()
@@ -122,8 +125,13 @@ class SurfParams(Viewer):
 
         self.isoActor = vtk.vtkActor()
         self.isoActor.SetMapper(self.isoMapper)
+        self.set_lighting()
         self.renderer.AddActor(self.isoActor)
         self.update_properties()
+
+    def set_lighting(self):
+        #self.isoActor.GetProperty().SetSpecular(1.0)
+        pass
 
     def set_image_data(self, imageData):
         print "SurfParams.set_image_data(", imageData,")"
@@ -145,8 +153,34 @@ class SurfParams(Viewer):
             imageData = args[0]
             self.set_image_data(imageData)       
 
-
     def __del__(self):
         if self.isoActor is not None:
             self.renderer.RemoveActor(self.isoActor)
 
+    def set_color(self,color):
+        print color, type(color)
+        if type(color)==gtk.gdk.Color:
+            print "adjusting color"
+            self._color = [float(x)/65535. for x in (color.red,color.green,color.blue)]
+            print self._color
+        else:
+            self._color = color
+        self.isoActor.GetProperty().SetColor(self._color)
+        self.renderer.Render()
+
+    def get_color(self):
+        return self._color
+
+    def set_opacity(self,opacity):
+        self._opacity = opacity
+        self.isoActor.GetProperty().SetOpacity(self._opacity)
+
+    def get_opacity(self):
+        return self._opacity
+
+    color = property(get_color,set_color)
+    opacity = property(get_opacity,set_opacity)
+
+    def destroy(self):
+        if self.isoActor is not None:
+            self.renderer.RemoveActor(self.isoActor)

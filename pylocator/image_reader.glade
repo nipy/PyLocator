@@ -867,7 +867,6 @@
                                 <child>
                                   <widget class="GtkImage" id="image10">
                                     <property name="visible">True</property>
-                                    <property name="pixbuf">stock_video-24.png</property>
                                   </widget>
                                   <packing>
                                     <property name="expand">False</property>

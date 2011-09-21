@@ -27,7 +27,7 @@ class SurfRendererProps(gtk.Window, Viewer):
     """
 
     SCROLLBARSIZE = 150,20
-    lastColor = SurfParams.color
+    lastColor = SurfParams.color_
     paramd = {}   # a dict from names to SurfParam instances
 
     def __init__(self, sr, pwxyz):

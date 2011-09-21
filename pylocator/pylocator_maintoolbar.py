@@ -28,7 +28,7 @@ class MainToolbar(MyToolbar):
         #('Load other', 'Load new 3d-volume from Dicom, bmp or raw', gtk.STOCK_NEW, 'load_image'),
         #('Load VTK File', 'Load new VTK mesh', gtk.STOCK_NEW, 'load_vtk'),
         #('Load Registration file', 'Load .reg file', gtk.STOCK_NEW, 'load_registration'),
-        ('Markers', 'Load markers from file', gtk.STOCK_OPEN, 'load_from'),
+        ('Load', 'Load markers from file', gtk.STOCK_OPEN, 'load_from'),
         ('Save', 'Save markers', gtk.STOCK_SAVE, 'save'),
         ('Save as ', 'Save markers as new filename', gtk.STOCK_SAVE_AS, 'save_as'),
         #('Save registration as', 'Save registration as new filename', gtk.STOCK_SAVE_AS, 'save_registration_as'),
@@ -40,6 +40,7 @@ class MainToolbar(MyToolbar):
         (None, None, None, None),
         ('Properties', 'Set the plane properties', gtk.STOCK_PROPERTIES, 'set_properties'),
         ('Surface', 'Set the surface rendering properties', gtk.STOCK_PROPERTIES, 'show_surf_props'),
+        ('ROI', 'Load mask of ROI to include in surface view', gtk.STOCK_PROPERTIES, 'show_roi_props'),
         ('Screenshot', 'Settings for taking screenshots', camera_fn, 'show_screenshot_props'),
         #('Correlation', 'Display Correlations', gtk.STOCK_PROPERTIES, 'show_correlation_props'),
         )
@@ -59,6 +60,9 @@ class MainToolbar(MyToolbar):
                                     
     def show_surf_props(self, button):
         self.owner.dlgSurf.show()
+                                    
+    def show_roi_props(self, button):
+        self.owner.dlgRoi.show()
                                     
     def show_screenshot_props(self, button):
         self.owner.dlgScreenshots.show()

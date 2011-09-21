@@ -19,6 +19,7 @@ from events import EventHandler, UndoRegistry, Viewer
 from shared import shared
 from surf_renderer import SurfRenderWindow
 from surf_renderer_props import SurfRendererProps
+from roi_renderer_props import RoiRendererProps
 from screenshot_taker import ScreenshotProps #ScreenshotTaker
 
 import scipy
@@ -80,9 +81,8 @@ class PlaneWidgetsWithObservers(gtk.VBox):
         toolbarInteractor.show()
         toolbarInteractor.set_orientation(gtk.ORIENTATION_VERTICAL)        
 
-
-
         self.dlgSurf = SurfRendererProps(self.surfRenWin, self.pwxyz)
+        self.dlgRoi = RoiRendererProps(self.surfRenWin)
 
         self.dlgScreenshots = ScreenshotProps()
 
@@ -330,4 +330,8 @@ class PlaneWidgetsWithObservers(gtk.VBox):
         self.observerY.Render()
         self.observerZ.Render()
 
+    def destroy(self):
+        for widg in [self.observerX,self.observerY,self.observerZ,self.pwxyz,self.surfRenWin]:
+            widg.hide()
+            widg.destroy()
 

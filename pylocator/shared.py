@@ -15,8 +15,10 @@ class Shared(object):
         """
         Return the dir name of the most recent file selected
         """
-
-        return os.path.dirname(self.lastSel) + os.sep
+        if os.path.isdir(self.lastSel):
+            return self.lastSel
+        else:
+            return os.path.dirname(self.lastSel) + os.sep
 
 
 
