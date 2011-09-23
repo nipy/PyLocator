@@ -12,6 +12,6 @@ vtk
 pygtk, gtkglext
 """
 
-__version__ = "0.2"
+__version__ = "0.29"
 
 #from pylocator import main

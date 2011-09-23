@@ -7,7 +7,6 @@ from gtk import gdk
 
 from gtkutils import error_msg, simple_msg, ButtonAltLabel, \
      str2posint_or_err, str2posnum_or_err, ProgressBarDialog, make_option_menu
-from matplotlib.cbook import Bunch
 
 from events import EventHandler, UndoRegistry, Viewer
 from markers import Marker
@@ -775,6 +774,10 @@ class SurfRendererProps(gtk.Window, Viewer):
         self.update_segments_frame() 
         self.update_pipeline_frame()
         self.update_picker_frame()
+
+        #Maybe snap surf to planes view
+        if len(self.paramd.keys())<2:
+            self.surf_to_planes_view()
         
     def interaction_event(self, observer, event):
         if not self.collecting: return 
@@ -795,6 +798,16 @@ class SurfRendererProps(gtk.Window, Viewer):
         return val
 
 
+    def planes_to_surf_view(self, button=None):
+        fpu = self.sr.get_camera_fpu()
+        self.pwxyz.set_camera(fpu)
+        self.pwxyz.Render()
+        
+    def surf_to_planes_view(self, button=None):
+        fpu = self.pwxyz.get_camera_fpu()
+        self.sr.set_camera(fpu)
+        self.sr.Render()
+
     def _make_camera_control(self):
         """
         Control the view of the rendered surface
@@ -814,25 +827,15 @@ class SurfRendererProps(gtk.Window, Viewer):
         frame.add(vbox)
 
 
-        def planes_to_surf_view(button):
-            fpu = self.sr.get_camera_fpu()
-            self.pwxyz.set_camera(fpu)
-            self.pwxyz.Render()
-            
         button = ButtonAltLabel('Snap planes to surf view', gtk.STOCK_GO_BACK)
         button.show()
-        button.connect('clicked', planes_to_surf_view)
+        button.connect('clicked', self.planes_to_surf_view)
         vbox.pack_start(button, False, False)
-
-        def surf_to_planes_view(button):
-            fpu = self.pwxyz.get_camera_fpu()
-            self.sr.set_camera(fpu)
-            self.sr.Render()
 
 
         button = ButtonAltLabel('Snap surf to planes view', gtk.STOCK_GO_FORWARD)
         button.show()
-        button.connect('clicked', surf_to_planes_view)
+        button.connect('clicked', self.surf_to_planes_view)
         vbox.pack_start(button, False, False)
     
 

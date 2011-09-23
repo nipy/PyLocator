@@ -31,7 +31,7 @@ Program for the localization of EEG-electrodes.
       long_description=file('README').read(),
       license='BSD',
       classifiers=[
-          'Development Status :: 2 - Pre-Alpha',
+          'Development Status :: 3 - Alpha',
           'Environment :: Console',
           'Intended Audience :: Developers',
           'Intended Audience :: Science/Research',
@@ -44,7 +44,7 @@ Program for the localization of EEG-electrodes.
       ],
       platforms='any',
       package_data={'pylocator': ['image_reader.glade','camera.png'],},
-      packages=['pylocator', 'pylocator.misc', 'pylocator.test'],
+      packages=['pylocator', 'pylocator.misc', 'pylocator.tests'],
       scripts=['bin/pylocator'],
       **extra_setuptools_args)
 

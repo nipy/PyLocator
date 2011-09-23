@@ -8,7 +8,6 @@ from gtk import gdk
 
 from gtkutils import error_msg, simple_msg, ButtonAltLabel, \
      str2posint_or_err, str2posnum_or_err, ProgressBarDialog, make_option_menu
-from matplotlib.cbook import Bunch
 
 from events import EventHandler, UndoRegistry, Viewer
 from markers import Marker

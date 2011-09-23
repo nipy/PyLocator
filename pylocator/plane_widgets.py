@@ -12,7 +12,6 @@ from scipy import mean
 #from image_reader import widgets, GladeHandlers
 from gtkutils import error_msg, simple_msg, ButtonAltLabel, \
      str2posnum_or_err, ProgressBarDialog, make_option_menu, MyToolbar
-from matplotlib.cbook import Bunch
 
 from markers import Marker, RingActor
 from events import EventHandler, UndoRegistry, Viewer
@@ -20,6 +19,7 @@ from shared import shared
 from surf_renderer import SurfRenderWindow
 from surf_renderer_props import SurfRendererProps
 from roi_renderer_props import RoiRendererProps
+from marker_list import MarkerList
 from screenshot_taker import ScreenshotProps #ScreenshotTaker
 
 import scipy
@@ -148,27 +148,33 @@ class PlaneWidgetsWithObservers(gtk.VBox):
         hbox.pack_start(hack_table, False, False)
         """
 
-        vbox = gtk.VBox(spacing=border)
+        vpaned = gtk.VPaned()
         #vbox.set_border_width(border)
-        vbox.show()
         # add vbox to hbox
-        hbox.pack_start(vbox, True, True)
+        hbox.pack_start(vpaned, True, True)
 
 
-        hboxUpper = gtk.HBox(spacing=border)
-        hboxUpper.show()
-        # add PlaneWidgetsXYZ to hboxUpper
-        hboxUpper.pack_start(self.pwxyz, True, True)
-        # add surfRenderWindow to hboxUpper
-        ######################################################################
-        ######################################################################
-        ######################################################################
-        hboxUpper.pack_start(self.surfRenWin, True, True)
-        ######################################################################
-        ######################################################################
-        ######################################################################
+        #Upper line of widgets consists of two packed HPaned
+        upperPaned1 = gtk.HPaned()
+        upperPaned2 = gtk.HPaned()
+        upperPaned1.pack2(upperPaned2,True,True)
+        # add PlaneWidgetsXYZ to upperPaned1
+        upperPaned1.pack1(self.pwxyz, True, True)
+        # add surfRenderWindow to upperPaned2
+        upperPaned2.pack1(self.surfRenWin, True, True)
+        # Create marker list
+        self.marker_list = MarkerList()
+        self.marker_list.show_all()
+        self.marker_list._treev_sel.connect("changed",self.on_marker_selection_changed)
+        upperPaned2.pack2(self.marker_list, True, True)
         # add hboxUpper to vbox
-        vbox.pack_start(hboxUpper, True, True)
+        vpaned.pack1(upperPaned1, True, True)
+
+        #Share space for the HPaned-instances
+        #width = upperPaned1.get_property("max-position")
+        #print "width", width
+        upperPaned1.set_position(300)
+        upperPaned2.set_position(300)
 
         pwx, pwy, pwz = self.pwxyz.get_plane_widgets_xyz()
 
@@ -178,13 +184,7 @@ class PlaneWidgetsWithObservers(gtk.VBox):
         hbox.show()
         # add hbox to vbox
 
-        ######################################################################
-        ######################################################################
-        ######################################################################
-        vbox.pack_start(hbox, True, True)
-        ######################################################################
-        ######################################################################
-        ######################################################################
+        vpaned.pack2(hbox, True, True)
 
         vboxObs = gtk.VBox()
         vboxObs.show()
@@ -231,6 +231,12 @@ class PlaneWidgetsWithObservers(gtk.VBox):
         self.observerX.set_screenshot_props(self.dlgScreenshots,"Slice 1")
         self.observerY.set_screenshot_props(self.dlgScreenshots,"Slice 2")
         self.observerZ.set_screenshot_props(self.dlgScreenshots,"Slice 3")
+
+        vpaned.show_all()
+        #Share space for the HPaned-instances
+        #height = vpaned.get_property("max-position")
+        #print "height", height
+        vpaned.set_position(250)
 
         #for pw in self.pwxyz.get_plane_widgets_xyz():
         #    move_pw_to_point(pw,self.pwxyz.imageData.GetCenter())
@@ -329,6 +335,9 @@ class PlaneWidgetsWithObservers(gtk.VBox):
         self.observerX.Render()
         self.observerY.Render()
         self.observerZ.Render()
+    
+    def on_marker_selection_changed(self,*args):
+        pass
 
     def destroy(self):
         for widg in [self.observerX,self.observerY,self.observerZ,self.pwxyz,self.surfRenWin]:

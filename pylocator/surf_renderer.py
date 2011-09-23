@@ -9,7 +9,6 @@ from marker_window_interactor import MarkerWindowInteractor
 
 from gtkutils import error_msg, simple_msg, ButtonAltLabel, \
      str2posint_or_err, str2posnum_or_err, ProgressBarDialog, make_option_menu
-from matplotlib.cbook import Bunch
 
 from events import EventHandler, UndoRegistry, Viewer
 from markers import Marker
