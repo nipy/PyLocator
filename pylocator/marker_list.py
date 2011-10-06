@@ -23,6 +23,9 @@ class MarkerList(gtk.Frame):
 
     def __init__(self):
         super(MarkerList,self).__init__(self)
+        EventHandler().attach(self)
+        self._markers = {}
+        self.nmrk=0
         self.set_label("List of markers")
         vbox = gtk.VBox()
         self.add(vbox)
@@ -65,16 +68,18 @@ class MarkerList(gtk.Frame):
         self.treev_mrk.append_column(self.col1)
         self.col2 = gtk.TreeViewColumn("Label",renderer,text=1)
         self.treev_mrk.append_column(self.col2)
+        self.col3 = gtk.TreeViewColumn("Position",renderer,text=2)
+        self.treev_mrk.append_column(self.col3)
         self.treev_mrk.show()
         vbox.pack_start(self.treev_mrk,True,True)
         #Buttons for TreeView
         hbox = gtk.HBox()
         vbox.pack_start(hbox,False,False)
         button1 = gtk.Button(stock=gtk.STOCK_ADD)
-        button1.connect("clicked",self.add_mrk)
+        #button1.connect("clicked",self.add_mrk)
         hbox.pack_start(button1)
         button2 = gtk.Button(stock=gtk.STOCK_REMOVE)
-        button2.connect("clicked",self.rm_mrk)
+        #button2.connect("clicked",self.rm_mrk)
         hbox.pack_start(button2)
         hbox.show_all()
 
@@ -107,62 +112,78 @@ class MarkerList(gtk.Frame):
         self.set_size_request(0,0)
 
 
-    def add_mrk(self,*args):
-        dialog = gtk.FileSelection('Choose filename for ROI mask')
-        dialog.set_filename(shared.get_last_dir())
-        dialog.show()
-        response = dialog.run()
-        if response==gtk.RESPONSE_OK:
-            fname = dialog.get_filename()
-            dialog.destroy()
-            try: 
-                #Actually add ROI 
-                self.nroi+=1
-                tree_iter = self.tree_roi.append(None)
-                self.tree_roi.set(tree_iter,0,self.nroi,1,os.path.split(fname)[1],2,fname,3,True)
+    def update_viewer(self, event, *args):
+        if event=='add marker':
+            marker = args[0]
+            self.add_marker(marker)
+        elif event=='remove marker':
+            marker = args[0]
+            self.remove_marker(marker)
+        #elif event=='color marker':
+        #    marker, color = args
+        #    marker.set_color(color)
+        elif event=='label marker':
+            marker, label = args
+            print "MarkerList:", marker, label
+            id_ = self._markers[marker.get_center()]
+            treeiter = self._get_iter_for_id(id_)
+            if treeiter:
+                self.tree_mrk.set(treeiter,1,str(label))
+        elif event=='move marker':
+            marker, center = args
+            x,y,z = marker.get_center()
+            id_ = self._markers[marker.get_center()]
+            treeiter = self._get_iter_for_id(id_)
+            self.tree_mrk.set(treeiter,2,"%.1f,%.1f,%.1f"%(x,y,z))
+        elif event=='select marker':
+            marker = args[0]
+        elif event=='unselect marker':
+            marker = args[0]
 
-                roi_image_reader = vtkNiftiImageReader()
-                roi_image_reader.SetFileName(fname)
-                roi_image_reader.Update()
-                roi_id = self.tree_roi.get(tree_iter,0) 
-                if not self.paramd.has_key(roi_id):
-                    self.paramd[roi_id] = RoiParams([self.sr.renderer,self.pwxyz.renderer], self.sr.interactor)
-                    self.paramd[roi_id].set_image_data(roi_image_reader.GetOutput())
-                    self.paramd[roi_id].update_pipeline()
-                    print self.paramd[roi_id].intensity
-                    self.sr.Render()
-            except IOError:
-                error_msg(
-                    'Could not load ROI mask from %s' % fname, 
-                    )
-            
+    def _get_iter_for_id(self,id_):
+        treeiter = self.tree_mrk.get_iter_first()
+        while treeiter:
+            print self.tree_mrk.get(treeiter,0)[0], id_
+            if self.tree_mrk.get(treeiter,0)[0] == id_:
+                break
             else:
-                shared.set_file_selection(fname)
-        else: dialog.destroy()
+                treeiter = self.tree_mrk.iter_next(treeiter)
+        return treeiter
 
-    def rm_mrk(self,*args):
-        treestore,treeiter = self._treev_sel.get_selected()
-        roi_id = treestore.get(treeiter,0)
-        treestore.remove(treeiter)
-        self.paramd[roi_id].destroy()
-        del self.paramd[roi_id]
+    def add_marker(self,marker):
+        self.nmrk+=1
+        self._markers[marker.get_center()] = self.nmrk
+        x,y,z = marker.get_center()
+        treeiter = self.tree_mrk.append(None)
+        self.tree_mrk.set(treeiter,0,self.nmrk,1,"",2,"%.1f,%.1f,%.1f"%(x,y,z))
+
+    def remove_marker(self,marker):
+        try:
+            id_ = self._markers[marker.get_center()]
+            treeiter = self._get_iter_for_id(id_)
+            if treeiter:
+                self.tree_mrk.remove(treeiter)
+                del self._markers[marker]
+        except Exception, e:
+            print "Exception in MarkerList.remove_marker"
 
     def treev_sel_changed(self,selection):
-        treeiter = selection.get_selected()[1]
-        if treeiter:
-            self.props_frame.show_all()
-            #print "selection changed", self.tree_roi.get(treeiter,0,1,2)
-            roi_id = self.tree_roi.get(treeiter,0)
-            try:
-                self.color_chooser.color = gtk.gdk.Color(*(self.paramd[roi_id].color))
-            except Exception, e:
-                print "During setting color of color chooser:", type(e),e
-            try:
-                self.scrollbar_opacity.set_value(self.paramd[roi_id].opacity)
-            except Exception, e:
-                print "During setting value of opacity scrollbar:", type(e),e
-        else:
-            self.props_frame.hide()
+        pass
+        #treeiter = selection.get_selected()[1]
+        #if treeiter:
+        #    self.props_frame.show_all()
+        #    #print "selection changed", self.tree_roi.get(treeiter,0,1,2)
+        #    roi_id = self.tree_roi.get(treeiter,0)
+        #    try:
+        #        self.color_chooser.color = gtk.gdk.Color(*(self.paramd[roi_id].color))
+        #    except Exception, e:
+        #        print "During setting color of color chooser:", type(e),e
+        #    try:
+        #        self.scrollbar_opacity.set_value(self.paramd[roi_id].opacity)
+        #    except Exception, e:
+        #        print "During setting value of opacity scrollbar:", type(e),e
+        #else:
+        #    self.props_frame.hide()
 
     def change_color_of_roi(self,*args):
         treeiter = self._treev_sel.get_selected()[1]
@@ -176,54 +197,3 @@ class MarkerList(gtk.Frame):
             roi_id = self.tree_roi.get(treeiter,0)
             self.paramd[roi_id].set_opacity(self.scrollbar_opacity.get_value())
 
-class ColorChooser(gtk.Frame):
-    def __init__(self,color=None):
-        gtk.Frame.__init__(self)
-        self.da = gtk.DrawingArea()
-        self.add(self.da)
-        self.da.set_size_request(40,20)
-        if color==None:
-            color=gtk.gdk.Color(1.,1.,1.)
-        self.set_color(color)
-        self.set_border_width(20)
-        self.set_property("shadow-type",gtk.SHADOW_ETCHED_IN)
-        self.da.add_events(gtk.gdk.BUTTON_PRESS_MASK)
-        self.da.connect("button-press-event",self.choose_color)
-
-    def set_color(self,color):
-        for state in [gtk.STATE_NORMAL,
-                      gtk.STATE_ACTIVE,
-                      gtk.STATE_PRELIGHT,
-                      gtk.STATE_SELECTED,
-                      gtk.STATE_INSENSITIVE]:
-            self.da.modify_bg(state,color)
-        self._color=color
-        self.emit("color_changed")
-
-    def get_color(self):
-        return self._color
-
-    def choose_color(self, *args):
-        dialog = gtk.ColorSelectionDialog('Choose color for ROI')
-            
-        colorsel = dialog.colorsel
-
-        
-        colorsel.set_previous_color(self._color)
-        colorsel.set_current_color(self._color)
-        colorsel.set_has_palette(True)
-    
-        response = dialog.run()
-        
-        if response == gtk.RESPONSE_OK:
-            color = colorsel.get_current_color()
-            dialog.destroy()
-            self.set_color(color)
-    
-    color = property(get_color,set_color)
-
-gobject.type_register(ColorChooser)
-gobject.signal_new("color_changed", 
-                   ColorChooser, 
-                   gobject.SIGNAL_RUN_FIRST,
-                   gobject.TYPE_NONE, ())

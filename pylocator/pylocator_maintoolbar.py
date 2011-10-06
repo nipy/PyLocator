@@ -356,6 +356,7 @@ class MainToolbar(MyToolbar):
                 print "calling EventHandler().setNifti()"
                 #XXX EventHandler().setNifti(reader.GetFilename())
                 EventHandler().setNifti(reader.GetQForm())
+            EventHandler().notify('observer update planes', imageData)
 
     def save_as(self, button):
 

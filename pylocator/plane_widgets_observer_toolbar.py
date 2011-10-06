@@ -1,5 +1,6 @@
 import gtk
 import vtk
+from events import EventHandler, UndoRegistry, Viewer
 
 def move_pw_to_point(pw, xyz):
 
