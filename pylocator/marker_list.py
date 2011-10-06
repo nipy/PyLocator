@@ -71,7 +71,10 @@ class MarkerList(gtk.Frame):
         self.col3 = gtk.TreeViewColumn("Position",renderer,text=2)
         self.treev_mrk.append_column(self.col3)
         self.treev_mrk.show()
-        vbox.pack_start(self.treev_mrk,True,True)
+        self.scrolledwindow = gtk.ScrolledWindow()
+        vbox.pack_start(self.scrolledwindow,True,True)
+        self.scrolledwindow.add(self.treev_mrk)
+        self.scrolledwindow.show()
         #Buttons for TreeView
         hbox = gtk.HBox()
         vbox.pack_start(hbox,False,False)
