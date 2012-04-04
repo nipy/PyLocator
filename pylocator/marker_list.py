@@ -35,23 +35,6 @@ class MarkerList(gtk.Frame):
         hbox = gtk.HBox()
         hbox.show()
         vbox.pack_start(hbox, False, False)        
-
-
-        #button = gtk.Button(stock=gtk.STOCK_CANCEL)
-        #button.show()
-        #button.connect('clicked', hide)
-        #hbox.pack_start(button, True, True)        
-
-            
-        #button = ButtonAltLabel('Render', gtk.STOCK_EXECUTE)
-        #button.show()
-        #button.connect('clicked', self.render)
-        #hbox.pack_start(button, True, True)        
-
-        #button = gtk.Button(stock=gtk.STOCK_OK)
-        #button.show()
-        #button.connect('clicked', hide)
-        #hbox.pack_start(button, True, True)        
         
         #create TreeView
         #Fields: Index, Short filename, long FN, is_active?, opacityi
@@ -86,31 +69,6 @@ class MarkerList(gtk.Frame):
         hbox.pack_start(button2)
         hbox.show_all()
 
-        ##Edit properties of one ROI
-        #self.props_frame = gtk.Frame('Properties')
-        #self.props_frame.set_border_width(5)
-        #vboxFrame.pack_start(self.props_frame,False,False)
-        #vboxProps = gtk.VBox()
-        #self.props_frame.add(vboxProps)
-        #vboxProps.pack_start(gtk.Label("Opacity"))
-        #self.scrollbar_opacity = gtk.HScrollbar()
-        #self.scrollbar_opacity.show()
-        #self.scrollbar_opacity.set_size_request(*self.SCROLLBARSIZE)
-        #self.scrollbar_opacity.set_range(0, 1)
-        #self.scrollbar_opacity.set_increments(.05, .2)
-        #self.scrollbar_opacity.set_value(1.0)
-        #self.scrollbar_opacity.connect('value_changed', self.change_opacity_of_roi)
-        #vboxProps.pack_start(self.scrollbar_opacity)
-        #tmp = gtk.HBox()
-        #vboxProps.pack_start(tmp)
-        #tmp.pack_start(gtk.Label("Color"),False,False)
-        #self.color_chooser = ColorChooser()
-        #self.color_chooser.connect("color_changed",self.change_color_of_roi)
-        #tmp.pack_start(self.color_chooser,True,False)
-
-
-        #vboxProps.pack_start()
-        #vboxProps.show_all()
         self.show_all()
         self.set_size_request(0,0)
 
@@ -128,20 +86,28 @@ class MarkerList(gtk.Frame):
         elif event=='label marker':
             marker, label = args
             print "MarkerList:", marker, label
-            id_ = self._markers[marker.get_center()]
+            id_, marker_ = self._markers[marker.uuid]
             treeiter = self._get_iter_for_id(id_)
             if treeiter:
                 self.tree_mrk.set(treeiter,1,str(label))
         elif event=='move marker':
             marker, center = args
             x,y,z = marker.get_center()
-            id_ = self._markers[marker.get_center()]
+            id_, marker_ = self._markers[marker.uuid]
             treeiter = self._get_iter_for_id(id_)
             self.tree_mrk.set(treeiter,2,"%.1f,%.1f,%.1f"%(x,y,z))
         elif event=='select marker':
             marker = args[0]
         elif event=='unselect marker':
             marker = args[0]
+
+    def cb_add(self,*args):
+        EventHandler().notify("remove marker")
+
+    def cb_remove(self,*args):
+        sr = self._treev_sel.get_selected_rows()
+        EventHandler().remove_marker()
+        print "MRK:", sr
 
     def _get_iter_for_id(self,id_):
         treeiter = self.tree_mrk.get_iter_first()
@@ -155,14 +121,14 @@ class MarkerList(gtk.Frame):
 
     def add_marker(self,marker):
         self.nmrk+=1
-        self._markers[marker.get_center()] = self.nmrk
+        self._markers[marker.uuid] = (self.nmrk, marker)
         x,y,z = marker.get_center()
         treeiter = self.tree_mrk.append(None)
         self.tree_mrk.set(treeiter,0,self.nmrk,1,"",2,"%.1f,%.1f,%.1f"%(x,y,z))
 
     def remove_marker(self,marker):
         try:
-            id_ = self._markers[marker.get_center()]
+            id_, marker_ = self._markers[marker.uuid]
             treeiter = self._get_iter_for_id(id_)
             if treeiter:
                 self.tree_mrk.remove(treeiter)

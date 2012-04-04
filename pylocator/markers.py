@@ -1,6 +1,7 @@
 import math
 import vtk
 import copy
+import uuid
 
 from image_reader import widgets
 import numpy as n
@@ -40,6 +41,10 @@ class Marker(vtk.vtkActor):
 
         self.label = ''
         self.labelColor = (1,1,0)
+
+        #create ID
+        self.uuid = uuid.uuid1()
+
 
     def contains(self, xyz):
         'return true if point xyz is in the marker'

@@ -186,7 +186,6 @@ class MarkerWindowInteractor(Viewer, ScreenshotTaker):
     #        self.window.set_cursor (cursor)
     
     def set_mouse1_to_delete(self):
-        
 
         def button_up(*args):
             pass
