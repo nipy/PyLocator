@@ -1,5 +1,5 @@
 The PyLocator-program
-====================
+=====================
 
 A little program for localization of EEG-electrodes from MRI-recordings.
 Uses VTK for a neat 3d-interface. 

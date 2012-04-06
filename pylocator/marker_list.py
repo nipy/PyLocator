@@ -25,6 +25,7 @@ class MarkerList(gtk.Frame):
         super(MarkerList,self).__init__(self)
         EventHandler().attach(self)
         self._markers = {}
+        self._marker_ids = {}
         self.nmrk=0
         self.set_label("List of markers")
         vbox = gtk.VBox()
@@ -62,10 +63,10 @@ class MarkerList(gtk.Frame):
         hbox = gtk.HBox()
         vbox.pack_start(hbox,False,False)
         button1 = gtk.Button(stock=gtk.STOCK_ADD)
-        #button1.connect("clicked",self.add_mrk)
+        button1.connect("clicked",self.cb_add)
         hbox.pack_start(button1)
         button2 = gtk.Button(stock=gtk.STOCK_REMOVE)
-        #button2.connect("clicked",self.rm_mrk)
+        button2.connect("clicked",self.cb_remove)
         hbox.pack_start(button2)
         hbox.show_all()
 
@@ -93,7 +94,7 @@ class MarkerList(gtk.Frame):
         elif event=='move marker':
             marker, center = args
             x,y,z = marker.get_center()
-            id_, marker_ = self._markers[marker.uuid]
+            id_ = self._marker_ids[marker.uuid]
             treeiter = self._get_iter_for_id(id_)
             self.tree_mrk.set(treeiter,2,"%.1f,%.1f,%.1f"%(x,y,z))
         elif event=='select marker':
@@ -102,12 +103,13 @@ class MarkerList(gtk.Frame):
             marker = args[0]
 
     def cb_add(self,*args):
-        EventHandler().notify("remove marker")
+        pass
 
     def cb_remove(self,*args):
-        sr = self._treev_sel.get_selected_rows()
-        EventHandler().remove_marker()
-        print "MRK:", sr
+        treeiter = self._treev_sel.get_selected()[1]
+        if treeiter:
+            mrk_id = self.tree_mrk.get(treeiter,0)[0]
+            EventHandler().remove_marker(self._markers[mrk_id])
 
     def _get_iter_for_id(self,id_):
         treeiter = self.tree_mrk.get_iter_first()
@@ -121,18 +123,20 @@ class MarkerList(gtk.Frame):
 
     def add_marker(self,marker):
         self.nmrk+=1
-        self._markers[marker.uuid] = (self.nmrk, marker)
+        self._marker_ids[marker.uuid] = self.nmrk
+        self._markers[self.nmrk]=marker
         x,y,z = marker.get_center()
         treeiter = self.tree_mrk.append(None)
         self.tree_mrk.set(treeiter,0,self.nmrk,1,"",2,"%.1f,%.1f,%.1f"%(x,y,z))
 
     def remove_marker(self,marker):
         try:
-            id_, marker_ = self._markers[marker.uuid]
+            id_ = self._marker_ids[marker.uuid] 
             treeiter = self._get_iter_for_id(id_)
             if treeiter:
                 self.tree_mrk.remove(treeiter)
-                del self._markers[marker]
+                del self._markers[id_]
+                del self._marker_ids[marker.uuid]
         except Exception, e:
             print "Exception in MarkerList.remove_marker"
 
