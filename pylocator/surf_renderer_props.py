@@ -12,7 +12,7 @@ from events import EventHandler, UndoRegistry, Viewer
 from markers import Marker
 from shared import shared
 
-from color_seq import colord, colorSeq
+from colors import colord, colorSeq, gdkColor2tuple, tuple2gdkColor
 
 from surf_params import SurfParams
 
@@ -857,7 +857,7 @@ class SurfRendererProps(gtk.Window, Viewer):
         
         if response == gtk.RESPONSE_OK:
             color = colorsel.get_current_color()
-            self.lastColor = [val/65535 for val in (color.red, color.green, color.blue)]
+            self.lastColor = gdkColor2tuple(color)
 
         dialog.destroy()
         return self.lastColor

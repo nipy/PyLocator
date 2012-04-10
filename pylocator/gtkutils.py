@@ -288,10 +288,6 @@ def make_option_menu_from_strings(keys):
         itemd[menuItem] = k
     return menu, itemd
 
-
-
-
-
 class FileManager:
     if sys.platform=='win32':
         last = 'C:\\'
@@ -609,7 +605,85 @@ def get_two_nums(label1Str='Min', label2Str='Max',
             return val1, val2
         else: return None
         
+def get_three_nums(label1Str='Value 1', label2Str='Value 2', 
+                 label3Str='Value 3',
+                 value1="", value2="",value3="",
+                 title='Enter numbers', parent=None,
+                 tooltip1=None, tooltip2=None, tooltip3=None):
+    'Get three numeric values'
 
+    def make_float_string(value):
+        try:
+            rv = "%.2f"%float(value)
+            return rv
+        except Exception, e:
+            return str(value)
+
+    dlg = gtk.Dialog(title)
+    if parent is not None:
+        print "parent not None:", parent
+        dlg.set_transient_for(parent)
+    vbox = dlg.vbox
+
+    label1 = gtk.Label(label1Str)
+    label1.show()
+
+    label2 = gtk.Label(label2Str)
+    label2.show()
+
+    label3 = gtk.Label(label3Str)
+    label3.show()
+
+    entry1 = gtk.Entry()
+    entry1.set_text(make_float_string(value1))
+    entry1.show()
+    entry1.set_width_chars(10)
+    
+    entry2 = gtk.Entry()
+    entry2.set_text(make_float_string(value2))
+    entry2.show()
+    entry2.set_width_chars(10)
+    
+    entry3 = gtk.Entry()
+    entry3.set_text(make_float_string(value3))
+    entry3.show()
+    entry3.set_width_chars(10)
+    entry3.set_activates_default(True)
+    
+    table = gtk.Table(3,2)
+    table.show()
+    table.set_row_spacings(4)
+    table.set_col_spacings(4)
+
+    table.attach(label1, 0, 1, 0, 1)
+    table.attach(label2, 1, 2, 0, 1)
+    table.attach(label3, 2, 3, 0, 1)
+    table.attach(entry1, 0, 1, 1, 2)
+    table.attach(entry2, 1, 2, 1, 2)
+    table.attach(entry3, 2, 3, 1, 2)
+    dlg.vbox.pack_start(table, True, True)
+
+    dlg.add_button(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL)
+    dlg.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
+    dlg.set_default_response(gtk.RESPONSE_OK)
+
+    dlg.show()
+
+    while 1:
+        response = dlg.run()
+
+        if response==gtk.RESPONSE_OK:
+            val1 = str2num_or_err(entry1.get_text(), label1, parent)
+            if val1 is None: continue
+            val2 = str2num_or_err(entry2.get_text(), label2, parent)
+            if val2 is None: continue
+            val3 = str2num_or_err(entry3.get_text(), label3, parent)
+            if val3 is None: continue
+
+            rv= val1, val2, val3
+        else: rv = None
+        dlg.destroy()
+        return rv
 
 def add_button_icon_pixmap(button, pixmap, orientation='left'):
     button.realize()
@@ -882,7 +956,7 @@ class MyToolbar(gtk.Toolbar):
     iconSize = gtk.ICON_SIZE_SMALL_TOOLBAR
     def __init__(self):
         gtk.Toolbar.__init__(self)
-        self.set_border_width(5)
+        self.set_border_width(1)
         self.set_style(gtk.TOOLBAR_BOTH)
 
         if gtk.pygtk_version >= (2,4,0):

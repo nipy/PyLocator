@@ -141,6 +141,8 @@ class Marker(vtk.vtkActor):
         except TypeError: return label, 0
         else: return name, num
 
+    color = property(get_color, set_color)
+
 class RingActor(vtk.vtkActor):
     def __init__(self, marker, planeWidget,
                  transform=None, lineWidth=1):

@@ -9,6 +9,7 @@ from marker_window_interactor import MarkerWindowInteractor
 
 from gtkutils import error_msg, simple_msg, ButtonAltLabel, \
      str2posint_or_err, str2posnum_or_err, ProgressBarDialog, make_option_menu
+from vtkutils import create_box_actor_around_marker
 
 from events import EventHandler, UndoRegistry, Viewer
 from markers import Marker
@@ -43,6 +44,7 @@ class SurfRenderWindow(Viewer, ScreenshotTaker):
         self.interactor = self.renWin.GetInteractor()
         self.renderer.SetBackground(0,0,0)
         self.textActors = {}
+        self.boxes = {}
         
     def set_image_data(self, imageData):
         self.imageData = imageData
@@ -97,8 +99,18 @@ class SurfRenderWindow(Viewer, ScreenshotTaker):
             actors = self.textActors.values()
             for actor in actors:
                 actor.VisibilityOff()
-
+        elif event=='select marker':
+            marker = args[0]
+            actor = create_box_actor_around_marker(marker)
+            if shared.debug: print "PlaneWidgetsXYZ.update_viewer(): self.renderer.AddActor(actor)"
+            self.renderer.AddActor(actor)
+            self.boxes[marker] = actor
+        elif event=='unselect marker':
+            marker = args[0]
+            actor = self.boxes[marker]
+            self.renderer.RemoveActor(actor)
         self.Render()
+
     def add_marker(self, marker):
 
         self.renderer.AddActor(marker)

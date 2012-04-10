@@ -24,7 +24,7 @@ class MainToolbar(MyToolbar):
     """
 
     toolitems = (
-        ('Load nifti', 'Load new 3d-volume from a nifti-file', gtk.STOCK_NEW, 'load_mri'),
+        #('Load nifti', 'Load new 3d-volume from a nifti-file', gtk.STOCK_NEW, 'load_mri'),
         #('Load other', 'Load new 3d-volume from Dicom, bmp or raw', gtk.STOCK_NEW, 'load_image'),
         #('Load VTK File', 'Load new VTK mesh', gtk.STOCK_NEW, 'load_vtk'),
         #('Load Registration file', 'Load .reg file', gtk.STOCK_NEW, 'load_registration'),
@@ -36,7 +36,7 @@ class MainToolbar(MyToolbar):
         ('Toggle ', 'Toggle labels display', gtk.STOCK_BOLD, 'toggle_labels'),
         ('Choose', 'Select default marker color', gtk.STOCK_SELECT_COLOR, 'choose_color'),
         (None, None, None, None),
-        ('Undo', 'Undo changes', gtk.STOCK_UNDO, 'undo_last'),
+        #('Undo', 'Undo changes', gtk.STOCK_UNDO, 'undo_last'),
         (None, None, None, None),
         ('Properties', 'Set the plane properties', gtk.STOCK_PROPERTIES, 'set_properties'),
         ('Surface', 'Set the surface rendering properties', gtk.STOCK_PROPERTIES, 'show_surf_props'),
@@ -264,26 +264,9 @@ class MainToolbar(MyToolbar):
             pass
             #print "hit cancel, see if we can survive"
         else:
-            #pars=Params()
-            #pars.dfov = max(reader.GetDataExtent())#max(abs(reader.vx2q((0,0,0))-reader.vx2q(np.array(reader.shape)-1)))
-            #pars.dimensions = reader.GetDataExtent()
-            #pars=widgets.validate(pars)
-
             imageData = reader.GetOutput()
-
-            #stupid workaround, somehow imageData.Extent is not written. dunno why
-            #maybe its in vtkImageImportFromArray
-            #imageData.SetExtent(reader.GetDataExtent())
-          
-            #print "pylocator_maintoolbar.load_mri(): reader.GetOutput() is " , imageData
-        #print "load_mri(): imageData.SetSpacing(", reader.GetDataSpacing(), " )"
-            #imageData.SetOrigin(reader.vx2q((0,0,0)))
-            #imageData.SetSpacing(reader.GetDataSpacing())
-            #print "calling EventHandler().notify('set image data', imageData)"
             EventHandler().notify('set image data', imageData)
             EventHandler().notify("set axes directions")
-            #print "calling EventHandler().setNifti()"
-            #EventHandler().setNifti(reader.GetQForm(),reader.GetDataSpacing())
             EventHandler().setNifti(reader.GetQForm(),reader.nifti_voxdim,reader.shape)
             
     def load_vtk(self, *args):

@@ -13,7 +13,7 @@ from events import EventHandler, UndoRegistry, Viewer
 from markers import Marker
 from shared import shared
 
-from color_seq import colord, colorSeq
+from colors import colord, colorSeq,ColorChooser
 
 from surf_params import SurfParams
 
@@ -248,54 +248,3 @@ class RoiRendererProps(gtk.Window, Viewer):
             roi_id = self.tree_roi.get(treeiter,0)
             self.paramd[roi_id].set_opacity(self.scrollbar_opacity.get_value())
 
-class ColorChooser(gtk.Frame):
-    def __init__(self,color=None):
-        gtk.Frame.__init__(self)
-        self.da = gtk.DrawingArea()
-        self.add(self.da)
-        self.da.set_size_request(40,20)
-        if color==None:
-            color=gtk.gdk.Color(1.,1.,1.)
-        self.set_color(color)
-        self.set_border_width(20)
-        self.set_property("shadow-type",gtk.SHADOW_ETCHED_IN)
-        self.da.add_events(gtk.gdk.BUTTON_PRESS_MASK)
-        self.da.connect("button-press-event",self.choose_color)
-
-    def set_color(self,color):
-        for state in [gtk.STATE_NORMAL,
-                      gtk.STATE_ACTIVE,
-                      gtk.STATE_PRELIGHT,
-                      gtk.STATE_SELECTED,
-                      gtk.STATE_INSENSITIVE]:
-            self.da.modify_bg(state,color)
-        self._color=color
-        self.emit("color_changed")
-
-    def get_color(self):
-        return self._color
-
-    def choose_color(self, *args):
-        dialog = gtk.ColorSelectionDialog('Choose color for ROI')
-            
-        colorsel = dialog.colorsel
-
-        
-        colorsel.set_previous_color(self._color)
-        colorsel.set_current_color(self._color)
-        colorsel.set_has_palette(True)
-    
-        response = dialog.run()
-        
-        if response == gtk.RESPONSE_OK:
-            color = colorsel.get_current_color()
-            dialog.destroy()
-            self.set_color(color)
-    
-    color = property(get_color,set_color)
-
-gobject.type_register(ColorChooser)
-gobject.signal_new("color_changed", 
-                   ColorChooser, 
-                   gobject.SIGNAL_RUN_FIRST,
-                   gobject.TYPE_NONE, ())

@@ -58,10 +58,12 @@ class EventHandler:
             del self.selected[marker]
             self.notify('unselect marker', marker)
         
-        
-    def select_new(self, marker):
+    def clear_selection(self):
         for oldMarker in self.selected.keys():
             self.remove_selection(oldMarker)
+
+    def select_new(self, marker):
+        self.clear_selection()
         self.add_selection(marker)
     
     def add_marker(self, marker):

@@ -4,6 +4,7 @@ import vtk
 from events import EventHandler, UndoRegistry, Viewer
 from marker_window_interactor import MarkerWindowInteractor
 from image_reader import widgets
+from vtkutils import create_box_actor_around_marker
 
 import numpy as np
 from scipy import array, zeros
@@ -63,6 +64,8 @@ class PlaneWidgetsXYZ(MarkerWindowInteractor):
 
         self.vtk_translation = zeros(3, 'd')
         self.vtk_rotation = zeros(3, 'd')
+
+        self.camera = self.renderer.GetActiveCamera()
 
     def translate_vtk(self, axis, value):
         if (axis == 'x'): ax = 0
@@ -246,15 +249,7 @@ class PlaneWidgetsXYZ(MarkerWindowInteractor):
                 actor.VisibilityOff()
         elif event=='select marker':
             marker = args[0]
-            boxSource = vtk.vtkCubeSource()
-            boxSource.SetBounds(marker.GetBounds())
-            mapper = vtk.vtkPolyDataMapper()
-            mapper.SetInput(boxSource.GetOutput())
-            actor = vtk.vtkActor()
-            actor.SetMapper(mapper)
-            actor.GetProperty().SetColor( marker.get_color() )
-            actor.GetProperty().SetRepresentationToWireframe()
-            actor.GetProperty().SetLineWidth(2.0)
+            actor = create_box_actor_around_marker(marker)
             if shared.debug: print "PlaneWidgetsXYZ.update_viewer(): self.renderer.AddActor(actor)"
             self.renderer.AddActor(actor)
             self.boxes[marker] = actor

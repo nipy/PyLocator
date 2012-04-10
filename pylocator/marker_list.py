@@ -7,10 +7,12 @@ import gtk
 from gtk import gdk
 
 from gtkutils import error_msg, simple_msg, ButtonAltLabel, \
-     str2posint_or_err, str2posnum_or_err, ProgressBarDialog, make_option_menu
+     str2posint_or_err, str2posnum_or_err, ProgressBarDialog, make_option_menu, get_three_nums
 
 from events import EventHandler, UndoRegistry, Viewer
+from colors import choose_one_color, tuple2gdkColor, gdkColor2tuple
 from markers import Marker
+from marker_list_toolbar import MarkerListToolbar
 from shared import shared
 
 
@@ -59,16 +61,10 @@ class MarkerList(gtk.Frame):
         vbox.pack_start(self.scrolledwindow,True,True)
         self.scrolledwindow.add(self.treev_mrk)
         self.scrolledwindow.show()
-        #Buttons for TreeView
-        hbox = gtk.HBox()
-        vbox.pack_start(hbox,False,False)
-        button1 = gtk.Button(stock=gtk.STOCK_ADD)
-        button1.connect("clicked",self.cb_add)
-        hbox.pack_start(button1)
-        button2 = gtk.Button(stock=gtk.STOCK_REMOVE)
-        button2.connect("clicked",self.cb_remove)
-        hbox.pack_start(button2)
-        hbox.show_all()
+
+        #Toolbar
+        toolbar = MarkerListToolbar(self)
+        vbox.pack_start(toolbar,False,False)
 
         self.show_all()
         self.set_size_request(0,0)
@@ -86,14 +82,14 @@ class MarkerList(gtk.Frame):
         #    marker.set_color(color)
         elif event=='label marker':
             marker, label = args
-            print "MarkerList:", marker, label
+            #print "MarkerList:", marker, label
             id_, marker_ = self._markers[marker.uuid]
             treeiter = self._get_iter_for_id(id_)
             if treeiter:
                 self.tree_mrk.set(treeiter,1,str(label))
         elif event=='move marker':
             marker, center = args
-            x,y,z = marker.get_center()
+            x,y,z = center #marker.get_center()
             id_ = self._marker_ids[marker.uuid]
             treeiter = self._get_iter_for_id(id_)
             self.tree_mrk.set(treeiter,2,"%.1f,%.1f,%.1f"%(x,y,z))
@@ -103,7 +99,18 @@ class MarkerList(gtk.Frame):
             marker = args[0]
 
     def cb_add(self,*args):
-        pass
+        parent_window = self.get_parent_window()
+        #print parent_window
+        coordinates = get_three_nums("X","Y","Z",title="Enter coordinates", parent=None)
+        if coordinates==None:
+            return
+        x,y,z = coordinates
+        marker = Marker(xyz=(x,y,z),
+                        rgb=EventHandler().get_default_color(),
+                        radius=shared.ratio*3)
+
+        EventHandler().add_marker(marker)
+
 
     def cb_remove(self,*args):
         treeiter = self._treev_sel.get_selected()[1]
@@ -111,10 +118,70 @@ class MarkerList(gtk.Frame):
             mrk_id = self.tree_mrk.get(treeiter,0)[0]
             EventHandler().remove_marker(self._markers[mrk_id])
 
+    def cb_choose_color(self,*args):
+        treeiter = self._treev_sel.get_selected()[1]
+        if not treeiter:
+            return
+        mrk_id = self.tree_mrk.get(treeiter,0)[0]
+        marker = self._markers[mrk_id]
+        old_color = marker.get_color()
+        print old_color
+        new_color = choose_one_color("New color for marker",tuple2gdkColor(old_color))
+        print new_color
+        EventHandler().notify('color marker', marker, gdkColor2tuple(new_color))
+
+    def cb_move_up(self, *args):
+        self._move_in_list(up=True)
+
+    def cb_move_down(self, *args):
+        self._move_in_list(up=False)
+
+    def cb_edit_position(self,*args):
+        treeiter = self._treev_sel.get_selected()[1]
+        if treeiter:
+            mrk_id = self.tree_mrk.get(treeiter,0)[0]
+        marker = self._markers[mrk_id]
+        x_old,y_old,z_old = marker.get_center()
+        parent_window = self.get_parent_window()
+        #print parent_window
+        coordinates = get_three_nums("X","Y","Z",x_old,y_old,z_old,title="Enter coordinates", parent=None)
+        if coordinates==None:
+            return
+        x,y,z = coordinates
+        print x_old,y_old,z_old
+        print x,y,z
+        EventHandler().notify("move marker",marker, (x,y,z))
+        self.treev_sel_changed(self._treev_sel)
+
+
+    def _move_in_list(self,up=True):
+        if self._treev_sel.count_selected_rows == 0:
+            return
+        ( model, rows ) = self._treev_sel.get_selected_rows()
+        # Get new path for each selected row and swap items. */
+        for path1 in rows:
+            # Move path2 in right direction
+            if up:
+                path2 = ( path1[0] - 1, )
+            else:
+                path2 = ( path1[0] + 1, )
+            # If path2 is negative, we're trying to move first path up. Skip
+            # one loop iteration.
+            if path2[0] < 0:
+                continue
+            # Obtain iters and swap items. If the second iter is invalid, we're
+            # trying to move the last item down. */
+            iter1 = model.get_iter( path1 )
+            try:
+                iter2 = model.get_iter( path2 )
+            except ValueError:
+                continue
+            model.swap( iter1, iter2 )
+
     def _get_iter_for_id(self,id_):
         treeiter = self.tree_mrk.get_iter_first()
         while treeiter:
-            print self.tree_mrk.get(treeiter,0)[0], id_
+            #print self.tree_mrk.get(treeiter,0)[0], id_
             if self.tree_mrk.get(treeiter,0)[0] == id_:
                 break
             else:
@@ -141,22 +208,17 @@ class MarkerList(gtk.Frame):
             print "Exception in MarkerList.remove_marker"
 
     def treev_sel_changed(self,selection):
-        pass
-        #treeiter = selection.get_selected()[1]
-        #if treeiter:
-        #    self.props_frame.show_all()
-        #    #print "selection changed", self.tree_roi.get(treeiter,0,1,2)
-        #    roi_id = self.tree_roi.get(treeiter,0)
-        #    try:
-        #        self.color_chooser.color = gtk.gdk.Color(*(self.paramd[roi_id].color))
-        #    except Exception, e:
-        #        print "During setting color of color chooser:", type(e),e
-        #    try:
-        #        self.scrollbar_opacity.set_value(self.paramd[roi_id].opacity)
-        #    except Exception, e:
-        #        print "During setting value of opacity scrollbar:", type(e),e
-        #else:
-        #    self.props_frame.hide()
+        EventHandler().clear_selection()
+        try:
+            treeiter = selection.get_selected()[1]
+            if treeiter:
+                mrk_id = self.tree_mrk.get(treeiter,0)[0]
+                if mrk_id==None:
+                    return
+                marker = self._markers[mrk_id]
+                EventHandler().select_new(marker)
+        except:
+            pass
 
     def change_color_of_roi(self,*args):
         treeiter = self._treev_sel.get_selected()[1]

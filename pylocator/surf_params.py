@@ -15,7 +15,7 @@ from shared import shared
 from connect_filter import ConnectFilter
 from decimate_filter import DecimateFilter
 
-from color_seq import colorSeq
+from colors import colorSeq, gdkColor2tuple
 
 class SurfParams(Viewer):
     """
@@ -168,7 +168,7 @@ class SurfParams(Viewer):
         print color, type(color)
         if type(color)==gtk.gdk.Color:
             print "adjusting color"
-            self._color = [float(x)/65535. for x in (color.red,color.green,color.blue)]
+            self._color = gdkColor2tuple(color)
             print self._color
         else:
             self._color = color

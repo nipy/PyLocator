@@ -28,7 +28,7 @@ def main(*args):
             surface=value
 
     window = PyLocatorMainWindow(filename=filename,surface=surface)
-    window.show()
+    #window.show()
     gtk.main()
 
 if __name__=="__main__":
