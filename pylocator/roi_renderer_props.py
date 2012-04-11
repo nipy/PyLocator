@@ -13,12 +13,13 @@ from events import EventHandler, UndoRegistry, Viewer
 from markers import Marker
 from shared import shared
 
-from colors import colord, colorSeq,ColorChooser
+from color_seq import colord, colorSeq
 
 from surf_params import SurfParams
 
 from decimate_filter import DecimateFilter
 from connect_filter import ConnectFilter
+from color_chooser import ColorChooser
 from vtkNifti import vtkNiftiImageReader
 
 class RoiParams(SurfParams):

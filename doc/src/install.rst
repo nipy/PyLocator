@@ -17,7 +17,8 @@ On a Debian-like environement, these dependencies can usually be resolved via a 
 
 This should prepare your system for PyLocator. On Windows and OS X, things are a little bit 
 more complicated, but Python distributions like `EPD <http://www.enthought.com/products/epd.php>`_
-or `Python(x,y) <http://www.pythonxy.com/>`_ should be helpful here.
+or `Python(x,y) <http://www.pythonxy.com/>`_ should be helpful here. The main problem will be to 
+get **gtkgtlext** working. If you have any hints, e.g., binary packages, please let me know.
 
 Depending on your configuration, nibabel has to be downloaded separately.
 
@@ -28,19 +29,19 @@ How to download
 ---------------
 The source code of PyLocator is kept in a public GIT repository:
 
-http://www.github.com/thorstenkranz/PyLocator
+http://www.github.com/nipy/PyLocator
 
 You can simply clone this repository via::
 
-  git clone git://github.com/thorstenkranz/PyLocator.git
+  git clone git://github.com/nipy/PyLocator.git
 
-Alternatively, you can download a tarball that is update once in a while from
+Alternatively, you can download a tarball that is updated once in a while from
 
-http://pylocator.thorstenkranz.de/download/pylocator-0.2.dev.tar.gz
+http://pylocator.thorstenkranz.de/download/pylocator-0.30.dev.tar.gz
 
 Extract this archive using your preferred archive manager or in a terminal using something like::
 
-  tar xfvz PyLocator.tar.gz
+  tar xfvz pylocator-0.30.dev.tar.gz
 
 Installing
 -------------

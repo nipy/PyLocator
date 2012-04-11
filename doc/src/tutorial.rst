@@ -3,22 +3,14 @@ Tutorial
 
 This section shows a basic usage-example and thus introduces the main
 concepts of Pylocator.  It is arranged as a step-by-step instruction and
-uses a dataset which is available 
-`here <http://pylocator.thorstenkranz.de/download/post2std_brain.nii.gz>`_.
+uses a dataset which is available here: 
+`post2std_brain.nii.gz <http://pylocator.thorstenkranz.de/download/post2std_brain.nii.gz>`_.
 
 Loading the MR image
 -----------------------------------------------
 After starting the program (refer to :doc:`Installation </install>` for
-details) you'll see the main window of PyLocator. It consists of two toolbars
-(a main toolbar at the top and a secondary at the left side) and 5 subwindows
-that are all black for now.
-
-.. figure:: _static/tutorial1.png
-   :align: center
-
-First you'll have to load a Nifti file containing the MR recording. Pushing
-the first button in the main toolbar brings up a little dialogue where you
-can choose the "post2std_brain.nii.gz" file.
+details) you'll first see a dialog prompting for a Nifti-file. Choose the 
+"post2std_brain.nii.gz" file, downloaded from above.
 
 .. note::
   The MR image is a post-implantation image
@@ -32,8 +24,9 @@ can choose the "post2std_brain.nii.gz" file.
   3. these two matrices where then concatenated; using this new matrix the post-implantation image was transformed to the MNI template.
   4. finally, the image was brain-extracted.
 
-After closing the dialogue, the image is being loaded and the 5 subwindows come 
-to live - or at least four of them.
+Then the MRI is loaded and the main window of PyLocator pops up. It consists
+of two toolbars (a main toolbar at the top and a secondary at the left side)
+and 5 subwindows. Four of these windows come to live immediately..
 
 .. figure:: _static/tutorial3.png
    :align: center
