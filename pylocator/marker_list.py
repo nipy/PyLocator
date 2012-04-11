@@ -9,6 +9,8 @@ from gtk import gdk
 from gtkutils import error_msg, simple_msg, ButtonAltLabel, \
      str2posint_or_err, str2posnum_or_err, ProgressBarDialog, make_option_menu, get_three_nums
 
+from dialogs import edit_coordinates
+
 from events import EventHandler, UndoRegistry, Viewer
 from colors import choose_one_color, tuple2gdkColor, gdkColor2tuple
 from markers import Marker
@@ -82,8 +84,8 @@ class MarkerList(gtk.Frame):
         #    marker.set_color(color)
         elif event=='label marker':
             marker, label = args
-            #print "MarkerList:", marker, label
-            id_, marker_ = self._markers[marker.uuid]
+            #print "MarkerList:", marker.uuid, label
+            id_ = self._marker_ids[marker.uuid]
             treeiter = self._get_iter_for_id(id_)
             if treeiter:
                 self.tree_mrk.set(treeiter,1,str(label))
@@ -101,7 +103,7 @@ class MarkerList(gtk.Frame):
     def cb_add(self,*args):
         parent_window = self.get_parent_window()
         #print parent_window
-        coordinates = get_three_nums("X","Y","Z",title="Enter coordinates", parent=None)
+        coordinates = edit_coordinates(description="Please enter the coordinates\nfor the marker to be added")
         if coordinates==None:
             return
         x,y,z = coordinates
@@ -142,14 +144,12 @@ class MarkerList(gtk.Frame):
             mrk_id = self.tree_mrk.get(treeiter,0)[0]
         marker = self._markers[mrk_id]
         x_old,y_old,z_old = marker.get_center()
-        parent_window = self.get_parent_window()
+        #parent_window = self.get_parent_window()
         #print parent_window
-        coordinates = get_three_nums("X","Y","Z",x_old,y_old,z_old,title="Enter coordinates", parent=None)
+        coordinates = edit_coordinates(x_old,y_old,z_old)
         if coordinates==None:
             return
         x,y,z = coordinates
-        print x_old,y_old,z_old
-        print x,y,z
         EventHandler().notify("move marker",marker, (x,y,z))
         self.treev_sel_changed(self._treev_sel)
 

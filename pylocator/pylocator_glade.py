@@ -2,6 +2,9 @@ import os.path
 
 #glade_test = os.path.join(os.path.split(__file__)[0],"gladefiles/test2.glade")
 main_window = os.path.join(os.path.split(__file__)[0],"gladefiles/mainWindow.glade")
+edit_label_dialog = os.path.join(os.path.split(__file__)[0],"gladefiles/editLabel.glade")
+edit_coordinates_dialog = os.path.join(os.path.split(__file__)[0],"gladefiles/editCoordinates.glade")
+
 
 #from pylocator_glade import glade_test
 #print glade_test

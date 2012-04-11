@@ -685,6 +685,7 @@ def get_three_nums(label1Str='Value 1', label2Str='Value 2',
         dlg.destroy()
         return rv
 
+
 def add_button_icon_pixmap(button, pixmap, orientation='left'):
     button.realize()
     label = gtk.Label(button.get_children()[0].get())

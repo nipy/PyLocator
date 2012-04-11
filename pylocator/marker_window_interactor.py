@@ -6,6 +6,8 @@ from events import EventHandler, UndoRegistry, Viewer
 import re
 from shared import shared
 
+from dialogs import edit_label
+
 
 INTERACT_CURSOR, MOVE_CURSOR, COLOR_CURSOR, SELECT_CURSOR, DELETE_CURSOR, LABEL_CURSOR, SCREENSHOT_CURSOR = gtk.gdk.ARROW, gtk.gdk.HAND2, gtk.gdk.SPRAYCAN, gtk.gdk.TCROSS, gtk.gdk.X_CURSOR, gtk.gdk.PENCIL, gtk.gdk.ICON
 
@@ -233,18 +235,6 @@ class MarkerWindowInteractor(Viewer, ScreenshotTaker):
         def button_down(*args):
             marker = self.get_marker_at_point()
             if marker is None: return
-            dlg = gtk.Dialog('Marker Label')
-            dlg.show()
-
-            
-            frame = gtk.Frame('Marker Label')
-            frame.show()
-            frame.set_border_width(5)
-            dlg.vbox.pack_start(frame)
-
-            entry = gtk.Entry()
-            entry.set_activates_default(True)            
-            entry.show()
 
             label = marker.get_label()
             defaultLabel = label
@@ -253,23 +243,17 @@ class MarkerWindowInteractor(Viewer, ScreenshotTaker):
                 if m:
                     defaultLabel = m.group(1) + str(int(m.group(2))+1)
                 
+            new_label = edit_label(defaultLabel)
                 
-            entry.set_text(defaultLabel)
-            frame.add(entry)
-            
-            dlg.add_button(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL)
-            dlg.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
-            dlg.set_default_response(gtk.RESPONSE_OK)
-            response = dlg.run()
-            if response == gtk.RESPONSE_OK:
-                label = entry.get_text()
-                if label == '': return
-                oldLabel = marker.get_label()
-                UndoRegistry().push_command(
-                    EventHandler().notify, 'label marker', marker, oldLabel)
-                EventHandler().notify('label marker', marker, label)
-                self.lastLabel = label
-            dlg.destroy()
+            print new_label, label
+
+            if new_label==None or new_label==label: return
+
+                #oldLabel = marker.get_label()
+                #UndoRegistry().push_command(
+                #    EventHandler().notify, 'label marker', marker, oldLabel)
+            EventHandler().notify('label marker', marker, new_label)
+            self.lastLabel = label
             self.Render()
             
 
