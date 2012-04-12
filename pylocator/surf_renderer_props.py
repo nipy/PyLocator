@@ -12,14 +12,14 @@ from events import EventHandler, UndoRegistry, Viewer
 from markers import Marker
 from shared import shared
 
-from color_seq import colord, colorSeq
+from colors import colord, colorSeq
 
 from surf_params import SurfParams
 
 from decimate_filter import DecimateFilter
 from connect_filter import ConnectFilter
 
-class SurfRendererProps(gtk.Window, Viewer):
+class SurfRendererProps(gtk.VBox, Viewer):
     """
     CLASS: SurfRendererProps
     DESCR: 
@@ -31,8 +31,8 @@ class SurfRendererProps(gtk.Window, Viewer):
 
     def __init__(self, sr, pwxyz):
         """sr is a SurfRenderer"""
-        gtk.Window.__init__(self)
-        self.set_title('Surface renderer properties')
+        gtk.VBox.__init__(self)
+        self.set_homogeneous(False)
 
         self.sr = sr
         self.interactorStyle = self.sr.GetInteractorStyle()
@@ -41,47 +41,31 @@ class SurfRendererProps(gtk.Window, Viewer):
         self.sr.AddObserver('KeyPressEvent', self.key_press)
         self.pwxyz = pwxyz
         
-        self.notebook = gtk.Notebook()
-        self.notebook.show()
-
-        vbox = gtk.VBox()
-        vbox.show()
-        vbox.pack_start(self.notebook, True, True)
-        self.add(vbox)
+        self.scrolled_window = gtk.ScrolledWindow()
+        self.inner_vbox = gtk.VBox()
+        self.inner_vbox.set_spacing(20)
+        self.scrolled_window.add_with_viewport(self.inner_vbox)
+        #self.scrolled_window.show()
+        #self.inner_vbox.show()
+        self.pack_start(self.scrolled_window)
 
         self._make_intensity_frame()
-        self._make_camera_control()
+        #self._make_camera_control()
         self._make_seqment_props_frame()
         self._make_pipeline_frame()
         self._make_picker_frame()
-
 
         def hide(*args):
             self.hide()
             return True
         self.connect('delete_event', hide)
 
-        # action area
-        hbox = gtk.HBox()
-        hbox.show()
-        vbox.pack_start(hbox, True, True)        
-
-
-        button = gtk.Button(stock=gtk.STOCK_CANCEL)
-        button.show()
-        button.connect('clicked', hide)
-        hbox.pack_start(button, True, True)        
-
-            
         button = ButtonAltLabel('Render', gtk.STOCK_EXECUTE)
         button.show()
         button.connect('clicked', self.render)
-        hbox.pack_start(button, True, True)        
+        self.pack_start(button, False, False)        
 
-        button = gtk.Button(stock=gtk.STOCK_OK)
-        button.show()
-        button.connect('clicked', hide)
-        hbox.pack_start(button, True, True)        
+        self.show_all()
 
 
     def key_press(self, interactor, event):
@@ -159,15 +143,16 @@ class SurfRendererProps(gtk.Window, Viewer):
         SufaceRenderer class can use
         """
 
+        frame = gtk.Frame('Pipeline settings')
+        frame.set_border_width(5)
+        self.inner_vbox.pack_start(frame, False, False)
 
-        vbox = gtk.VBox()
-        vbox.show()
-        vbox.set_spacing(3)
-        
-        label = gtk.Label('Pipeline')
-        label.show()
-        self.notebook.append_page(vbox, label)
-        self.vboxPipelineFrame = vbox
+        vboxFrame = gtk.VBox()
+        vboxFrame.show()
+        vboxFrame.set_spacing(3)
+        frame.add(vboxFrame)
+
+        self.vboxPipelineFrame = vboxFrame
 
         self.update_pipeline_frame()
         
@@ -398,19 +383,17 @@ class SurfRendererProps(gtk.Window, Viewer):
         self.intensitySum = 0
         self.intensityCnt = 0
 
+        main_frame = gtk.Frame('Add segment')
+        main_frame.set_border_width(5)
+        self.inner_vbox.pack_start(main_frame, False,False)
 
-        vbox = gtk.VBox()
-        vbox.show()
-        vbox.set_spacing(3)
-        
-        label = gtk.Label('Segmentation')
-        label.show()
-        self.notebook.append_page(vbox, label)
+        main_vbox = gtk.VBox()
+        main_frame.add(main_vbox)
 
-        frame = gtk.Frame('Set the segment intensity')
-        frame.show()
+        frame = gtk.Frame('Intensity threshold')
         frame.set_border_width(5)
-        vbox.pack_start(frame, False, False)
+        main_vbox.pack_start(frame,False,False)
+
         
         vboxFrame = gtk.VBox()
         vboxFrame.show()
@@ -442,7 +425,7 @@ class SurfRendererProps(gtk.Window, Viewer):
         hbox.set_spacing(3)
         vboxFrame.pack_start(hbox, False, False)
             
-        button = ButtonAltLabel('Capture', gtk.STOCK_ADD)
+        button = gtk.Button('Capture')
         button.show()
         button.connect('clicked', self.start_collect_intensity)
         hbox.pack_start(button, True, True)
@@ -457,12 +440,13 @@ class SurfRendererProps(gtk.Window, Viewer):
         button.connect('clicked', self.clear_intensity)
         hbox.pack_start(button, True, True)
 
+        frame.show_all()
 
 
         frame = gtk.Frame('Segment properties')
         frame.show()
         frame.set_border_width(5)
-        vbox.pack_start(frame, False, False)
+        main_vbox.pack_start(frame, False, False)
         
         vboxFrame = gtk.VBox()
         vboxFrame.show()
@@ -515,7 +499,9 @@ class SurfRendererProps(gtk.Window, Viewer):
         button = ButtonAltLabel('Add segment', gtk.STOCK_ADD)
         button.show()
         button.connect('clicked', self.add_segment)
-        vbox.pack_start(button, False, False)        
+        main_vbox.pack_start(button, False, False)        
+
+        frame.show_all()
 
         
     def _make_seqment_props_frame(self):
@@ -523,19 +509,9 @@ class SurfRendererProps(gtk.Window, Viewer):
         Control the sement attributes (delete, opacity, etc)
         """
 
-
-        vbox = gtk.VBox()
-        vbox.show()
-        vbox.set_spacing(3)
-        
-        label = gtk.Label('Segments')
-        label.show()
-        self.notebook.append_page(vbox, label)
-
         frame = gtk.Frame('Segment properties')
-        frame.show()
         frame.set_border_width(5)
-        vbox.pack_start(frame, True, True)
+        self.inner_vbox.pack_start(frame, False, False)
 
         
         vboxFrame = gtk.VBox()
@@ -559,7 +535,7 @@ class SurfRendererProps(gtk.Window, Viewer):
         names = self.paramd.keys()
 
         if not len(names):
-            label = gtk.Label('No segments')
+            label = gtk.Label('No segments defined')
             label.show()
             vbox.pack_start(label)
             return
@@ -660,19 +636,10 @@ class SurfRendererProps(gtk.Window, Viewer):
         Controls to clean up the rendered segments
         """
 
-
-        vbox = gtk.VBox()
-        vbox.show()
-        vbox.set_spacing(3)
-        
-        label = gtk.Label('Picker')
-        label.show()
-        self.notebook.append_page(vbox, label)
-
-        frame = gtk.Frame('Select on which segment')
+        frame = gtk.Frame('Add marks only on ...')
         frame.show()
         frame.set_border_width(5)
-        vbox.pack_start(frame, True, True)
+        self.inner_vbox.pack_start(frame, False, False)
 
         
         vboxFrame = gtk.VBox()
@@ -702,7 +669,7 @@ class SurfRendererProps(gtk.Window, Viewer):
         names = self.paramd.keys()
 
         if not len(names):
-            label = gtk.Label('No segments')
+            label = gtk.Label('No segments defined')
             label.show()
             vbox.pack_start(label)
             return

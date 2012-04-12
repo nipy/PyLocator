@@ -3,9 +3,6 @@ import sys, os
 import vtk
 
 import gtk
-from gtk import gdk
-from GtkGLExtVTKRenderWindowInteractor import GtkGLExtVTKRenderWindowInteractor
-from marker_window_interactor import MarkerWindowInteractor
 
 from gtkutils import error_msg, simple_msg, ButtonAltLabel, \
      str2posint_or_err, str2posnum_or_err, ProgressBarDialog, make_option_menu
@@ -14,38 +11,19 @@ from vtkutils import create_box_actor_around_marker
 from events import EventHandler, UndoRegistry, Viewer
 from markers import Marker
 from shared import shared
-from screenshot_taker import ScreenshotTaker
+from render_window import PyLocatorRenderWindow
 
-
-#class SurfRenderWindow(GtkGLExtVTKRenderWindowInteractor, Viewer):
-class SurfRenderWindow(Viewer, ScreenshotTaker):
+class SurfRenderWindow(Viewer, PyLocatorRenderWindow):
     """
     CLASS: SurfRenderWindow
     DESCR: Upper right frame in pylocator window
     """
 
     def __init__(self, imageData=None):
-        #GtkGLExtVTKRenderWindowInteractor.__init__(self)
-        ScreenshotTaker.__init__(self)
-        EventHandler().attach(self)
-
-        self.Initialize()
-        self.Start()
-        self.renderOn = True
-        
-        self.renderer = vtk.vtkRenderer()
-        self.renWin = self.GetRenderWindow()
-
-        #XXX XXX XXX my anaglyph stuff
-        #self.renWin.SetStereoRender(1)
-        #self.renWin.SetStereoTypeToRedBlue()
-
-        self.renWin.AddRenderer(self.renderer)
-        self.interactor = self.renWin.GetInteractor()
-        self.renderer.SetBackground(0,0,0)
+        PyLocatorRenderWindow.__init__(self)
         self.textActors = {}
         self.boxes = {}
-        
+
     def set_image_data(self, imageData):
         self.imageData = imageData
         if imageData is None: return
@@ -56,25 +34,6 @@ class SurfRenderWindow(Viewer, ScreenshotTaker):
         fpu = center, pos, (0,-1,0)
         self.set_camera(fpu)
 
-    def get_camera_fpu(self):
-        camera = self.renderer.GetActiveCamera()
-        return (camera.GetFocalPoint(),
-                camera.GetPosition(),
-                camera.GetViewUp())
-
-    def set_camera(self, fpu):
-        camera = self.renderer.GetActiveCamera()
-        focal, position, up = fpu
-        camera.SetFocalPoint(focal)
-        camera.SetPosition(position)
-        camera.SetViewUp(up)
-        self.renderer.ResetCameraClippingRange()
-        self.Render()
-                        
-    def Render(self):
-        if self.renderOn:
-            GtkGLExtVTKRenderWindowInteractor.Render(self)
-                
     def update_viewer(self, event, *args):
         if event=='render off':
             self.renderOn = 0
@@ -141,17 +100,4 @@ class SurfRenderWindow(Viewer, ScreenshotTaker):
         self.renderer.RemoveActor(marker)
         self.renderer.RemoveActor(self.textActors[marker])
         del self.textActors[marker]
-
-    #def set_mouse1_to_screenshot(self):
-    #    self.set_select_mode()
-    #    cursor = gtk.gdk.Cursor (SCREENSHOT_CURSOR)
-    #    self.pressHooks[1] = self.take_screenshot
-    #    if self.window is not None:
-    #        self.window.set_cursor (cursor)
-
-    #def OnKeyPress(self, wid, event=None):
-        #if (event.keyval == gdk.keyval_from_name("s") or
-        #    event.keyval == gdk.keyval_from_name("S")):
-        #    if shared.debug: print "KeyPress Screenshot"
-        #    self.take_screenshot()
-    #    return True
+        

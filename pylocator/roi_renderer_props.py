@@ -29,7 +29,7 @@ class RoiParams(SurfParams):
         surf_prop.SetDiffuse(.3)
         surf_prop.SetSpecular(.5)
 
-class RoiRendererProps(gtk.Window, Viewer):
+class RoiRendererProps(gtk.VBox, Viewer):
     """
     CLASS: RoiRendererProps
     DESCR: 
@@ -41,50 +41,28 @@ class RoiRendererProps(gtk.Window, Viewer):
 
     def __init__(self, sr, pwxyz):
         """sr is a SurfRenderer"""
-        gtk.Window.__init__(self)
-        self.set_default_size(300,400)
-        self.set_title('ROI rendering')
+        gtk.VBox.__init__(self)
+        self.show()
 
         self.sr = sr
         self.pwxyz = pwxyz
         self.interactorStyle = self.sr.GetInteractorStyle()
 
-        self.notebook = gtk.Notebook()
-        self.notebook.show()
-
-        vbox = gtk.VBox()
-        vbox.show()
-        vbox.pack_start(self.notebook, True, True)
-        self.add(vbox)
+        self.scrolled_window = gtk.ScrolledWindow()
+        self.inner_vbox = gtk.VBox()
+        self.inner_vbox.set_spacing(20)
+        self.scrolled_window.add_with_viewport(self.inner_vbox)
+        self.pack_start(self.scrolled_window)
+        self.scrolled_window.show_all()
 
         self._make_roi_frame()
-
-        def hide(*args):
-            self.hide()
-            return True
-        self.connect('delete_event', hide)
-
-        # action area
-        hbox = gtk.HBox()
-        hbox.show()
-        vbox.pack_start(hbox, False, False)        
-
-
-        button = gtk.Button(stock=gtk.STOCK_CANCEL)
-        button.show()
-        button.connect('clicked', hide)
-        hbox.pack_start(button, True, True)        
-
             
         button = ButtonAltLabel('Render', gtk.STOCK_EXECUTE)
         button.show()
         button.connect('clicked', self.render)
-        hbox.pack_start(button, True, True)        
+        self.pack_end(button, False, False)        
+        self.__update_treeview_visibility()
 
-        button = gtk.Button(stock=gtk.STOCK_OK)
-        button.show()
-        button.connect('clicked', hide)
-        hbox.pack_start(button, True, True)        
 
     def render(self, *args):
         self.sr.Render()
@@ -93,34 +71,18 @@ class RoiRendererProps(gtk.Window, Viewer):
     def _make_roi_frame(self):
         """
         Provides the following attributes
-        self.collecting         # intensity collection on
-        self.intensitySum = 0   # intensity sum
-        self.intensityCnt = 0   # intensity cnt
         self.labelIntensity     # label for intensity entry
         self.entryIntensity     # intensity entry box
         """
 
-        self.collecting = False
-        self.intensitySum = 0
-        self.intensityCnt = 0
-
-
-        vbox = gtk.VBox()
-        vbox.show()
-        vbox.set_spacing(3)
-        
-        label = gtk.Label('Input')
-        label.show()
-        self.notebook.append_page(vbox, label)
-
         frame = gtk.Frame('Select ROI masks')
         frame.show()
         frame.set_border_width(5)
-        vbox.pack_start(frame, True, True)
+        self.inner_vbox.pack_start(frame, False, False)
         
         vboxFrame = gtk.VBox()
         vboxFrame.show()
-        vboxFrame.set_spacing(3)
+        vboxFrame.set_spacing(10)
         frame.add(vboxFrame)
         
         #create TreeView
@@ -138,18 +100,13 @@ class RoiRendererProps(gtk.Window, Viewer):
         self.treev_roi.append_column(self.col1)
         self.col2 = gtk.TreeViewColumn("Short filename",renderer,text=1)
         self.treev_roi.append_column(self.col2)
-        self.treev_roi.show()
+        #self.treev_roi.show()
         vboxFrame.pack_start(self.treev_roi,True,True)
-        #Buttons for TreeView
-        hbox = gtk.HBox()
-        vboxFrame.pack_start(hbox,False,False)
-        button1 = gtk.Button(stock=gtk.STOCK_ADD)
-        button1.connect("clicked",self.add_roi)
-        hbox.pack_start(button1)
-        button2 = gtk.Button(stock=gtk.STOCK_REMOVE)
-        button2.connect("clicked",self.rm_roi)
-        hbox.pack_start(button2)
-        hbox.show_all()
+
+        #Empty-indicator
+        self.emptyIndicator = gtk.Label('No region-of-interest defined')
+        self.emptyIndicator.show()
+        vboxFrame.pack_start(self.emptyIndicator)
 
         #Edit properties of one ROI
         self.props_frame = gtk.Frame('Properties')
@@ -172,6 +129,17 @@ class RoiRendererProps(gtk.Window, Viewer):
         self.color_chooser = ColorChooser()
         self.color_chooser.connect("color_changed",self.change_color_of_roi)
         tmp.pack_start(self.color_chooser,True,False)
+
+        #Buttons for TreeView
+        hbox = gtk.HBox()
+        vboxFrame.pack_start(hbox,False,False)
+        button1 = gtk.Button(stock=gtk.STOCK_ADD)
+        button1.connect("clicked",self.add_roi)
+        hbox.pack_start(button1)
+        button2 = gtk.Button(stock=gtk.STOCK_REMOVE)
+        button2.connect("clicked",self.rm_roi)
+        hbox.pack_start(button2)
+        hbox.show_all()
 
 
         #vboxProps.pack_start()
@@ -202,13 +170,13 @@ class RoiRendererProps(gtk.Window, Viewer):
                     self.paramd[roi_id].update_pipeline()
                     print self.paramd[roi_id].intensity
                     self.sr.Render()
+                shared.set_file_selection(fname)
             except IOError:
                 error_msg(
                     'Could not load ROI mask from %s' % fname, 
                     )
-            
-            else:
-                shared.set_file_selection(fname)
+            finally:
+                self.__update_treeview_visibility()
         else: dialog.destroy()
 
     def rm_roi(self,*args):
@@ -217,6 +185,7 @@ class RoiRendererProps(gtk.Window, Viewer):
         treestore.remove(treeiter)
         self.paramd[roi_id].destroy()
         del self.paramd[roi_id]
+        self.__update_treeview_visibility()
 
     def treev_sel_changed(self,selection):
         treeiter = selection.get_selected()[1]
@@ -247,3 +216,11 @@ class RoiRendererProps(gtk.Window, Viewer):
             roi_id = self.tree_roi.get(treeiter,0)
             self.paramd[roi_id].set_opacity(self.scrollbar_opacity.get_value())
 
+    def __update_treeview_visibility(self):
+        if self.tree_roi.get_iter_first()==None: 
+            # tree is empty
+            self.emptyIndicator.show()
+            self.treev_roi.hide()
+        else:
+            self.emptyIndicator.hide()
+            self.treev_roi.show()

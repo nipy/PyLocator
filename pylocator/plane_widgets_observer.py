@@ -541,7 +541,7 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
         else: return None
 
     def get_pwxyz(self):
-        return self.owner.get_plane_widget_xyz()
+        return self.owner.pwxyz
 
     def get_pw(self):
         return self.pw

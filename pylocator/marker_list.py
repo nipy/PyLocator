@@ -18,7 +18,7 @@ from marker_list_toolbar import MarkerListToolbar
 from shared import shared
 
 
-class MarkerList(gtk.Frame):
+class MarkerList(gtk.VBox):
     """
     CLASS: MarkerList
     DESCR: 
@@ -27,20 +27,21 @@ class MarkerList(gtk.Frame):
 
     def __init__(self):
         super(MarkerList,self).__init__(self)
+        self.set_homogeneous(False)
         EventHandler().attach(self)
         self._markers = {}
         self._marker_ids = {}
         self.nmrk=0
-        self.set_label("List of markers")
-        vbox = gtk.VBox()
-        self.add(vbox)
-        self.show_all()
 
-        # action area
-        hbox = gtk.HBox()
-        hbox.show()
-        vbox.pack_start(hbox, False, False)        
+        #Toolbar
+        toolbar = MarkerListToolbar(self)
+        self.pack_start(toolbar,False,False)
         
+        #Empty-indicator
+        self.emptyIndicator = gtk.Label('No marker defined')
+        self.emptyIndicator.show()
+        self.pack_start(self.emptyIndicator, False, False)
+
         #create TreeView
         #Fields: Index, Short filename, long FN, is_active?, opacityi
         self.tree_mrk = gtk.TreeStore(gobject.TYPE_INT, gobject.TYPE_STRING, gobject.TYPE_STRING)
@@ -58,18 +59,16 @@ class MarkerList(gtk.Frame):
         self.treev_mrk.append_column(self.col2)
         self.col3 = gtk.TreeViewColumn("Position",renderer,text=2)
         self.treev_mrk.append_column(self.col3)
-        self.treev_mrk.show()
+        #self.treev_mrk.show()
         self.scrolledwindow = gtk.ScrolledWindow()
-        vbox.pack_start(self.scrolledwindow,True,True)
+        self.pack_start(self.scrolledwindow,True,True)
         self.scrolledwindow.add(self.treev_mrk)
         self.scrolledwindow.show()
 
-        #Toolbar
-        toolbar = MarkerListToolbar(self)
-        vbox.pack_start(toolbar,False,False)
-
         self.show_all()
-        self.set_size_request(0,0)
+
+        self.__update_treeview_visibility()
+        #self.set_size_request(0,0)
 
 
     def update_viewer(self, event, *args):
@@ -140,8 +139,9 @@ class MarkerList(gtk.Frame):
 
     def cb_edit_position(self,*args):
         treeiter = self._treev_sel.get_selected()[1]
-        if treeiter:
-            mrk_id = self.tree_mrk.get(treeiter,0)[0]
+        if not treeiter:
+            return
+        mrk_id = self.tree_mrk.get(treeiter,0)[0]
         marker = self._markers[mrk_id]
         x_old,y_old,z_old = marker.get_center()
         #parent_window = self.get_parent_window()
@@ -195,6 +195,7 @@ class MarkerList(gtk.Frame):
         x,y,z = marker.get_center()
         treeiter = self.tree_mrk.append(None)
         self.tree_mrk.set(treeiter,0,self.nmrk,1,"",2,"%.1f,%.1f,%.1f"%(x,y,z))
+        self.__update_treeview_visibility()
 
     def remove_marker(self,marker):
         try:
@@ -206,6 +207,8 @@ class MarkerList(gtk.Frame):
                 del self._marker_ids[marker.uuid]
         except Exception, e:
             print "Exception in MarkerList.remove_marker"
+        finally:
+            self.__update_treeview_visibility()
 
     def treev_sel_changed(self,selection):
         EventHandler().clear_selection()
@@ -232,3 +235,11 @@ class MarkerList(gtk.Frame):
             roi_id = self.tree_roi.get(treeiter,0)
             self.paramd[roi_id].set_opacity(self.scrollbar_opacity.get_value())
 
+    def __update_treeview_visibility(self):
+        if self.tree_mrk.get_iter_first()==None: 
+            # tree is empty
+            self.emptyIndicator.show()
+            self.scrolledwindow.hide()
+        else:
+            self.emptyIndicator.hide()
+            self.scrolledwindow.show()

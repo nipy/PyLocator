@@ -3,7 +3,7 @@
 import gobject, gtk
 import getopt,sys,os
 
-from pylocator.pylocator_mainwindow import PyLocatorMainWindow
+from pylocator.pylocator_mainwindow import run_pylocator
 from pylocator.shared import shared
 
 usage="""usage: %s [options]
@@ -27,9 +27,7 @@ def main(*args):
         if option in ('-s', '--surface'):
             surface=value
 
-    window = PyLocatorMainWindow(filename=filename,surface=surface)
-    #window.show()
-    gtk.main()
+    run_pylocator(filename=filename,surface=surface)
 
 if __name__=="__main__":
     main()

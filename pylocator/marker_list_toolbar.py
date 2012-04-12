@@ -46,10 +46,6 @@ class MarkerListToolbar(gtk.Toolbar):
                     'Select color for marker',
                     self.marker_list.cb_choose_color)
 
-        for button in self.buttons.values():
-            print button
-            button.Sensitive=False
-
     def __add_button(self,stock, title, tooltip,callback):
         iconw = gtk.Image() # icon widget
         iconw.set_from_stock(stock, self.iconSize)

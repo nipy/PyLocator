@@ -1,9 +1,14 @@
 import os.path
 
-#glade_test = os.path.join(os.path.split(__file__)[0],"gladefiles/test2.glade")
+
+#GTK Builder files
 main_window = os.path.join(os.path.split(__file__)[0],"gladefiles/mainWindow.glade")
 edit_label_dialog = os.path.join(os.path.split(__file__)[0],"gladefiles/editLabel.glade")
 edit_coordinates_dialog = os.path.join(os.path.split(__file__)[0],"gladefiles/editCoordinates.glade")
+
+#image files
+camera_fn = os.path.join(os.path.split(__file__)[0],"gladefiles/camera48.png")
+camera_small_fn = os.path.join(os.path.split(__file__)[0],"gladefiles/camera24.png")
 
 
 #from pylocator_glade import glade_test

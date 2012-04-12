@@ -1,7 +1,7 @@
 import gtk
 import vtk
 from GtkGLExtVTKRenderWindowInteractor import GtkGLExtVTKRenderWindowInteractor
-from screenshot_taker import ScreenshotTaker
+from render_window import PyLocatorRenderWindow
 from events import EventHandler, UndoRegistry, Viewer
 import re
 from shared import shared
@@ -11,23 +11,13 @@ from dialogs import edit_label
 
 INTERACT_CURSOR, MOVE_CURSOR, COLOR_CURSOR, SELECT_CURSOR, DELETE_CURSOR, LABEL_CURSOR, SCREENSHOT_CURSOR = gtk.gdk.ARROW, gtk.gdk.HAND2, gtk.gdk.SPRAYCAN, gtk.gdk.TCROSS, gtk.gdk.X_CURSOR, gtk.gdk.PENCIL, gtk.gdk.ICON
 
-class MarkerWindowInteractor(Viewer, ScreenshotTaker):
+class MarkerWindowInteractor(Viewer, PyLocatorRenderWindow):
     """
     CLASS: MarkerWindowInteractor
     DESCR: 
     """
     def __init__(self):
-        ScreenshotTaker.__init__(self)
-        EventHandler().attach(self)
-        self.interactButtons = (1,2,3)
-        self.renderOn = 1
-        self.Initialize()
-        self.Start()
-
-        self.renderer = vtk.vtkRenderer()
-        self.renWin = self.GetRenderWindow()
-        self.renWin.AddRenderer(self.renderer)
-        self.interactor = self.renWin.GetInteractor()
+        PyLocatorRenderWindow.__init__(self)
         #self.camera = self.renderer.GetActiveCamera()
 
         
@@ -43,12 +33,6 @@ class MarkerWindowInteractor(Viewer, ScreenshotTaker):
         self.lastLabel = None
 
         self.vtk_interact_mode = False
-        
-    def Render(self):
-        if self.renderOn:
-           # print "render on: MarkerWindowInteractor.Render()!! uhh classname is?" , str(self.__class__)
-            GtkGLExtVTKRenderWindowInteractor.Render(self)
-
 
     def mouse1_mode_change(self, event):
         """
@@ -336,23 +320,6 @@ class MarkerWindowInteractor(Viewer, ScreenshotTaker):
                 UndoRegistry().push_command(self.set_camera, self.lastCamera)
 
         return True
-
-
-
-    def get_camera_fpu(self):
-        camera = self.renderer.GetActiveCamera()
-        return (camera.GetFocalPoint(),
-                camera.GetPosition(),
-                camera.GetViewUp())
-                
-    def set_camera(self, fpu):
-        camera = self.renderer.GetActiveCamera()
-        focal, position, up = fpu
-        camera.SetFocalPoint(focal)
-        camera.SetPosition(position)
-        camera.SetViewUp(up)
-        self.renderer.ResetCameraClippingRange()
-        self.Render()
 
     def get_plane_points(self, pw):
         return pw.GetOrigin(), pw.GetPoint1(), pw.GetPoint2()
