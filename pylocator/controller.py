@@ -4,13 +4,116 @@ from shared import shared
 from events import EventHandler
 from vtkNifti import vtkNiftiImageReader
 
+from surf_renderer import SurfRenderWindow
+from plane_widgets_xyz import PlaneWidgetsXYZ, move_pw_to_point
+from plane_widgets_observer import PlaneWidgetObserver
+from plane_widgets_observer_toolbar import ObserverToolbar
+
+from surf_renderer_props import SurfRendererProps
+from roi_renderer_props import RoiRendererProps
+from screenshot_props import ScreenshotProps
+
+from marker_list import MarkerList
 from gtkutils import simple_msg
 
 import pylocator
+from pylocator_glade import main_window
+from dialogs import SettingsController
+
+from colors import gdkColor2tuple
 
 class PyLocatorController(object):
-    def __init__(self, window):
-        self.window = window
+    def __init__(self):
+        self.window = self.__create_mainwindow()
+        self.__set_default_color()
+
+    def __set_default_color(self):
+        da = gtk.DrawingArea()
+        cmap = da.get_colormap()
+        self.lastColor = cmap.alloc_color(0, 0, 65535)
+
+    def __create_mainwindow(self):
+        """Read builder-XML file and create window.
+        Inserts custom widgets at the desired positions
+        """
+        builder = gtk.Builder()
+        builder.add_from_file(main_window)
+        window = builder.get_object("pylocatorMainWindow")
+        hpaned = {}
+        for key in ["Main","Top"]:
+            hpaned[key] = builder.get_object("hpaned%s"%key)
+        hboxSlices = builder.get_object("hboxSlices")
+        vboxes = {}
+        for key in ["Markers","Surfaces","ROI","Screenshots"]:
+            vboxes[key] = builder.get_object("vbox%s"%key)
+
+        window.pwxyz = PlaneWidgetsXYZ()
+        window.pwxyz.show()
+        hpaned["Top"].pack1(window.pwxyz,True,True)
+
+        window.surfRenWin = SurfRenderWindow()
+        window.surfRenWin.show()
+        hpaned["Top"].pack2(window.surfRenWin,True,True)
+
+        self.__fill_notebook_pages(window, vboxes)
+        self.__add_observer_widgets_to_window(window,hboxSlices)
+        self.__set_screenshot_properties(window)
+        
+        window.screenshot_props.create_buttons()
+
+        builder.connect_signals(self)
+        return window
+
+    def __fill_notebook_pages(self, window, vboxes):
+        window.marker_list = MarkerList()
+        #window.marker_list._treev_sel.connect("changed",self.on_marker_selection_changed)
+        vboxes["Markers"].pack_start(window.marker_list,True,True)
+
+        window.surf_ren_props = SurfRendererProps(window.surfRenWin, window.pwxyz)
+        vboxes["Surfaces"].pack_start(window.surf_ren_props)
+
+        window.roi_props = RoiRendererProps(window.surfRenWin, window.pwxyz)
+        vboxes["ROI"].pack_start(window.roi_props)
+
+        window.screenshot_props = ScreenshotProps()
+        vboxes["Screenshots"].pack_start(window.screenshot_props)
+
+    def __add_observer_widgets_to_window(self,win,hbox):
+        win.observers = []
+        for orientation, pw in zip(range(3),win.pwxyz.get_plane_widgets_xyz()):
+            vboxObs = gtk.VBox()
+            vboxObs.show()
+            observer = PlaneWidgetObserver(pw, owner=win, orientation=orientation)
+            observer.show()
+            win.observers.append(observer)
+            vboxObs.pack_start(observer, True, True)
+            toolbar = ObserverToolbar(observer)
+            toolbar.show()
+            vboxObs.pack_start(toolbar, False, False)
+            hbox.pack_start(vboxObs, True, True)
+            observer.observer.AddObserver('InteractionEvent', win.surf_ren_props.interaction_event)
+
+    def __set_screenshot_properties(self, window):
+        # set screenshot properties for all render windows
+        screenshot_properties = [
+            (window.pwxyz,          "Three planes"),
+            (window.surfRenWin,     "Surface"),
+            (window.observers[0],   "Slice 1"),
+            (window.observers[1],   "Slice 2"),
+            (window.observers[2],   "Slice 3"),
+        ]
+        for widget, name in screenshot_properties:
+            widget.set_screenshot_props(name)
+            window.screenshot_props.append_screenshot_taker(widget)
+
+    def get_render_windows(self):
+        if self.window!=None:
+            yield self.window.pwxyz
+            yield self.window.surfRenWin
+            for o in self.window.observers:
+                yield o
+
+    # Event handler stuff from here #########################
 
     def load_markers(self, *args):
         dialog = gtk.FileSelection('Choose filename for marker info')
@@ -89,6 +192,8 @@ class PyLocatorController(object):
             EventHandler().notify('set image data', imageData)
             EventHandler().notify("set axes directions")
             EventHandler().setNifti(reader.GetQForm(),reader.nifti_voxdim,reader.shape)
+            self.store_current_camera_fpus()
+            EventHandler().notify("render now")
             return True
 
     def set_mouse_interact_mode(self, menuItem, *args):
@@ -119,6 +224,34 @@ class PyLocatorController(object):
         fpu = self.window.pwxyz.get_camera_fpu()
         self.window.surfRenWin.set_camera(fpu)
         self.window.surfRenWin.Render()
+
+    def store_current_camera_fpus(self):
+        for rw in self.get_render_windows():
+            rw.store_camera_default()
+
+    def reset_cameras(self, *args):
+        for rw in self.get_render_windows():
+            rw.reset_camera_to_default()
+
+    def show_settings_dialog(self,*args):
+        settings = SettingsController(self.window.pwxyz)
+        settings.dialog.run()
+
+    def choose_color(self, *args):
+        dialog = gtk.ColorSelectionDialog('Choose default marker color')
+        colorsel = dialog.colorsel
+        colorsel.set_previous_color(self.lastColor)
+        colorsel.set_current_color(self.lastColor)
+        colorsel.set_has_palette(True)
+        response = dialog.run()
+        
+        if response == gtk.RESPONSE_OK:
+            color = colorsel.get_current_color()
+            self.lastColor = color
+            EventHandler().set_default_color(gdkColor2tuple(color))
+            
+        dialog.destroy()
+
 
     def show_about_dialog(self,item,*args):
         simple_msg("PyLocator Version %s" % pylocator.__version__)

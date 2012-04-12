@@ -83,10 +83,11 @@ def choose_one_color(title, previous_color):
     
 def tuple2gdkColor(colorTuple):
     return gtk.gdk.Color(
-            65535.*colorTuple[0],
-            65535.*colorTuple[1],
-            65535.*colorTuple[2]
+            int(65535.*colorTuple[0]),
+            int(65535.*colorTuple[1]),
+            int(65535.*colorTuple[2])
     )
 
 def gdkColor2tuple(color):
     return [float(x)/65535. for x in (color.red,color.green,color.blue)]
+

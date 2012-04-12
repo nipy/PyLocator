@@ -17,6 +17,11 @@
     <property name="can_focus">False</property>
     <property name="stock">gtk-media-rewind</property>
   </object>
+  <object class="GtkImage" id="image8">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-revert-to-saved</property>
+  </object>
   <object class="GtkWindow" id="pylocatorMainWindow">
     <property name="can_focus">False</property>
     <property name="border_width">1</property>
@@ -238,6 +243,17 @@
                       </object>
                     </child>
                     <child>
+                      <object class="GtkImageMenuItem" id="resetCameras">
+                        <property name="label" translatable="yes">Reset cameras</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="use_action_appearance">False</property>
+                        <property name="image">image8</property>
+                        <property name="use_stock">False</property>
+                        <signal name="activate" handler="reset_cameras" swapped="no"/>
+                      </object>
+                    </child>
+                    <child>
                       <object class="GtkImageMenuItem" id="settingsMenuItem">
                         <property name="label" translatable="yes">Settings</property>
                         <property name="visible">True</property>
@@ -245,6 +261,7 @@
                         <property name="use_action_appearance">False</property>
                         <property name="image">image1</property>
                         <property name="use_stock">False</property>
+                        <signal name="activate" handler="show_settings_dialog" swapped="no"/>
                       </object>
                     </child>
                   </object>

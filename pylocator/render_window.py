@@ -16,7 +16,7 @@ INTERACT_CURSOR, MOVE_CURSOR, COLOR_CURSOR, SELECT_CURSOR, DELETE_CURSOR, LABEL_
 class PyLocatorRenderWindow(GtkGLExtVTKRenderWindowInteractor):
     def __init__(self,*args):
         GtkGLExtVTKRenderWindowInteractor.__init__(self,*args)
-        self.spd = None
+        self.screenshot_button_label = "_render window_"
 
         EventHandler().attach(self)
         self.interactButtons = (1,2,3)
@@ -52,21 +52,21 @@ class PyLocatorRenderWindow(GtkGLExtVTKRenderWindowInteractor):
         self.Render()
 
     def store_camera_default(self):
-        self.camera_default_fpu = self.get_camera_fpu
+        self.camera_default_fpu = self.get_camera_fpu()
 
-    def reset_camera_to_default():
+    def reset_camera_to_default(self):
         fpu = self.camera_default_fpu
         if fpu != None:
             self.set_camera(fpu)
 
-    def take_screenshot(self):
+    def take_screenshot(self, fn_pattern, magnification=1):
         #print "Start Screenshot"
-        if not self.spd:
-            error_msg("Cannot take screenshot: Properties not set.")
+        if not fn_pattern:
+            error_msg("Cannot take screenshot: No filename pattern given.")
             return False
 
-        fn = self.spd.entryFn.get_text()%shared.screenshot_cnt
-        mag = int(round(self.spd.sbMag.get_value()))
+        fn = fn_pattern%shared.screenshot_cnt
+        mag = int(round(magnification))
 
         shared.screenshot_cnt+=1
 
@@ -83,7 +83,6 @@ class PyLocatorRenderWindow(GtkGLExtVTKRenderWindowInteractor):
         self.Render()
         return
 
-    def set_screenshot_props(self, spd, label):
-        self.spd = spd
-        spd.append_screenshot_taker(self,label)
+    def set_screenshot_props(self, label):
+        self.screenshot_button_label = label
 

@@ -74,6 +74,8 @@ class MarkerWindowInteractor(Viewer, PyLocatorRenderWindow):
         elif event=='render on':
             self.renderOn = 1
             self.Render()
+        elif event=='render now':
+            self.Render()
         elif event=='set image data':
             imageData = args[0]
             self.set_image_data(imageData)
@@ -164,13 +166,6 @@ class MarkerWindowInteractor(Viewer, PyLocatorRenderWindow):
         if self.window is not None:
             self.window.set_cursor (cursor)
 
-    #def set_mouse1_to_screenshot(self):
-    #    self.set_select_mode()
-    #    cursor = gtk.gdk.Cursor (SCREENSHOT_CURSOR)
-    #    self.pressHooks[1] = self.take_screenshot
-    #    if self.window is not None:
-    #        self.window.set_cursor (cursor)
-    
     def set_mouse1_to_delete(self):
 
         def button_up(*args):
@@ -284,7 +279,7 @@ class MarkerWindowInteractor(Viewer, PyLocatorRenderWindow):
         if shared.debug: print "MarkerWindowInteractor.OnButtonDown(): pressFuncs=", self.pressFuncs, "pressHooks=", self.pressHooks
 
         if event.button in self.interactButtons:
-            print "self.vtk_interact_mode =", self.vtk_interact_mode
+            if shared.debug: print "self.vtk_interact_mode =", self.vtk_interact_mode
             if (self.vtk_interact_mode == False):
                 self.pressFuncs[event.button]()            
 

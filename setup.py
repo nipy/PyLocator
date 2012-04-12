@@ -52,6 +52,7 @@ Program for the localization of EEG-electrodes.
                             'gladefiles/screenshots.png',
                             'gladefiles/editLabel.glade',
                             'gladefiles/editCoordinates.glade',
+                            'gladefiles/editSettings.glade',
                             'gladefiles/camera24.png',
                             'gladefiles/camera48.png',
                             ],},

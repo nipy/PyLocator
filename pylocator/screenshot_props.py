@@ -21,7 +21,6 @@ class ScreenshotProps(gtk.VBox, Viewer):
 
     def __init__(self):
         self._sts = [] # Stores all PyLocatorRenderWindows to invoke on button press
-        self._labels = []
         gtk.VBox.__init__(self)
 
         self.scrolled_window = gtk.ScrolledWindow()
@@ -140,8 +139,11 @@ Set the magnification factor to increase image size for screenshots.
         label, button = insert_row("All views",cameraPixBuf,0)
         button.connect('clicked', self.take_all_shots)
 
-        for i,label_string in enumerate(self._labels):
-            label, button = insert_row(label_string,cameraPixBuf,i+1)
+        for i,st in enumerate(self._sts):
+            label, button = insert_row(
+                                st.screenshot_button_label,
+                                cameraPixBuf, i+1 
+                            )
             button.connect('clicked',self.take_shot,i)
 
         self.buttons_vbox.show()
@@ -157,9 +159,8 @@ Set the magnification factor to increase image size for screenshots.
         self.entryFn.set_text(mri_fn+"_pylocator%03i.png")
         return True
             
-    def append_screenshot_taker(self,st,label):
+    def append_screenshot_taker(self,st):
         self._sts.append(st)
-        self._labels.append(label)
 
     def take_shot(self, button, idx):
         """For one PyLocatorRenderWindow, take a SS"""
@@ -167,13 +168,17 @@ Set the magnification factor to increase image size for screenshots.
         if len(self._sts)==0:
             error_msg("Cannot take screenshots: \nNo instances registered.")
             return False
-        self._sts[idx].take_screenshot()
+        fn_pattern = self.entryFn.get_text()
+        mag = self.sbMag.get_value()
+        self._sts[idx].take_screenshot(fn_pattern, mag)
 
     def take_all_shots(self, *args):
         """For each PyLocatorRenderWindow in list, take a SS"""
         if len(self._sts)==0:
             error_msg("Cannot take screenshots: \nNo instances registered.")
             return False
+        fn_pattern = self.entryFn.get_text()
+        mag = self.sbMag.get_value()
         for st in self._sts:
-            st.take_screenshot()
+            st.take_screenshot(fn_pattern, mag)
 

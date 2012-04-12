@@ -1,6 +1,8 @@
 import gtk
-from pylocator_glade import edit_label_dialog, edit_coordinates_dialog
+from pylocator_glade import edit_label_dialog, edit_coordinates_dialog, edit_settings_dialog
 from gtkutils import str2num_or_err
+from colors import gdkColor2tuple, tuple2gdkColor
+from events import EventHandler
 
 def edit_label(oldLabel=""):
     builder = gtk.Builder()
@@ -53,6 +55,67 @@ def edit_coordinates(X=0,Y=0,Z=0, description=None):
     dialog.destroy()
     return rv
 
-if __name__=="__main__":
-    gtk.idle_add(lambda: edit_label("test"))
-    gtk.main_loop()
+class SettingsController(object):
+    def __init__(self, pwxyz):
+        self.pwxyz = pwxyz
+
+        builder = gtk.Builder()
+        builder.add_from_file(edit_settings_dialog)
+
+        self.dialog = builder.get_object("dialog")
+        self.mo = builder.get_object("marker_opacity")
+        self.ms = builder.get_object("marker_size")
+        self.po = builder.get_object("planes_opacity")
+        self.dc = builder.get_object("colorbutton")
+
+        self.__get_current_values()
+
+        builder.connect_signals(self)
+
+    def __get_current_values(self):
+        self.po.set_value(self.pwxyz.pwX.GetTexturePlaneProperty().GetOpacity())
+
+        markers = EventHandler().get_markers_as_seq()
+        if len(markers)>0:
+            old_mo = markers[0].GetProperty().GetOpacity()
+            self.mo.set_value(old_mo)
+            old_ms = markers[0].get_size()
+            self.ms.set_value(old_ms)
+
+        old_color = EventHandler().get_default_color()
+        self.dc.set_color(tuple2gdkColor(old_color))
+
+    def marker_opacity_changed(self, *args):
+        val = self.mo.get_value()
+        for marker in EventHandler().get_markers_as_seq():
+            marker.GetProperty().SetOpacity(val)
+        EventHandler().notify("render now")
+
+    def marker_size_changed(self, *args):
+        val = self.ms.get_value()
+        for marker in EventHandler().get_markers_as_seq():
+            marker.set_size(val)
+        EventHandler().notify("render now")
+
+    def planes_opacity_changed(self, *args):
+        val = self.po.get_value()
+        for pw in self.__get_plane_widgets():
+            pw.GetTexturePlaneProperty().SetOpacity(val)
+            pw.GetPlaneProperty().SetOpacity(val)
+        self.pwxyz.Render()
+
+    def set_default_color(self, *args):
+        color = self.dc.get_color()
+        EventHandler().set_default_color(gdkColor2tuple(color))
+
+    def close_dialog(self, *args):
+        print "close dialog"
+        self.dialog.hide()
+        self.dialog.destroy()
+
+    def __get_plane_widgets(self):
+        pwx = self.pwxyz.pwX
+        pwy = self.pwxyz.pwY
+        pwz = self.pwxyz.pwZ
+        return pwx, pwy, pwz
+

@@ -38,7 +38,7 @@ class UndoRegistry:
 class EventHandler:
     __sharedState = {}
     markers = vtk.vtkActorCollection()
-    defaultColor = (0,0,1)
+    defaultColor = (0,0,1.)
     labelsOn = 1
     observers = {}
     selected = {}

@@ -24,6 +24,7 @@ Contents
 
     install.rst
     tutorial.rst
+    insert_markers.rst
     faq.rst
 
 Information on how to obtain and configure PyLocator correctly can be obtained

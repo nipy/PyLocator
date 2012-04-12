@@ -65,9 +65,9 @@ class vtkNiftiImageReader(object):
         
         
         affine = array_to_vtkmatrix4x4(self.__nim.get_affine())
-        print self._irs.GetResliceAxesOrigin()
+        if shared.debug: print self._irs.GetResliceAxesOrigin()
         self._irs.SetResliceAxes(affine)
-        print self._irs.GetResliceAxesOrigin()
+        if shared.debug: print self._irs.GetResliceAxesOrigin()
         m2t = vtk.vtkMatrixToLinearTransform()
         m2t.SetInput(affine.Invert())
         self._irs.TransformInputSamplingOff()

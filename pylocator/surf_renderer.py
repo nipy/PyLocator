@@ -40,6 +40,8 @@ class SurfRenderWindow(Viewer, PyLocatorRenderWindow):
         elif event=='render on':
             self.renderOn = 1
             self.Render()
+        elif event=='render now':
+            self.Render()
         elif event=='set image data':
             imageData = args[0]
             self.set_image_data(imageData)
