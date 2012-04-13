@@ -8,12 +8,12 @@ from gtkutils import error_msg, simple_msg, ButtonAltLabel, \
      str2posint_or_err, str2posnum_or_err, ProgressBarDialog, make_option_menu
 from vtkutils import create_box_actor_around_marker
 
-from events import EventHandler, UndoRegistry, Viewer
+from events import EventHandler
 from markers import Marker
 from shared import shared
 from render_window import PyLocatorRenderWindow
 
-class SurfRenderWindow(Viewer, PyLocatorRenderWindow):
+class SurfRenderWindow(PyLocatorRenderWindow):
     """
     CLASS: SurfRenderWindow
     DESCR: Upper right frame in pylocator window
@@ -34,43 +34,27 @@ class SurfRenderWindow(Viewer, PyLocatorRenderWindow):
         fpu = center, pos, (0,-1,0)
         self.set_camera(fpu)
 
-    def update_viewer(self, event, *args):
-        if event=='render off':
-            self.renderOn = 0
-        elif event=='render on':
-            self.renderOn = 1
-            self.Render()
-        elif event=='render now':
-            self.Render()
-        elif event=='set image data':
-            imageData = args[0]
-            self.set_image_data(imageData)
-            self.Render()
-        elif event=='add marker':
-            marker = args[0]
-            self.add_marker(marker)
-        elif event=='remove marker':
-            marker = args[0]
-            self.remove_marker(marker)
-        elif event=='labels on':
+    def set_labels_visibility(self, visible=True):
+        if visible:
             actors = self.textActors.values()
             for actor in actors:
                 actor.VisibilityOn()
-        elif event=='labels off':
+        else:
             actors = self.textActors.values()
             for actor in actors:
                 actor.VisibilityOff()
-        elif event=='select marker':
+
+    def set_marker_selection(self, marker, select=True):
+        if select:
             marker = args[0]
             actor = create_box_actor_around_marker(marker)
             if shared.debug: print "PlaneWidgetsXYZ.update_viewer(): self.renderer.AddActor(actor)"
             self.renderer.AddActor(actor)
             self.boxes[marker] = actor
-        elif event=='unselect marker':
+        else:
             marker = args[0]
             actor = self.boxes[marker]
             self.renderer.RemoveActor(actor)
-        self.Render()
 
     def add_marker(self, marker):
 

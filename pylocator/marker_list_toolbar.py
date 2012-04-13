@@ -1,6 +1,6 @@
 import gtk
 import vtk
-from events import EventHandler, UndoRegistry, Viewer
+from events import EventHandler, UndoRegistry
 
 class MarkerListToolbar(gtk.Toolbar):
     """

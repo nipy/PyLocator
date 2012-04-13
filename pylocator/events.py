@@ -6,11 +6,6 @@ import pickle
 from scipy import array, zeros
 from shared import shared
 
-class Viewer:
-    def update_viewer(self, event, *args):
-        raise NotImplementedError
-
-
 class UndoRegistry:
     __sharedState = {}
     commands = []

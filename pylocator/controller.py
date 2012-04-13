@@ -18,7 +18,7 @@ from gtkutils import simple_msg
 
 import pylocator
 from pylocator_glade import main_window
-from dialogs import SettingsController
+from dialogs import SettingsController, about
 
 from colors import gdkColor2tuple
 
@@ -254,7 +254,7 @@ class PyLocatorController(object):
 
 
     def show_about_dialog(self,item,*args):
-        simple_msg("PyLocator Version %s" % pylocator.__version__)
+        about(pylocator.__version__)
 
     def open_help(self,item,*args):
         pass

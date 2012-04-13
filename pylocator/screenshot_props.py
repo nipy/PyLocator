@@ -2,7 +2,7 @@ from gtk import gdk
 import gtk
 import vtk
 from GtkGLExtVTKRenderWindowInteractor import GtkGLExtVTKRenderWindowInteractor
-from events import EventHandler, UndoRegistry, Viewer
+from events import EventHandler, UndoRegistry
 from gtkutils import error_msg
 import re
 
@@ -13,7 +13,7 @@ from shared import shared
 
 INTERACT_CURSOR, MOVE_CURSOR, COLOR_CURSOR, SELECT_CURSOR, DELETE_CURSOR, LABEL_CURSOR, SCREENSHOT_CURSOR = gtk.gdk.ARROW, gtk.gdk.HAND2, gtk.gdk.SPRAYCAN, gtk.gdk.TCROSS, gtk.gdk.X_CURSOR, gtk.gdk.PENCIL, gtk.gdk.ICON
 
-class ScreenshotProps(gtk.VBox, Viewer):
+class ScreenshotProps(gtk.VBox):
     """
     CLASS: ScreenshotProps
     DESC: 

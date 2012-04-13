@@ -12,6 +12,7 @@ vtk
 pygtk, gtkglext
 """
 
+from main import run_pylocator
+
 __version__ = "0.30"
 
-#from pylocator import main

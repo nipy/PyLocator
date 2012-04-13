@@ -8,7 +8,7 @@ from gtk import gdk
 from gtkutils import error_msg, simple_msg, ButtonAltLabel, \
      str2posint_or_err, str2posnum_or_err, ProgressBarDialog, make_option_menu
 
-from events import EventHandler, UndoRegistry, Viewer
+from events import EventHandler, UndoRegistry
 from markers import Marker
 from shared import shared
 
@@ -17,7 +17,7 @@ from decimate_filter import DecimateFilter
 
 from colors import colorSeq, gdkColor2tuple
 
-class SurfParams(Viewer):
+class SurfParams(object):
     """
     CLASS: SurfParams
     DESCR:
@@ -167,7 +167,6 @@ class SurfParams(Viewer):
     def set_color(self,color):
         print color, type(color)
         if type(color)==gtk.gdk.Color:
-            print "adjusting color"
             self._color = gdkColor2tuple(color)
             print self._color
         else:

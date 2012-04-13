@@ -8,7 +8,7 @@ from gtk import gdk
 from gtkutils import error_msg, simple_msg, ButtonAltLabel, \
      str2posint_or_err, str2posnum_or_err, ProgressBarDialog, make_option_menu
 
-from events import EventHandler, UndoRegistry, Viewer
+from events import EventHandler, UndoRegistry
 from markers import Marker
 from shared import shared
 
@@ -19,7 +19,7 @@ from surf_params import SurfParams
 from decimate_filter import DecimateFilter
 from connect_filter import ConnectFilter
 
-class SurfRendererProps(gtk.VBox, Viewer):
+class SurfRendererProps(gtk.VBox):
     """
     CLASS: SurfRendererProps
     DESCR: 
@@ -100,7 +100,7 @@ class SurfRendererProps(gtk.VBox, Viewer):
 
             marker = Marker(xyz=pnt,
                             rgb=EventHandler().get_default_color(),
-                            radius=shared.ratio*3)
+                            radius=shared.ratio*shared.marker_size)
 
             EventHandler().add_marker(marker)
         elif key.lower()=='x':
@@ -474,8 +474,10 @@ class SurfRendererProps(gtk.VBox, Viewer):
                      xoptions=gtk.EXPAND|gtk.FILL, yoptions=0)
 
 
-        def func(menuitem, s):
-            if s=='choose':
+        def func(menuitem, *args):
+            if shared.debug: print "option menu changed", menuitem
+            s = menuitem.get_active_text()
+            if s=='custom...':
                 self.lastColor = self.choose_color()
             else:
                 self.entryName.set_text(s)
@@ -483,7 +485,7 @@ class SurfRendererProps(gtk.VBox, Viewer):
                             
 
         colors = [ name for name, color in colorSeq]
-        colors.append('choose')
+        colors.append('custom...')
         label = gtk.Label('Color: ')
         label.show()
         label.set_alignment(xalign=1.0, yalign=0.5)
@@ -720,7 +722,6 @@ class SurfRendererProps(gtk.VBox, Viewer):
             self.intensityCnt += 1
 
     def add_segment(self, button):
-        'render, man'
         val = self.get_intensity()
         if val is None: return
         name = self.entryName.get_text()
@@ -734,7 +735,7 @@ class SurfRendererProps(gtk.VBox, Viewer):
         params = self.paramd[name]
         params.label = name
         params.intensity = val
-        params.color = self.lastColor
+        params.set_color(self.lastColor)
         params.set_image_data(self.sr.imageData)
         params.update_properties()
         

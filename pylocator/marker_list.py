@@ -11,7 +11,7 @@ from gtkutils import error_msg, simple_msg, ButtonAltLabel, \
 
 from dialogs import edit_coordinates
 
-from events import EventHandler, UndoRegistry, Viewer
+from events import EventHandler, UndoRegistry
 from colors import choose_one_color, tuple2gdkColor, gdkColor2tuple
 from markers import Marker
 from marker_list_toolbar import MarkerListToolbar

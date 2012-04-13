@@ -9,7 +9,7 @@ from gtk import gdk
 from gtkutils import error_msg, simple_msg, ButtonAltLabel, \
      str2posint_or_err, str2posnum_or_err, ProgressBarDialog, make_option_menu
 
-from events import EventHandler, UndoRegistry, Viewer
+from events import EventHandler, UndoRegistry
 from markers import Marker
 from shared import shared
 
@@ -29,7 +29,7 @@ class RoiParams(SurfParams):
         surf_prop.SetDiffuse(.3)
         surf_prop.SetSpecular(.5)
 
-class RoiRendererProps(gtk.VBox, Viewer):
+class RoiRendererProps(gtk.VBox):
     """
     CLASS: RoiRendererProps
     DESCR: 

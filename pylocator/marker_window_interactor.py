@@ -2,7 +2,7 @@ import gtk
 import vtk
 from GtkGLExtVTKRenderWindowInteractor import GtkGLExtVTKRenderWindowInteractor
 from render_window import PyLocatorRenderWindow
-from events import EventHandler, UndoRegistry, Viewer
+from events import EventHandler, UndoRegistry
 import re
 from shared import shared
 
@@ -11,7 +11,7 @@ from dialogs import edit_label
 
 INTERACT_CURSOR, MOVE_CURSOR, COLOR_CURSOR, SELECT_CURSOR, DELETE_CURSOR, LABEL_CURSOR, SCREENSHOT_CURSOR = gtk.gdk.ARROW, gtk.gdk.HAND2, gtk.gdk.SPRAYCAN, gtk.gdk.TCROSS, gtk.gdk.X_CURSOR, gtk.gdk.PENCIL, gtk.gdk.ICON
 
-class MarkerWindowInteractor(Viewer, PyLocatorRenderWindow):
+class MarkerWindowInteractor(PyLocatorRenderWindow):
     """
     CLASS: MarkerWindowInteractor
     DESCR: 
@@ -43,6 +43,7 @@ class MarkerWindowInteractor(Viewer, PyLocatorRenderWindow):
         pass
 
     def update_viewer(self, event, *args):
+        PyLocatorRenderWindow.update_viewer(self, event, *args)
         if event.find('mouse1')==0:
             self.mouse1_mode_change(event)
         if event=='mouse1 interact':
@@ -66,24 +67,6 @@ class MarkerWindowInteractor(Viewer, PyLocatorRenderWindow):
         elif event=='mouse1 move':
             if shared.debug: print "MarkerWindowInteractor.set_mouse1_to_move()"
             self.set_mouse1_to_move()
-        #elif event=='mouse1 screenshot':
-        #    print "MarkerWindowInteractor.set_mouse1_to_move()"
-        #    self.set_mouse1_to_screenshot()
-        elif event=='render off':
-            self.renderOn = 0
-        elif event=='render on':
-            self.renderOn = 1
-            self.Render()
-        elif event=='render now':
-            self.Render()
-        elif event=='set image data':
-            imageData = args[0]
-            self.set_image_data(imageData)
-            self.Render()
-        elif event=='render':
-            self.Render()
-            
-
 
     def get_marker_at_point(self):    
         raise NotImplementedError
@@ -145,16 +128,12 @@ class MarkerWindowInteractor(Viewer, PyLocatorRenderWindow):
             # now do something with the actor !!!
             #print "actor is ", actor
 
-            
-            
-            
         def button_up(*args):
             #print "button up on brain interact."
             pass
 
         self.pressHooks[1] = button_down
         self.releaseHooks[1] = button_up
-
 
         cursor = gtk.gdk.Cursor (INTERACT_CURSOR)
         if self.window is not None:

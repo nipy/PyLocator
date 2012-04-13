@@ -1,7 +1,7 @@
 import gtk
 import vtk
 
-from events import EventHandler, UndoRegistry, Viewer
+from events import EventHandler, UndoRegistry
 from marker_window_interactor import MarkerWindowInteractor
 from image_reader import widgets
 from vtkutils import create_box_actor_around_marker

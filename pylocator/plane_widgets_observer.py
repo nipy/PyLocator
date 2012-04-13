@@ -4,8 +4,7 @@ import vtk
 import time
 from scipy import array
 from markers import Marker, RingActor
-from events import EventHandler, UndoRegistry, Viewer
-from screenshot_taker import ScreenshotTaker
+from events import EventHandler, UndoRegistry
 
 import numpy as np
 
@@ -378,7 +377,6 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
             else:
                 textActor.VisibilityOff()
 
-
     def interaction_event(self, *args):
         self.update_plane()
         self.update_rings()
@@ -404,7 +402,7 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
 
             marker = Marker(xyz=xyz,
                             rgb=EventHandler().get_default_color(),
-                            radius=self._ratio*3)
+                            radius=self._ratio*shared.marker_size)
 
             EventHandler().add_marker(marker)
             return True

@@ -6,6 +6,7 @@ main_window = os.path.join(os.path.split(__file__)[0],"gladefiles/mainWindow.gla
 edit_label_dialog = os.path.join(os.path.split(__file__)[0],"gladefiles/editLabel.glade")
 edit_coordinates_dialog = os.path.join(os.path.split(__file__)[0],"gladefiles/editCoordinates.glade")
 edit_settings_dialog = os.path.join(os.path.split(__file__)[0],"gladefiles/editSettings.glade")
+about_dialog = os.path.join(os.path.split(__file__)[0],"gladefiles/about.glade")
 
 #image files
 camera_fn = os.path.join(os.path.split(__file__)[0],"gladefiles/camera48.png")

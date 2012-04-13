@@ -26,6 +26,11 @@ class Shared(object):
     #screenshot_magnification = 3
     screenshot_cnt = 1
 
+    planes_opacity = 1.
+    markers_opacity = 1.
+    marker_size = 3.
+
+
         
 
 shared = Shared()

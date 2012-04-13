@@ -1,8 +1,9 @@
 import gtk
-from pylocator_glade import edit_label_dialog, edit_coordinates_dialog, edit_settings_dialog
+from pylocator_glade import edit_label_dialog, edit_coordinates_dialog, edit_settings_dialog, about_dialog
 from gtkutils import str2num_or_err
 from colors import gdkColor2tuple, tuple2gdkColor
 from events import EventHandler
+from shared import shared
 
 def edit_label(oldLabel=""):
     builder = gtk.Builder()
@@ -55,6 +56,19 @@ def edit_coordinates(X=0,Y=0,Z=0, description=None):
     dialog.destroy()
     return rv
 
+def about(version="0.xyz"):
+    builder = gtk.Builder()
+    builder.add_from_file(about_dialog)
+    dialog = builder.get_object("dialog")
+    label = builder.get_object("label2")
+
+    label.set_text(label.get_text().replace("__version__",version))
+
+    response = dialog.run()
+
+    dialog.destroy()
+    return label
+
 class SettingsController(object):
     def __init__(self, pwxyz):
         self.pwxyz = pwxyz
@@ -73,14 +87,10 @@ class SettingsController(object):
         builder.connect_signals(self)
 
     def __get_current_values(self):
-        self.po.set_value(self.pwxyz.pwX.GetTexturePlaneProperty().GetOpacity())
+        self.po.set_value(shared.planes_opacity)
 
-        markers = EventHandler().get_markers_as_seq()
-        if len(markers)>0:
-            old_mo = markers[0].GetProperty().GetOpacity()
-            self.mo.set_value(old_mo)
-            old_ms = markers[0].get_size()
-            self.ms.set_value(old_ms)
+        self.mo.set_value(shared.markers_opacity)
+        self.ms.set_value(shared.marker_size)
 
         old_color = EventHandler().get_default_color()
         self.dc.set_color(tuple2gdkColor(old_color))
@@ -89,12 +99,14 @@ class SettingsController(object):
         val = self.mo.get_value()
         for marker in EventHandler().get_markers_as_seq():
             marker.GetProperty().SetOpacity(val)
+        shared.marker_opacity = val
         EventHandler().notify("render now")
 
     def marker_size_changed(self, *args):
         val = self.ms.get_value()
         for marker in EventHandler().get_markers_as_seq():
             marker.set_size(val)
+        shared.marker_size = val
         EventHandler().notify("render now")
 
     def planes_opacity_changed(self, *args):
@@ -102,6 +114,7 @@ class SettingsController(object):
         for pw in self.__get_plane_widgets():
             pw.GetTexturePlaneProperty().SetOpacity(val)
             pw.GetPlaneProperty().SetOpacity(val)
+        shared.planes_opacity = val
         self.pwxyz.Render()
 
     def set_default_color(self, *args):

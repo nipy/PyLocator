@@ -2,7 +2,7 @@ from gtk import gdk
 import gtk
 import vtk
 from GtkGLExtVTKRenderWindowInteractor import GtkGLExtVTKRenderWindowInteractor
-from events import EventHandler, UndoRegistry, Viewer
+from events import EventHandler
 from gtkutils import error_msg
 import re
 
@@ -85,4 +85,49 @@ class PyLocatorRenderWindow(GtkGLExtVTKRenderWindowInteractor):
 
     def set_screenshot_props(self, label):
         self.screenshot_button_label = label
+
+    def set_image_data(self, image_data):
+        pass
+
+    def add_marker(self, marker):
+        pass
+
+    def remove_marker(self, marker):
+        pass
+
+    def set_labels_visibility(self, visible=True):
+        pass
+
+    def set_marker_selection(self, marker, select=True):
+        pass
+
+    def update_viewer(self, event, *args):
+        if event=='render off':
+            self.renderOn = 0
+        elif event=='render on':
+            self.renderOn = 1
+            self.Render()
+        elif event=='render now':
+            self.Render()
+        elif event=='set image data':
+            imageData = args[0]
+            self.set_image_data(imageData)
+            self.Render()
+        elif event=='add marker':
+            marker = args[0]
+            self.add_marker(marker)
+        elif event=='remove marker':
+            marker = args[0]
+            self.remove_marker(marker)
+        elif event=='labels on':
+            self.set_labels_visibility(True)
+        elif event=='labels off':
+            self.set_labels_visibility(False)
+        elif event=='select marker':
+            marker = args[0]
+            self.set_marker_selection(marker, True)
+        elif event=='unselect marker':
+            marker = args[0]
+            self.set_marker_selection(marker, False)
+        self.Render()
 
