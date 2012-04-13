@@ -5,6 +5,7 @@ import uuid
 
 from image_reader import widgets
 import numpy as n
+from vtkutils import create_box_source
 
 class Marker(vtk.vtkActor):
     """
@@ -39,12 +40,19 @@ class Marker(vtk.vtkActor):
 
         self.GetProperty().SetColor( rgb )
 
+        self.set_lighting()
+
         self.label = ''
-        self.labelColor = (1,1,0)
+        self.labelColor = (1,1,0.5)
 
         #create ID
         self.uuid = uuid.uuid1()
 
+    def set_lighting(self):
+        prop = self.GetProperty()
+        prop.SetAmbient(0.)
+        prop.SetDiffuse(0.)
+        prop.SetSpecular(1.0)
 
     def contains(self, xyz):
         'return true if point xyz is in the marker'
@@ -147,6 +155,7 @@ class RingActor(vtk.vtkActor):
     def __init__(self, marker, planeWidget,
                  transform=None, lineWidth=1):
     
+        self.lineWidth=lineWidth
         self.marker = marker
         self.markerSource = marker.get_source()
         self.planeWidget = planeWidget
@@ -209,10 +218,18 @@ class RingActor(vtk.vtkActor):
         return self.marker
 
     def set_line_width(self, w):
+        self.lineWidth = w
         self.lineProperty.SetLineWidth(w)
 
     def get_line_width(self, w):
-        return self.lineProperty.GetLineWidth(w)
+        return self.lineWidth
+
+    def set_selected(self, selected=False):
+        if selected:
+            self.lineProperty.SetLineWidth(self.lineWidth*5)
+        else:
+            self.lineProperty.SetLineWidth(self.lineWidth)
+        self.update()
 
     def is_visible(self):
         # side effects update the ring poly; so kill me

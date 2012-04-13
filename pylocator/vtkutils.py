@@ -16,8 +16,7 @@ def array_to_vtkmatrix4x4(scipy_array):
     return mat
 
 def create_box_actor_around_marker(marker):
-    boxSource = vtk.vtkCubeSource()
-    boxSource.SetBounds(marker.GetBounds())
+    boxSource = create_box_source(marker)
     mapper = vtk.vtkPolyDataMapper()
     mapper.SetInput(boxSource.GetOutput())
     actor = vtk.vtkActor()
@@ -26,3 +25,8 @@ def create_box_actor_around_marker(marker):
     actor.GetProperty().SetRepresentationToWireframe()
     actor.GetProperty().SetLineWidth(2.0)
     return actor
+
+def create_box_source(marker):
+    boxSource = vtk.vtkCubeSource()
+    boxSource.SetBounds(marker.GetBounds())
+    return boxSource

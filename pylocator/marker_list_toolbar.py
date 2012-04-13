@@ -29,6 +29,8 @@ class MarkerListToolbar(gtk.Toolbar):
                     'Remove', 
                     'Remove selected marker',
                     self.marker_list.cb_remove)
+        self.append_space()
+
         self.__add_button(gtk.STOCK_GO_UP, 
                     'Move up', 
                     'Move selected marker up in list',
@@ -37,6 +39,12 @@ class MarkerListToolbar(gtk.Toolbar):
                     'Move down', 
                     'Move selected marker down in list',
                     self.marker_list.cb_move_down)
+        self.append_space()
+
+        self.__add_button(gtk.STOCK_BOLD, 
+                    'Label', 
+                    'Edit Label of marker',
+                    self.marker_list.cb_edit_label)
         self.__add_button(gtk.STOCK_EDIT, 
                     'Position', 
                     'Edit position of marker',
@@ -45,6 +53,7 @@ class MarkerListToolbar(gtk.Toolbar):
                     'Color', 
                     'Select color for marker',
                     self.marker_list.cb_choose_color)
+        self.show_all()
 
     def __add_button(self,stock, title, tooltip,callback):
         iconw = gtk.Image() # icon widget

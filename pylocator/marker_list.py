@@ -9,7 +9,7 @@ from gtk import gdk
 from gtkutils import error_msg, simple_msg, ButtonAltLabel, \
      str2posint_or_err, str2posnum_or_err, ProgressBarDialog, make_option_menu, get_three_nums
 
-from dialogs import edit_coordinates
+from dialogs import edit_coordinates, edit_label_of_marker
 
 from events import EventHandler, UndoRegistry
 from colors import choose_one_color, tuple2gdkColor, gdkColor2tuple
@@ -19,10 +19,6 @@ from shared import shared
 
 
 class MarkerList(gtk.VBox):
-    """
-    CLASS: MarkerList
-    DESCR: 
-    """
     paramd = {}   # a dict from names to SurfParam instances
 
     def __init__(self):
@@ -32,6 +28,7 @@ class MarkerList(gtk.VBox):
         self._markers = {}
         self._marker_ids = {}
         self.nmrk=0
+        self.__ignore_sel_changed = False
 
         #Toolbar
         toolbar = MarkerListToolbar(self)
@@ -93,11 +90,13 @@ class MarkerList(gtk.VBox):
             x,y,z = center #marker.get_center()
             id_ = self._marker_ids[marker.uuid]
             treeiter = self._get_iter_for_id(id_)
-            self.tree_mrk.set(treeiter,2,"%.1f,%.1f,%.1f"%(x,y,z))
+            self.tree_mrk.set(treeiter,2,self.__format_coord_string(x,y,z))
         elif event=='select marker':
             marker = args[0]
+            self.__set_marker_selected(marker,True)
         elif event=='unselect marker':
             marker = args[0]
+            self.__set_marker_selected(marker,False)
 
     def cb_add(self,*args):
         parent_window = self.get_parent_window()
@@ -112,19 +111,12 @@ class MarkerList(gtk.VBox):
 
         EventHandler().add_marker(marker)
 
-
     def cb_remove(self,*args):
-        treeiter = self._treev_sel.get_selected()[1]
-        if treeiter:
-            mrk_id = self.tree_mrk.get(treeiter,0)[0]
-            EventHandler().remove_marker(self._markers[mrk_id])
+        marker = self.__get_selected_marker()
+        EventHandler().remove_marker(marker)
 
     def cb_choose_color(self,*args):
-        treeiter = self._treev_sel.get_selected()[1]
-        if not treeiter:
-            return
-        mrk_id = self.tree_mrk.get(treeiter,0)[0]
-        marker = self._markers[mrk_id]
+        marker = self.__get_selected_marker()
         old_color = marker.get_color()
         print old_color
         new_color = choose_one_color("New color for marker",tuple2gdkColor(old_color))
@@ -137,12 +129,12 @@ class MarkerList(gtk.VBox):
     def cb_move_down(self, *args):
         self._move_in_list(up=False)
 
+    def cb_edit_label(self, *args):
+        marker = self.__get_selected_marker()
+        edit_label_of_marker(marker)
+
     def cb_edit_position(self,*args):
-        treeiter = self._treev_sel.get_selected()[1]
-        if not treeiter:
-            return
-        mrk_id = self.tree_mrk.get(treeiter,0)[0]
-        marker = self._markers[mrk_id]
+        marker = self.__get_selected_marker()
         x_old,y_old,z_old = marker.get_center()
         #parent_window = self.get_parent_window()
         #print parent_window
@@ -152,7 +144,6 @@ class MarkerList(gtk.VBox):
         x,y,z = coordinates
         EventHandler().notify("move marker",marker, (x,y,z))
         self.treev_sel_changed(self._treev_sel)
-
 
     def _move_in_list(self,up=True):
         if self._treev_sel.count_selected_rows == 0:
@@ -194,7 +185,7 @@ class MarkerList(gtk.VBox):
         self._markers[self.nmrk]=marker
         x,y,z = marker.get_center()
         treeiter = self.tree_mrk.append(None)
-        self.tree_mrk.set(treeiter,0,self.nmrk,1,"",2,"%.1f,%.1f,%.1f"%(x,y,z))
+        self.tree_mrk.set(treeiter,0,self.nmrk,1,"",2,self.__format_coord_string(x,y,z))
         self.__update_treeview_visibility()
 
     def remove_marker(self,marker):
@@ -211,6 +202,8 @@ class MarkerList(gtk.VBox):
             self.__update_treeview_visibility()
 
     def treev_sel_changed(self,selection):
+        if self.__ignore_sel_changed:
+            return
         EventHandler().clear_selection()
         try:
             treeiter = selection.get_selected()[1]
@@ -243,3 +236,31 @@ class MarkerList(gtk.VBox):
         else:
             self.emptyIndicator.hide()
             self.scrolledwindow.show()
+
+    def __get_selected_marker(self):
+        treeiter = self._treev_sel.get_selected()[1]
+        if not treeiter:
+            return
+        mrk_id = self.tree_mrk.get(treeiter,0)[0]
+        return self._markers[mrk_id]
+
+    def __format_coord_string(self,x,y,z):
+        def fmt(f):
+            s = "%.1f"%f
+            return " "*(7-len(s))+s
+
+        return "%s,%s,%s"%(fmt(x), fmt(y), fmt(z))
+
+    def __set_marker_selected(self, marker, selected=True):
+        id_ = self._marker_ids[marker.uuid]
+        treeiter = self._get_iter_for_id(id_)
+        try:
+            self.__ignore_sel_changed = True
+            if selected:
+                self._treev_sel.select_iter(treeiter)
+            else:
+                self._treev_sel.unselect_iter(treeiter)
+        except Exception:
+            pass
+        finally:
+            self.__ignore_sel_changed = False

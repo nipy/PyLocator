@@ -1,4 +1,5 @@
 import gtk
+import re
 from pylocator_glade import edit_label_dialog, edit_coordinates_dialog, edit_settings_dialog, about_dialog
 from gtkutils import str2num_or_err
 from colors import gdkColor2tuple, tuple2gdkColor
@@ -22,6 +23,22 @@ def edit_label(oldLabel=""):
 
     dialog.destroy()
     return label
+
+def edit_label_of_marker(marker):
+    label = marker.get_label()
+    defaultLabel = label
+    if defaultLabel=='' and shared.lastLabel is not None:
+        m = re.match('(.+?)(\d+)', shared.lastLabel)
+        if m:
+            defaultLabel = m.group(1) + str(int(m.group(2))+1)
+        
+    new_label = edit_label(defaultLabel)
+    if shared.debug: print new_label, label
+
+    if new_label==None or new_label==label: return
+    EventHandler().notify('label marker', marker, new_label)
+    shared.lastLabel = label
+
     
 def edit_coordinates(X=0,Y=0,Z=0, description=None):
     builder = gtk.Builder()
@@ -68,6 +85,8 @@ def about(version="0.xyz"):
 
     dialog.destroy()
     return label
+
+
 
 class SettingsController(object):
     def __init__(self, pwxyz):

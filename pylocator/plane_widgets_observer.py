@@ -453,8 +453,14 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
             self.update_plane()
         elif event=="set axes directions":
             self.add_axes_labels()
-            #EventHandler().notify('observers update plane')
-            
+        elif event=='select marker':
+            marker = args[0]
+            actor = self.get_actor_for_marker(marker)
+            actor.set_selected(True)
+        elif event=='unselect marker':
+            marker = args[0]
+            actor = self.get_actor_for_marker(marker)
+            actor.set_selected(False)
         self.update_rings()
         self.Render()
 

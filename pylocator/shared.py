@@ -5,6 +5,7 @@ class Shared(object):
     lastSel = ''
     labels = ["L","R","P","A","I","S"]
     #lastSel = os.getcwd() + os.sep
+
     def set_file_selection(self, name):
         """
         Set the filename or dir of the most recent file selected
@@ -20,8 +21,6 @@ class Shared(object):
         else:
             return os.path.dirname(self.lastSel) + os.sep
 
-
-
     ratio = 3
     #screenshot_magnification = 3
     screenshot_cnt = 1
@@ -29,6 +28,8 @@ class Shared(object):
     planes_opacity = 1.
     markers_opacity = 1.
     marker_size = 3.
+
+    lastLabel = ""
 
 
         

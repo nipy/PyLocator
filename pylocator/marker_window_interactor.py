@@ -3,11 +3,8 @@ import vtk
 from GtkGLExtVTKRenderWindowInteractor import GtkGLExtVTKRenderWindowInteractor
 from render_window import PyLocatorRenderWindow
 from events import EventHandler, UndoRegistry
-import re
 from shared import shared
-
-from dialogs import edit_label
-
+from dialogs import edit_label_of_marker
 
 INTERACT_CURSOR, MOVE_CURSOR, COLOR_CURSOR, SELECT_CURSOR, DELETE_CURSOR, LABEL_CURSOR, SCREENSHOT_CURSOR = gtk.gdk.ARROW, gtk.gdk.HAND2, gtk.gdk.SPRAYCAN, gtk.gdk.TCROSS, gtk.gdk.X_CURSOR, gtk.gdk.PENCIL, gtk.gdk.ICON
 
@@ -30,7 +27,6 @@ class MarkerWindowInteractor(PyLocatorRenderWindow):
 
         self.pressHooks = {}
         self.releaseHooks = {}
-        self.lastLabel = None
 
         self.vtk_interact_mode = False
 
@@ -193,26 +189,7 @@ class MarkerWindowInteractor(PyLocatorRenderWindow):
         def button_down(*args):
             marker = self.get_marker_at_point()
             if marker is None: return
-
-            label = marker.get_label()
-            defaultLabel = label
-            if defaultLabel=='' and self.lastLabel is not None:
-                m = re.match('(.+?)(\d+)', self.lastLabel)
-                if m:
-                    defaultLabel = m.group(1) + str(int(m.group(2))+1)
-                
-            new_label = edit_label(defaultLabel)
-                
-            print new_label, label
-
-            if new_label==None or new_label==label: return
-
-                #oldLabel = marker.get_label()
-                #UndoRegistry().push_command(
-                #    EventHandler().notify, 'label marker', marker, oldLabel)
-            EventHandler().notify('label marker', marker, new_label)
-            self.lastLabel = label
-            self.Render()
+            edit_label_of_marker(marker)
             
 
         self.pressHooks[1] = button_down

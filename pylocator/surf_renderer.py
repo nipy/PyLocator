@@ -46,13 +46,11 @@ class SurfRenderWindow(PyLocatorRenderWindow):
 
     def set_marker_selection(self, marker, select=True):
         if select:
-            marker = args[0]
             actor = create_box_actor_around_marker(marker)
             if shared.debug: print "PlaneWidgetsXYZ.update_viewer(): self.renderer.AddActor(actor)"
             self.renderer.AddActor(actor)
             self.boxes[marker] = actor
         else:
-            marker = args[0]
             actor = self.boxes[marker]
             self.renderer.RemoveActor(actor)
 
