@@ -15,6 +15,7 @@ from shared import shared
 
 from surf_params import SurfParams
 
+from list_toolbar import ListToolbar
 from decimate_filter import DecimateFilter
 from connect_filter import ConnectFilter
 from colors import ColorChooser, colord, colorSeq
@@ -48,7 +49,11 @@ class RoiRendererProps(gtk.VBox):
         self.pwxyz = pwxyz
         self.interactorStyle = self.sr.GetInteractorStyle()
 
+        toolbar = self.__create_toolbar()
+        self.pack_start(toolbar,False,False)
+
         self.scrolled_window = gtk.ScrolledWindow()
+
         self.inner_vbox = gtk.VBox()
         self.inner_vbox.set_spacing(20)
         self.scrolled_window.add_with_viewport(self.inner_vbox)
@@ -67,6 +72,31 @@ class RoiRendererProps(gtk.VBox):
     def render(self, *args):
         self.sr.Render()
             
+    def __create_toolbar(self):
+        conf = [
+                [gtk.STOCK_ADD,
+                 'Add',
+                 'Add new marker by entering its coordinates',
+                 self.add_roi
+                ],
+                [gtk.STOCK_REMOVE, 
+                 'Remove', 
+                 'Remove selected marker',
+                 self.rm_roi
+                ],
+                #"-",
+                #[gtk.STOCK_GO_UP, 
+                # 'Move up', 
+                # 'Move selected marker up in list',
+                # self.cb_move_up
+                #],
+                #[gtk.STOCK_GO_DOWN, 
+                # 'Move down', 
+                # 'Move selected marker down in list',
+                # self.cb_move_down
+                #],
+               ]
+        return ListToolbar(conf)
 
     def _make_roi_frame(self):
         """
@@ -129,18 +159,6 @@ class RoiRendererProps(gtk.VBox):
         self.color_chooser = ColorChooser()
         self.color_chooser.connect("color_changed",self.change_color_of_roi)
         tmp.pack_start(self.color_chooser,True,False)
-
-        #Buttons for TreeView
-        hbox = gtk.HBox()
-        vboxFrame.pack_start(hbox,False,False)
-        button1 = gtk.Button(stock=gtk.STOCK_ADD)
-        button1.connect("clicked",self.add_roi)
-        hbox.pack_start(button1)
-        button2 = gtk.Button(stock=gtk.STOCK_REMOVE)
-        button2.connect("clicked",self.rm_roi)
-        hbox.pack_start(button2)
-        hbox.show_all()
-
 
         #vboxProps.pack_start()
         vboxProps.show_all()

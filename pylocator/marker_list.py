@@ -14,7 +14,7 @@ from dialogs import edit_coordinates, edit_label_of_marker
 from events import EventHandler, UndoRegistry
 from colors import choose_one_color, tuple2gdkColor, gdkColor2tuple
 from markers import Marker
-from marker_list_toolbar import MarkerListToolbar
+from list_toolbar import ListToolbar
 from shared import shared
 
 
@@ -31,7 +31,7 @@ class MarkerList(gtk.VBox):
         self.__ignore_sel_changed = False
 
         #Toolbar
-        toolbar = MarkerListToolbar(self)
+        toolbar = self.__create_toolbar()
         self.pack_start(toolbar,False,False)
         
         #Empty-indicator
@@ -65,8 +65,48 @@ class MarkerList(gtk.VBox):
         self.show_all()
 
         self.__update_treeview_visibility()
-        #self.set_size_request(0,0)
 
+    def __create_toolbar(self):
+        conf = [
+                [gtk.STOCK_ADD,
+                 'Add',
+                 'Add new marker by entering its coordinates',
+                 self.cb_add
+                ],
+                [gtk.STOCK_REMOVE, 
+                 'Remove', 
+                 'Remove selected marker',
+                 self.cb_remove
+                ],
+                "-",
+                [gtk.STOCK_GO_UP, 
+                 'Move up', 
+                 'Move selected marker up in list',
+                 self.cb_move_up
+                ],
+                [gtk.STOCK_GO_DOWN, 
+                 'Move down', 
+                 'Move selected marker down in list',
+                 self.cb_move_down
+                ],
+                "-",
+                [gtk.STOCK_BOLD, 
+                 'Label', 
+                 'Edit Label of marker',
+                 self.cb_edit_label
+                ],
+                [gtk.STOCK_EDIT, 
+                 'Position', 
+                 'Edit position of marker',
+                 self.cb_edit_position
+                ],
+                [gtk.STOCK_SELECT_COLOR, 
+                 'Color', 
+                 'Select color for marker',
+                 self.cb_choose_color
+                ]
+               ]
+        return ListToolbar(conf)
 
     def update_viewer(self, event, *args):
         if event=='add marker':
@@ -215,18 +255,6 @@ class MarkerList(gtk.VBox):
                 EventHandler().select_new(marker)
         except:
             pass
-
-    def change_color_of_roi(self,*args):
-        treeiter = self._treev_sel.get_selected()[1]
-        if treeiter:
-            roi_id = self.tree_roi.get(treeiter,0)
-            self.paramd[roi_id].set_color(self.color_chooser.color)
-
-    def change_opacity_of_roi(self,*args):
-        treeiter = self._treev_sel.get_selected()[1]
-        if treeiter:
-            roi_id = self.tree_roi.get(treeiter,0)
-            self.paramd[roi_id].set_opacity(self.scrollbar_opacity.get_value())
 
     def __update_treeview_visibility(self):
         if self.tree_mrk.get_iter_first()==None: 
