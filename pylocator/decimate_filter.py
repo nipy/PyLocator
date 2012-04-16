@@ -21,47 +21,43 @@ class DecimateFilter(vtk.vtkDecimatePro):
         
     Public attrs:
       targetReduction
-      aspectRatio    
-      initialError   
-      errorIncrement 
-      maxIterations  
-      initialAngle   
+      #aspectRatio    
+      #initialError   
+      #errorIncrement 
+      #maxIterations  
+      #initialAngle   
     """
 
     fmts = {
       'targetReduction' : '%1.2f',
-      'aspectRatio'     : '%1.1f',
-      'initialError'    : '%1.5f',
-      'errorIncrement'  : '%1.4f',      
-      'maxIterations'   : '%d',
-      'initialAngle'    : '%1.1f',
+      #'initialError'    : '%1.5f',
+      #'errorIncrement'  : '%1.4f',      
+      #'maxIterations'   : '%d',
+      #'initialAngle'    : '%1.1f',
       }
 
 
     labels = {
         'targetReduction' : 'Target reduction',
-        'aspectRatio'     : 'Aspect ratio',
-        'initialError'    : 'Initial error',
-        'errorIncrement'  : 'Error increment',
-        'maxIterations'   : 'Maximum iterations',
-        'initialAngle'    :'Initial angle',
+        #'initialError'    : 'Initial error',
+        #'errorIncrement'  : 'Error increment',
+        #'maxIterations'   : 'Maximum iterations',
+        #'initialAngle'    :'Initial angle',
         }
 
     converters = {
       'targetReduction' : str2posnum_or_err,
-      'aspectRatio'     : str2posnum_or_err,
-      'initialError'    : str2posnum_or_err,
-      'errorIncrement'  : str2posnum_or_err,      
-      'maxIterations'   : str2posint_or_err,
-      'initialAngle'    : str2posnum_or_err,
+      #'initialError'    : str2posnum_or_err,
+      #'errorIncrement'  : str2posnum_or_err,      
+      #'maxIterations'   : str2posint_or_err,
+      #'initialAngle'    : str2posnum_or_err,
         
         }
     targetReduction = 0.8
-    aspectRatio     = 20 
-    initialError    = 0.0005
-    errorIncrement  = 0.001
-    maxIterations   = 6
-    initialAngle    = 30
+    #initialError    = 0.0005
+    #errorIncrement  = 0.001
+    #maxIterations   = 6
+    #initialAngle    = 30
 
     def __init__(self):
         prog = ProgressBarDialog(
@@ -70,6 +66,7 @@ class DecimateFilter(vtk.vtkDecimatePro):
             msg='Decimating data....',
             size=(300,40),
             )
+        prog.set_modal(True)
 
         def start(o, event):
             prog.show()
@@ -91,9 +88,8 @@ class DecimateFilter(vtk.vtkDecimatePro):
 
     def update(self):
         self.SetTargetReduction(self.targetReduction)
-        self.SetAspectRatio(self.aspectRatio)
-        self.SetInitialError(self.initialError)
-        self.SetErrorIncrement(self.errorIncrement)
-        self.SetMaximumIterations(self.maxIterations)
-        self.SetInitialFeatureAngle(self.initialAngle)
+        #self.SetInitialError(self.initialError)
+        #self.SetErrorIncrement(self.errorIncrement)
+        #self.SetMaximumIterations(self.maxIterations)
+        #self.SetInitialFeatureAngle(self.initialAngle)
                 

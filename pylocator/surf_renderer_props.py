@@ -2,6 +2,7 @@ from __future__ import division
 import sys, os
 import vtk
 
+import gobject
 import gtk
 from gtk import gdk
 
@@ -12,8 +13,9 @@ from events import EventHandler, UndoRegistry
 from markers import Marker
 from shared import shared
 
-from colors import colord, colorSeq
+from colors import ColorChooser, colord, colorSeq
 
+from list_toolbar import ListToolbar
 from surf_params import SurfParams
 
 from decimate_filter import DecimateFilter
@@ -31,28 +33,36 @@ class SurfRendererProps(gtk.VBox):
 
     def __init__(self, sr, pwxyz):
         """sr is a SurfRenderer"""
+
+        self.nsurf=0
+        self.ignore_pipeline_updates = False
+
         gtk.VBox.__init__(self)
+        self.show()
         self.set_homogeneous(False)
 
         self.sr = sr
         self.interactorStyle = self.sr.GetInteractorStyle()
 
-
         self.sr.AddObserver('KeyPressEvent', self.key_press)
         self.pwxyz = pwxyz
         
+        toolbar = self.__create_toolbar()
+        self.pack_start(toolbar,False,False)
+        toolbar.show()
+
         self.scrolled_window = gtk.ScrolledWindow()
+        self.scrolled_window.show()
         self.inner_vbox = gtk.VBox()
+        self.inner_vbox.show()
         self.inner_vbox.set_spacing(20)
         self.scrolled_window.add_with_viewport(self.inner_vbox)
         #self.scrolled_window.show()
         #self.inner_vbox.show()
         self.pack_start(self.scrolled_window)
 
+        self._make_segment_list()
         self._make_intensity_frame()
-        #self._make_camera_control()
-        self._make_seqment_props_frame()
-        self._make_pipeline_frame()
         self._make_picker_frame()
 
         def hide(*args):
@@ -65,8 +75,85 @@ class SurfRendererProps(gtk.VBox):
         button.connect('clicked', self.render)
         self.pack_start(button, False, False)        
 
-        self.show_all()
+    def __create_toolbar(self):
+        conf = [
+                [gtk.STOCK_ADD,
+                 'Add',
+                 'Load ROI from file and render it',
+                 self.add_segment
+                ],
+                [gtk.STOCK_REMOVE, 
+                 'Remove', 
+                 'Remove selected ROI',
+                 self.add_segment
+                ],
+               ]
+        return ListToolbar(conf)
 
+    def _make_segment_list(self):
+        #create TreeView
+        #Fields: idx, Name 
+        self.tree_surf = gtk.TreeStore(gobject.TYPE_INT, gobject.TYPE_STRING)
+        self.nroi = 0
+        self.treev_surf = gtk.TreeView(self.tree_surf)
+        self.treev_sel = self.treev_surf.get_selection()
+        self.treev_sel.connect("changed",self.treev_sel_changed)
+        self.treev_sel.set_mode(gtk.SELECTION_SINGLE)
+        renderer = gtk.CellRendererText()
+        renderer.set_property("xalign",0.0)
+        #renderer.set_xalign(0.0)
+        self.col1 = gtk.TreeViewColumn("Name",renderer,text=1)
+        self.treev_surf.append_column(self.col1)
+        #self.treev_roi.show()
+        self.inner_vbox.pack_start(self.treev_surf, False)
+        #self.treev_surf.show()
+
+        #Empty-indicator
+        self.emptyIndicator = gtk.Label('No segment defined')
+        self.emptyIndicator.show()
+        self.inner_vbox.pack_start(self.emptyIndicator, False)
+
+        #Edit properties of one surface
+        self.props_frame = gtk.Frame('Properties')
+        self.props_frame.set_border_width(5)
+        self.inner_vbox.pack_start(self.props_frame,False,False)
+        vboxProps = gtk.VBox()
+        self.props_frame.add(vboxProps)
+        general_expander = self._make_general_properties_expander()
+        vboxProps.pack_start(general_expander, False)
+        pipeline_expander = self._make_pipeline_expander()
+        vboxProps.pack_start(pipeline_expander, False)
+
+    def _make_general_properties_expander(self):
+        expander = gtk.Expander('General settings')
+        expander.set_expanded(True)
+
+        vbox = gtk.VBox()
+        vbox.show()
+        vbox.set_spacing(10)
+        expander.add(vbox)
+
+        vbox.pack_start(gtk.Label("Opacity"))
+        scrollbar = gtk.HScrollbar()
+        scrollbar.show()
+        scrollbar.set_size_request(*self.SCROLLBARSIZE)
+        scrollbar.set_range(0, 1)
+        scrollbar.set_increments(.05, .2)
+        scrollbar.set_value(1.0)
+        scrollbar.connect('value_changed', self.change_opacity_of_surf)
+        vbox.pack_start(scrollbar)
+        self.scrollbar_opacity = scrollbar
+        tmp = gtk.HBox()
+        vbox.pack_start(tmp)
+        tmp.pack_start(gtk.Label("Color"),False,False)
+        self.color_chooser = ColorChooser()
+        self.color_chooser.connect("color_changed",self.change_color_of_surf)
+        tmp.pack_start(self.color_chooser,True,False)
+        
+        self.visibility_toggle = gtk.ToggleButton("Visible")
+        vbox.pack_start(self.visibility_toggle, False, False)
+
+        return expander
 
     def key_press(self, interactor, event):
         key = interactor.GetKeySym()
@@ -130,244 +217,138 @@ class SurfRendererProps(gtk.VBox):
             else:
                 pw.EnabledOn()
 
-
-        
     def render(self, *args):
         self.sr.Render()
             
-    def _make_pipeline_frame(self):
-        """
-        Set up the surface rendering pipeline
-
-        This class will provide an attibutes dictionary that the
-        SufaceRenderer class can use
-        """
-
-        frame = gtk.Frame('Pipeline settings')
-        frame.set_border_width(5)
-        self.inner_vbox.pack_start(frame, False, False)
-
-        vboxFrame = gtk.VBox()
-        vboxFrame.show()
-        vboxFrame.set_spacing(3)
-        frame.add(vboxFrame)
-
-        self.vboxPipelineFrame = vboxFrame
-
-        self.update_pipeline_frame()
+    def _make_pipeline_expander(self):
+        def decimate_toggled(button):
+            frameDecimateFilter.set_sensitive(button.get_active())
+            apply_()
         
-        
-    def update_pipeline_frame(self):
+        def connect_toggled(button):
+            frameConnectFilter.set_sensitive(button.get_active())
+            apply_()
 
-        vbox = self.vboxPipelineFrame
+        def set_connect_mode(id_):
+            if self.paramd[id_].useConnect:
+                for num in self.connectExtractButtons.keys():
+                    bt = self.connectExtractButtons[num]
+                    if bt.get_active():
+                        self.paramd[id_].connect.mode = num
+                        break
+
+        def set_decimate_params(id_):
+            if self.paramd[id_].useDecimate:
+                self.paramd[id_].deci.targetReduction = self.scrollbar_target_reduction.get_value()
+
+        def connect_method_changed(button):
+            if button.get_active():
+                apply_()
+
+        def apply_(*args):
+            id_ = self.__get_selected_id()
+            self.paramd[id_].useConnect = self.buttonUseConnect.get_active()
+            self.paramd[id_].useDecimate = self.buttonUseDecimate.get_active()
+            
+            set_connect_mode(id_)
+            set_decimate_params(id_)
+            pa = self.paramd[id_]
+            print pa.deci.targetReduction
+            self.paramd[id_].update_properties()
+            self.render()
+
+        expander = gtk.Expander('Pipeline settings')
+
+        vbox = gtk.VBox()
+        vbox.show()
+        vbox.set_spacing(3)
+        expander.add(vbox)
+
+        self.vboxPipeline = vbox
 
         decattrs = DecimateFilter.labels.keys()
         decattrs.sort()
-
-        
-        widgets = vbox.get_children()
-        for w in widgets:
-            vbox.remove(w)
+        self.decattrs = decattrs 
 
         names = self.paramd.keys()
         names.sort()
 
-
-
-        if not len(names):
-            label = gtk.Label('No segments defined')
-            label.show()
-            vbox.pack_start(label)
-            return        
-
-        
-        frame = gtk.Frame('Segments')
-        frame.show()
-        frame.set_border_width(5)
-        vbox.pack_start(frame, True, True)
-
-        boxRadio = gtk.VBox()
-        boxRadio.show()
-        frame.add(boxRadio)
-
-
-
-        def get_active_name():
-            for name, button in buttonNames.items():
-                if button.get_active():
-                    return name
-
-
-
-        def update_params(*args):
-
-            name = get_active_name()
-
-            # set the active props of the filter frames
-            self.buttonUseConnect.set_active(self.paramd[name].useConnect)
-            self.buttonUseDecimate.set_active(self.paramd[name].useDecimate)
-
-            activeButton = connectExtractButtons[self.paramd[name].connect.mode]
-            activeButton.set_active(True)
-
-            # fill in the decimate entry boxes
-            for attr in decattrs:
-                s = DecimateFilter.labels[attr]
-                fmt = DecimateFilter.fmts[attr]
-                entry = self.__dict__['entry_' + attr]
-                val = getattr(self.paramd[name].deci, attr)
-                entry.set_text(fmt%val)
-
-
-        # set the active segment by name
-        lastButton = None
-        buttonNames = {}
-        for name in names:
-            button = gtk.RadioButton(lastButton)
-            button.set_label(name)
-            button.set_active(name==names[0])
-            button.show()
-            button.connect('clicked', update_params)
-            boxRadio.pack_start(button, True, True)
-            buttonNames[name] = button
-            lastButton = button
-
-
-        segmentName = get_active_name()
+        # Filter selection
         framePipelineFilters = gtk.Frame('Pipeline filters')
-        framePipelineFilters.show()
         framePipelineFilters.set_border_width(5)
         vbox.pack_start(framePipelineFilters, True, True)
-
-        frameConnectFilter = gtk.Frame('Connect filter settings')
-        frameConnectFilter.show()
-        frameConnectFilter.set_border_width(5)
-        frameConnectFilter.set_sensitive(self.paramd[segmentName].useConnect)
-        vbox.pack_start(frameConnectFilter, True, True)
-
-        frameDecimateFilter = gtk.Frame('Decimate filter settings')
-        frameDecimateFilter.show()
-        frameDecimateFilter.set_border_width(5)
-        frameDecimateFilter.set_sensitive(self.paramd[segmentName].useDecimate)
-        vbox.pack_start(frameDecimateFilter, True, True)
-
-        
-        def connect_toggled(button):
-            frameConnectFilter.set_sensitive(button.get_active())
-            name = get_active_name()
-            self.paramd[name].useConnect  = button.get_active()
-            self.paramd[name].update_pipeline()
-
-
         vboxFrame = gtk.VBox()
-        vboxFrame.show()
         vboxFrame.set_spacing(3)
         framePipelineFilters.add(vboxFrame)
-
         self.buttonUseConnect = gtk.CheckButton('Use connect filter')
-        self.buttonUseConnect.show()
-        self.buttonUseConnect.set_active(self.paramd[segmentName].useConnect)
+        self.buttonUseConnect.set_active(False)
         self.buttonUseConnect.connect('toggled', connect_toggled)
         vboxFrame.pack_start(self.buttonUseConnect, True, True)
-
-        def decimate_toggled(button):
-            frameDecimateFilter.set_sensitive(button.get_active())
-            name = get_active_name()
-            self.paramd[name].useDecimate = button.get_active()
-            self.paramd[name].update_pipeline()
-
         self.buttonUseDecimate = gtk.CheckButton('Use decimate filter')
-        self.buttonUseDecimate.show()
-        self.buttonUseDecimate.set_active(self.paramd[segmentName].useDecimate)
+        self.buttonUseDecimate.set_active(False)
         self.buttonUseDecimate.connect('toggled', decimate_toggled)
         vboxFrame.pack_start(self.buttonUseDecimate, True, True)
 
-
+        #Connect filter settings
+        frameConnectFilter = gtk.Frame('Connect filter settings')
+        frameConnectFilter.set_border_width(5)
+        frameConnectFilter.set_sensitive(False)
+        vbox.pack_start(frameConnectFilter, True, True)
         vboxFrame = gtk.VBox()
-        vboxFrame.show()
         vboxFrame.set_spacing(3)
         frameConnectFilter.add(vboxFrame)
-
-
         extractModes = ConnectFilter.num2mode.items()
         extractModes.sort()
-
-
-
-        def set_extract_mode(button, num):
-            name = get_active_name()
-            self.paramd[name].connect.mode = num
-
         lastButton = None
-        connectExtractButtons = {}
+        self.connectExtractButtons = {}
         for num, name in extractModes:
             button = gtk.RadioButton(lastButton)
             button.set_label(name)
-            button.show()
-            button.connect('toggled', set_extract_mode, num)
+            if num==ConnectFilter.mode:
+                button.set_active(True)
+            button.connect("toggled",connect_method_changed)
             vboxFrame.pack_start(button, True, True)
-            connectExtractButtons[num] = button
+            self.connectExtractButtons[num] = button
             lastButton = button
-        activeButton = connectExtractButtons[self.paramd[segmentName].connect.mode]
-        activeButton.set_active(True)
 
+        #Decimate filter settings
+        frameDecimateFilter = gtk.Frame('Decimate filter settings')
+        frameDecimateFilter.set_border_width(5)
+        frameDecimateFilter.set_sensitive(False)
+        vbox.pack_start(frameDecimateFilter, True, True)
         vboxFrame = gtk.VBox()
-        vboxFrame.show()
         vboxFrame.set_spacing(3)
+        vboxFrame.pack_start(gtk.Label("Target Reduction"))
+        scrollbar = gtk.HScrollbar()
+        scrollbar.show()
+        scrollbar.set_size_request(*self.SCROLLBARSIZE)
+        scrollbar.set_range(0, 0.99)
+        scrollbar.set_increments(.05, .2)
+        scrollbar.set_value(0.8)
+        scrollbar.connect('value_changed', apply_)
+        self.scrollbar_target_reduction = scrollbar
+        vboxFrame.pack_start(scrollbar)
         frameDecimateFilter.add(vboxFrame)
 
+        #button = gtk.Button(stock=gtk.STOCK_APPLY)
+        #vbox.pack_start(button, True, True)
+        #button.connect('clicked', apply)
+        #expander.show_all()
 
-        table = gtk.Table(len(decattrs),2)
-        table.set_col_spacings(3)
-        table.set_row_spacings(3)
-        table.show()
-        vboxFrame.pack_start(table, True, True)        
+        return expander
 
-        def make_row(name, default, fmt='%1.1f'):
-            label = gtk.Label(name)
-            label.show()
-            label.set_alignment(xalign=1, yalign=0.5)
-            entry = gtk.Entry()
-            entry.show()
-            entry.set_text(fmt%default)
-            entry.set_width_chars(10)
-            table.attach(label, 0, 1, make_row.rownum, make_row.rownum+1,
-                         xoptions=gtk.FILL, yoptions=0)
-            table.attach(entry, 1, 2, make_row.rownum, make_row.rownum+1,
-                         xoptions=gtk.EXPAND|gtk.FILL, yoptions=0)
-            make_row.rownum += 1
-            return label, entry
-        make_row.rownum=0
+    def update_pipeline_params(self, *args):
+        id_ = self.__get_selected_id()
 
-        for attr in decattrs:
-            label = DecimateFilter.labels[attr]
-            fmt = DecimateFilter.fmts[attr]
+        # set the active props of the filter frames
+        self.buttonUseConnect.set_active(self.paramd[id_].useConnect)
+        self.buttonUseDecimate.set_active(self.paramd[id_].useDecimate)
+        connect_mode = self.paramd[id_].connect.mode
+        print connect_mode
+        activeButton = self.connectExtractButtons[connect_mode]
+        activeButton.set_active(True)
 
-            val = getattr(self.paramd[segmentName].deci, attr)
-            label, entry = make_row(label, val, fmt)
-            self.__dict__['label_' + attr] = label
-            self.__dict__['entry_' + attr] = entry
-
-
-
-        def apply(button):
-            name = get_active_name()
-            if self.paramd[name].useDecimate:
-                for attr in decattrs:
-                    label = self.__dict__['label_' + attr]
-                    entry = self.__dict__['entry_' + attr]
-                    converter = DecimateFilter.converters[attr]
-                    val = converter(entry.get_text(), label, self)
-                    if val is None: return
-                    setattr(self.paramd[name].deci, attr, val)
-
-            self.paramd[name].update_properties()
-            
-        button = gtk.Button(stock=gtk.STOCK_APPLY)
-        button.show()
-        vbox.pack_start(button, True, True)
-        button.connect('clicked', apply)
-        
+        self.scrollbar_target_reduction.set_value(self.paramd[id_].deci.targetReduction)
 
     def _make_intensity_frame(self):
         """
@@ -424,7 +405,7 @@ class SurfRendererProps(gtk.VBox):
         hbox.set_homogeneous(True)
         hbox.set_spacing(3)
         vboxFrame.pack_start(hbox, False, False)
-            
+
         button = gtk.Button('Capture')
         button.show()
         button.connect('clicked', self.start_collect_intensity)
@@ -447,19 +428,17 @@ class SurfRendererProps(gtk.VBox):
         frame.show()
         frame.set_border_width(5)
         main_vbox.pack_start(frame, False, False)
-        
+
         vboxFrame = gtk.VBox()
         vboxFrame.show()
         vboxFrame.set_spacing(3)
         frame.add(vboxFrame)
-        
-        
 
         table = gtk.Table(2,2)
         table.set_col_spacings(3)
         table.set_row_spacings(3)
         table.show()
-        vboxFrame.pack_start(table, True, True)                
+        vboxFrame.pack_start(table, True, True)
 
         self.labelName = gtk.Label('Label: ')
         self.labelName.show()
@@ -482,7 +461,6 @@ class SurfRendererProps(gtk.VBox):
             else:
                 self.entryName.set_text(s)
                 self.lastColor = colord[s]
-                            
 
         colors = [ name for name, color in colorSeq]
         colors.append('custom...')
@@ -496,7 +474,6 @@ class SurfRendererProps(gtk.VBox):
                      xoptions=gtk.FILL, yoptions=0)
         table.attach(optmenu, 1, 2, 1, 2,
                      xoptions=gtk.EXPAND|gtk.FILL, yoptions=0)
-        
 
         button = ButtonAltLabel('Add segment', gtk.STOCK_ADD)
         button.show()
@@ -524,115 +501,6 @@ class SurfRendererProps(gtk.VBox):
         self.vboxSegPropsFrame = vboxFrame
         self.update_segments_frame() 
 
-        
-    def update_segments_frame(self):
-        'Update the segment props with the latest segments'
-
-        vbox = self.vboxSegPropsFrame
-        
-        widgets = vbox.get_children()
-        for w in widgets:
-            vbox.remove(w)
-
-        names = self.paramd.keys()
-
-        if not len(names):
-            label = gtk.Label('No segments defined')
-            label.show()
-            vbox.pack_start(label)
-            return
-        
-        names.sort()
-        numrows = len(names)+1
-        numcols = 2
-
-        table = gtk.Table(numrows,numcols)
-        table.set_col_spacings(3)
-        table.show()
-        vbox.pack_start(table, True, True)        
-
-        delete = gtk.Label('Hide')
-        delete.show()
-        opacity = gtk.Label('Opacity')
-        opacity.show()
-        
-
-        table.attach(delete, 0, 1, 0, 1, xoptions=gtk.FILL, yoptions=0)
-        table.attach(opacity, 1, 2, 0, 1, xoptions=gtk.EXPAND|gtk.FILL, yoptions=0)
-        deleteButtons = {}
-        opacityBars = {}
-
-
-        class OpacityCallback:
-            def __init__(self, sr, name, paramd):
-                """
-                sr is the surf renderer instance
-                name is the name of the surface
-                paramd is the dict mapping names to objects
-
-                You don't want to pass the object itself because it is
-                bound at init time but you to be able to dynamically
-                update
-                """
-                self.name = name
-                self.sr = sr
-                self.paramd = paramd
-
-            def __call__(self, bar):
-                val = bar.get_value()
-                self.paramd[self.name].isoActor.GetProperty().SetOpacity(val)
-
-        class HideCallback:
-            def __init__(self, sr, name, paramd):
-                """
-                sr is the surf renderer instance
-                name is the name of the surface
-                paramd is the dict mapping names to objects
-
-                You don't want to pass the object itself because it is
-                bound at init time but you to be able to dynamically
-                update                
-                """
-                self.sr = sr
-                self.name = name
-                self.paramd = paramd
-                self.removed = False
-
-            def __call__(self, button):
-
-                if button.get_active():
-                    self.paramd[self.name].isoActor.VisibilityOff()
-                else:
-                    self.paramd[self.name].isoActor.VisibilityOn()
-                self.sr.Render()                    
-
-        rownum = 1                
-        for name in names:
-            hideCallback = HideCallback(self.sr, name, self.paramd)
-            opacityCallback = OpacityCallback(self.sr, name, self.paramd)            
-            b = gtk.CheckButton(name)
-            b.show()
-            b.set_active(False)
-            b.connect('toggled', hideCallback)
-            table.attach(b, 0, 1, rownum, rownum+1,
-                         xoptions=False, yoptions=False)
-            deleteButtons[name] = b
-
-            scrollbar = gtk.HScrollbar()
-            scrollbar.show()
-            scrollbar.set_size_request(*self.SCROLLBARSIZE)
-            table.attach(scrollbar, 1, 2, rownum, rownum+1,
-                         xoptions=True, yoptions=False)
-            
-            scrollbar.set_range(0, 1)
-            scrollbar.set_increments(.05, .2)
-            scrollbar.set_value(1.0)
-
-
-            scrollbar.connect('value_changed', opacityCallback)
-            rownum += 1
-
-
     def _make_picker_frame(self):
         """
         Controls to clean up the rendered segments
@@ -643,7 +511,6 @@ class SurfRendererProps(gtk.VBox):
         frame.set_border_width(5)
         self.inner_vbox.pack_start(frame, False, False)
 
-        
         vboxFrame = gtk.VBox()
         vboxFrame.show()
         vboxFrame.set_spacing(3)
@@ -722,6 +589,7 @@ class SurfRendererProps(gtk.VBox):
             self.intensityCnt += 1
 
     def add_segment(self, button):
+        self.nsurf +=1
         val = self.get_intensity()
         if val is None: return
         name = self.entryName.get_text()
@@ -729,23 +597,23 @@ class SurfRendererProps(gtk.VBox):
             error_msg('You must enter a name in the Intensity tab')
             return
 
-        if not self.paramd.has_key(name):
-            self.paramd[name] = SurfParams(self.sr.renderer, self.sr.interactor)
+        tree_iter = self.tree_surf.append(None)
+        self.tree_surf.set(tree_iter, 0,self.nsurf, 1, name)
 
-        params = self.paramd[name]
+        if not self.paramd.has_key(self.nsurf):
+            self.paramd[self.nsurf] = SurfParams(self.sr.renderer, self.sr.interactor)
+
+        params = self.paramd[self.nsurf]
         params.label = name
         params.intensity = val
         params.set_color(self.lastColor)
         params.set_image_data(self.sr.imageData)
+        print "Add:", params.connect.mode
         params.update_properties()
         
-        self.update_segments_frame() 
-        self.update_pipeline_frame()
-        self.update_picker_frame()
-
-        #Maybe snap surf to planes view
-        if len(self.paramd.keys())<2:
-            self.surf_to_planes_view()
+        self.__update_treeview_visibility()
+        #self.update_segments_frame() 
+        #self.update_picker_frame()
         
     def interaction_event(self, observer, event):
         if not self.collecting: return 
@@ -764,48 +632,6 @@ class SurfRendererProps(gtk.VBox):
         val = str2posnum_or_err(self.entryIntensity.get_text(),
                                 self.labelIntensity, parent=self)
         return val
-
-
-    def planes_to_surf_view(self, button=None):
-        fpu = self.sr.get_camera_fpu()
-        self.pwxyz.set_camera(fpu)
-        self.pwxyz.Render()
-        
-    def surf_to_planes_view(self, button=None):
-        fpu = self.pwxyz.get_camera_fpu()
-        self.sr.set_camera(fpu)
-        self.sr.Render()
-
-    def _make_camera_control(self):
-        """
-        Control the view of the rendered surface
-        """
-
-        frame = gtk.Frame('Camera views')
-        frame.show()
-        frame.set_border_width(5)
-
-        label = gtk.Label('Views')
-        label.show()
-        self.notebook.append_page(frame, label)
-
-        vbox = gtk.VBox()
-        vbox.show()
-        vbox.set_spacing(3)
-        frame.add(vbox)
-
-
-        button = ButtonAltLabel('Snap planes to surf view', gtk.STOCK_GO_BACK)
-        button.show()
-        button.connect('clicked', self.planes_to_surf_view)
-        vbox.pack_start(button, False, False)
-
-
-        button = ButtonAltLabel('Snap surf to planes view', gtk.STOCK_GO_FORWARD)
-        button.show()
-        button.connect('clicked', self.surf_to_planes_view)
-        vbox.pack_start(button, False, False)
-    
 
     def choose_color(self, *args):
         dialog = gtk.ColorSelectionDialog('Choose segment color')
@@ -830,3 +656,54 @@ class SurfRendererProps(gtk.VBox):
         dialog.destroy()
         return self.lastColor
 
+    def __get_selected_id(self):
+        treeiter = self.treev_sel.get_selected()[1]
+        if treeiter:
+            return self.tree_surf.get(treeiter,0)[0]
+        else:
+            return None
+
+    def treev_sel_changed(self, selection):
+        surf_id = self.__get_selected_id()
+        if not surf_id:
+            self.props_frame.hide()
+            return
+
+        self.props_frame.show_all()
+        #print "selection changed", self.tree_roi.get(treeiter,0,1)
+        try:
+            self.color_chooser.color = gtk.gdk.Color(*(self.paramd[surf_id].color))
+        except Exception, e:
+            print "During setting color of color chooser:", type(e),e
+        try:
+            self.scrollbar_opacity.set_value(self.paramd[surf_id].opacity)
+        except Exception, e:
+            print "During setting value of opacity scrollbar:", type(e),e
+        try:
+            self.ignore_pipeline_updates = True
+            self.update_pipeline_params()
+        finally:
+            self.ignore_pipeline_updates = False
+
+    def change_opacity_of_surf(self,*args):
+        surf_id = self.__get_selected_id()
+        if not surf_id:
+            return
+        self.paramd[surf_id].set_opacity(self.scrollbar_opacity.get_value())
+        self.render()
+
+    def change_color_of_surf(self,*args):
+        surf_id = self.__get_selected_id()
+        if not surf_id:
+            return
+        self.paramd[surf_id].set_color(self.color_chooser.color)
+        self.render()
+
+    def __update_treeview_visibility(self):
+        if self.tree_surf.get_iter_first()==None: 
+            # tree is empty
+            self.emptyIndicator.show()
+            self.treev_surf.hide()
+        else:
+            self.emptyIndicator.hide()
+            self.treev_surf.show()

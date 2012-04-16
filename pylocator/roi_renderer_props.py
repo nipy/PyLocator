@@ -60,7 +60,7 @@ class RoiRendererProps(gtk.VBox):
         self.pack_start(self.scrolled_window)
         self.scrolled_window.show_all()
 
-        self._make_roi_frame()
+        self._make_roi_list()
             
         button = ButtonAltLabel('Render', gtk.STOCK_EXECUTE)
         button.show()
@@ -70,18 +70,19 @@ class RoiRendererProps(gtk.VBox):
 
 
     def render(self, *args):
+        self.pwxyz.Render()
         self.sr.Render()
             
     def __create_toolbar(self):
         conf = [
                 [gtk.STOCK_ADD,
                  'Add',
-                 'Add new marker by entering its coordinates',
+                 'Load ROI from file and render it',
                  self.add_roi
                 ],
                 [gtk.STOCK_REMOVE, 
                  'Remove', 
-                 'Remove selected marker',
+                 'Remove selected ROI',
                  self.rm_roi
                 ],
                 #"-",
@@ -98,23 +99,7 @@ class RoiRendererProps(gtk.VBox):
                ]
         return ListToolbar(conf)
 
-    def _make_roi_frame(self):
-        """
-        Provides the following attributes
-        self.labelIntensity     # label for intensity entry
-        self.entryIntensity     # intensity entry box
-        """
-
-        frame = gtk.Frame('Select ROI masks')
-        frame.show()
-        frame.set_border_width(5)
-        self.inner_vbox.pack_start(frame, False, False)
-        
-        vboxFrame = gtk.VBox()
-        vboxFrame.show()
-        vboxFrame.set_spacing(10)
-        frame.add(vboxFrame)
-        
+    def _make_roi_list(self):
         #create TreeView
         #Fields: Index, Short filename, long FN, is_active?, opacity
         self.tree_roi = gtk.TreeStore(gobject.TYPE_INT, gobject.TYPE_STRING, gobject.TYPE_STRING,gobject.TYPE_BOOLEAN,gobject.TYPE_FLOAT)
@@ -131,17 +116,17 @@ class RoiRendererProps(gtk.VBox):
         self.col2 = gtk.TreeViewColumn("Short filename",renderer,text=1)
         self.treev_roi.append_column(self.col2)
         #self.treev_roi.show()
-        vboxFrame.pack_start(self.treev_roi,True,True)
+        self.inner_vbox.pack_start(self.treev_roi)
 
         #Empty-indicator
         self.emptyIndicator = gtk.Label('No region-of-interest defined')
         self.emptyIndicator.show()
-        vboxFrame.pack_start(self.emptyIndicator)
+        self.inner_vbox.pack_start(self.emptyIndicator, False)
 
         #Edit properties of one ROI
         self.props_frame = gtk.Frame('Properties')
         self.props_frame.set_border_width(5)
-        vboxFrame.pack_start(self.props_frame,False,False)
+        self.inner_vbox.pack_start(self.props_frame,False,False)
         vboxProps = gtk.VBox()
         self.props_frame.add(vboxProps)
         vboxProps.pack_start(gtk.Label("Opacity"))
@@ -196,6 +181,7 @@ class RoiRendererProps(gtk.VBox):
             finally:
                 self.__update_treeview_visibility()
         else: dialog.destroy()
+        self.render()
 
     def rm_roi(self,*args):
         treestore,treeiter = self.treev_sel.get_selected()
@@ -204,6 +190,7 @@ class RoiRendererProps(gtk.VBox):
         self.paramd[roi_id].destroy()
         del self.paramd[roi_id]
         self.__update_treeview_visibility()
+        self.render()
 
     def treev_sel_changed(self,selection):
         treeiter = selection.get_selected()[1]
@@ -227,12 +214,14 @@ class RoiRendererProps(gtk.VBox):
         if treeiter:
             roi_id = self.tree_roi.get(treeiter,0)
             self.paramd[roi_id].set_color(self.color_chooser.color)
+            self.render()
 
     def change_opacity_of_roi(self,*args):
         treeiter = self.treev_sel.get_selected()[1]
         if treeiter:
             roi_id = self.tree_roi.get(treeiter,0)
             self.paramd[roi_id].set_opacity(self.scrollbar_opacity.get_value())
+            self.render()
 
     def __update_treeview_visibility(self):
         if self.tree_roi.get_iter_first()==None: 

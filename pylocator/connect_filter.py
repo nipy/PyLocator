@@ -38,6 +38,7 @@ class ConnectFilter(vtk.vtkPolyDataConnectivityFilter):
             msg='Computing connectivity ....',
             size=(300,40),
             )
+        prog.set_modal(True)
 
         def start(o, event):
             prog.show()

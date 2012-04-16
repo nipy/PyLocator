@@ -54,7 +54,9 @@ class SurfParams(object):
             parent=None,
             msg='Marching cubes ....',
             size=(300,40),
-                                 )
+        )
+        self.prog.set_modal(True)
+
         def start(o, event):
             self.prog.show()
             while gtk.events_pending(): gtk.main_iteration()
@@ -140,7 +142,7 @@ class SurfParams(object):
         pass
 
     def set_image_data(self, imageData):
-        print "SurfParams.set_image_data(", imageData,")"
+        #print "SurfParams.set_image_data(", imageData,")"
         self.marchingCubes.SetInput(imageData)
         x1,x2,y1,y2,z1,z2 = imageData.GetExtent()
         sx, sy, sz = imageData.GetSpacing()
@@ -165,10 +167,10 @@ class SurfParams(object):
                 renderer.RemoveActor(self.isoActor)
 
     def set_color(self,color):
-        print color, type(color)
+        #print color, type(color)
         if type(color)==gtk.gdk.Color:
             self._color = gdkColor2tuple(color)
-            print self._color
+            #print self._color
         else:
             self._color = color
         self.isoActor.GetProperty().SetColor(self._color)
