@@ -19,19 +19,6 @@ class vtkNiftiImageReader(object):
         self.__data = None
         self._irs = vtk.vtkImageReslice()
 
-    #def SetDirectoryName(self,dir):
-    #    self.__dirname=dir
-    #    self.__filename=os.path.join(
-    #            self.__dirname,self.__filePattern)
-
-    #def SetFilePrefix(self, dir):
-    #    pass
-
-    #def SetFilePattern(self, pattern):
-    #    self.__filePattern=pattern
-    #    self.__filename=os.path.join(
-    #            self.__dirname,self.__filePattern)
-
     def SetFileName(self, filename):
         self.__filename=filename
         
@@ -103,24 +90,6 @@ class vtkNiftiImageReader(object):
     def GetDepth(self):
         return self._irs.GetOutput().GetBouds()[4:]
 
-    #def SetDataSpacing(self, *args):
-    #    if len(args)==1:
-    #        try:
-    #            a=(len(args[0])==3)
-    #        except:
-    #            self.__spacing=args+(0.0,0,0)
-    #        else:
-    #            self.__spacing=args[0] 
-    #    elif len(args)==2:
-    #        self.__spacing=args+(0.0,)
-    #    elif len(args)<1:
-    #        if shared.debug: print "in vtkNifti.SetDataSpacing"
-    #        if shared.debug: print "negative number of dimensions not supported! ;-)"
-    #    else:
-    #        self.__spacing=args[:3]
-    #    if shared.debug: print args,self.__spacing
-    #    self.__vtkimport.SetDataSpacing(self.__spacing)
-
     def GetDataSpacing(self):
         if shared.debug: print self.__spacing, "*******************"
         return self._irs.GetOutput().GetSpacing()
@@ -141,7 +110,6 @@ class vtkNiftiImageReader(object):
     def GetBounds(self):
         return self._irs.GetOutput().GetBounds()
 
-
     def GetQForm(self):
         return self.__nim.get_affine()
 
@@ -152,6 +120,22 @@ class vtkNiftiImageReader(object):
     @property
     def shape(self):
         return self.__nim.shape
+
+    @property
+    def min(self):
+        if self.__data!=None:
+            return self.__data.min()
+
+    @property
+    def max(self):
+        if self.__data!=None:
+            return self.__data.max()
+
+    @property
+    def median(self):
+        d = self.__data
+        if d!=None:
+            return np.median(d[d!=0])
 
 if __name__ == "__main__":
     reader = vtkNiftiImageReader()

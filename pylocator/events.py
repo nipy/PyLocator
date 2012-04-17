@@ -40,6 +40,9 @@ class EventHandler:
     __NiftiQForm=None
     __NiftiSpacings=(1.0,1.0,1.0)
     __NiftiShape=None
+    __NiftiMin = None
+    __NiftiMax = None
+    __NiftiMedian = None
 
     def __init__(self):
         self.__dict__ = self.__sharedState            
@@ -108,27 +111,26 @@ class EventHandler:
             marker = self.markers.GetNextActor()
             if marker is None: continue
             else:
-                #XXX if self.__Nifti:
-                #if self.__NiftiQForm is not None:
-                #    conv_marker=marker.convert_coordinates(self.__NiftiQForm,self.__NiftiSpacings,self.__NiftiShape)
-                #    #XXX conv_marker=marker.convert_coordinates(QForm)
-                #    conv_lines.append(conv_marker.to_string())
-
                 lines.append(marker.to_string())
         lines.sort()
 
         fh = file(fname, 'w')
         fh.write('\n'.join(lines) + '\n')
-        #if self.__NiftiQForm is not None:
-        #    fn = file(fname+".conv", 'w') #only needed for nifti, but what the hell
-        #    conv_lines.sort()
-        #    fn.write('\n'.join(conv_lines) + '\n')
 
-    def setNifti(self,QForm,spacings,shape):
+    def set_nifti(self,reader):
         if shared.debug: print "setNifti:", QForm, spacings, shape
-        self.__NiftiQForm=QForm
-        self.__NiftiSpacings=spacings
-        self.__NiftiShape=shape
+        reader.GetQForm(),reader.nifti_voxdim,reader.shape
+        self.__NiftiQForm=reader.GetQForm()
+        self.__NiftiSpacings=reader.nifti_voxdim
+        self.__NiftiShape=reader.shape
+        self.__NiftiMin = reader.min
+        self.__NiftiMax = reader.max
+        self.__NiftiMedian = reader.median
+
+    def get_nifti_stats(self):
+        return (self.__NiftiMin,
+                self.__NiftiMedian,
+                self.__NiftiMax)
 
     def set_vtkactor(self, vtkactor):
         if shared.debug: print "EventHandler.set_vtkactor()"

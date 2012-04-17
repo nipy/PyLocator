@@ -109,14 +109,14 @@ class RoiRendererProps(gtk.VBox):
         self.treev_sel.connect("changed",self.treev_sel_changed)
         self.treev_sel.set_mode(gtk.SELECTION_SINGLE)
         renderer = gtk.CellRendererText()
-        renderer.set_property("xalign",1.0)
+        renderer.set_property("xalign",0.0)
         #renderer.set_xalign(0.0)
-        self.col1 = gtk.TreeViewColumn("#",renderer,text=0)
+        #self.col1 = gtk.TreeViewColumn("#",renderer,text=0)
+        #self.treev_roi.append_column(self.col1)
+        self.col1 = gtk.TreeViewColumn("Short filename",renderer,text=1)
         self.treev_roi.append_column(self.col1)
-        self.col2 = gtk.TreeViewColumn("Short filename",renderer,text=1)
-        self.treev_roi.append_column(self.col2)
         #self.treev_roi.show()
-        self.inner_vbox.pack_start(self.treev_roi)
+        self.inner_vbox.pack_start(self.treev_roi, False)
 
         #Empty-indicator
         self.emptyIndicator = gtk.Label('No region-of-interest defined')
@@ -124,12 +124,19 @@ class RoiRendererProps(gtk.VBox):
         self.inner_vbox.pack_start(self.emptyIndicator, False)
 
         #Edit properties of one ROI
-        self.props_frame = gtk.Frame('Properties')
-        self.props_frame.set_border_width(5)
+        self.props_frame = self._make_properties_frame()
         self.inner_vbox.pack_start(self.props_frame,False,False)
+
+        #vboxProps.pack_start()
+
+    def _make_properties_frame(self):
+        frame = gtk.Frame('Properties')
+        frame.set_border_width(5)
         vboxProps = gtk.VBox()
-        self.props_frame.add(vboxProps)
-        vboxProps.pack_start(gtk.Label("Opacity"))
+        frame.add(vboxProps)
+        f1 = gtk.Frame("Opacity")
+        f1.show()
+        vboxProps.pack_start(f1, False)
         self.scrollbar_opacity = gtk.HScrollbar()
         self.scrollbar_opacity.show()
         self.scrollbar_opacity.set_size_request(*self.SCROLLBARSIZE)
@@ -137,17 +144,18 @@ class RoiRendererProps(gtk.VBox):
         self.scrollbar_opacity.set_increments(.05, .2)
         self.scrollbar_opacity.set_value(1.0)
         self.scrollbar_opacity.connect('value_changed', self.change_opacity_of_roi)
-        vboxProps.pack_start(self.scrollbar_opacity)
+        f1.add(self.scrollbar_opacity)
+
+        f2 = gtk.Frame("Color")
+        f2.show()
+        vboxProps.pack_start(f2, False)
         tmp = gtk.HBox()
-        vboxProps.pack_start(tmp)
-        tmp.pack_start(gtk.Label("Color"),False,False)
+        f2.add(tmp)
         self.color_chooser = ColorChooser()
         self.color_chooser.connect("color_changed",self.change_color_of_roi)
         tmp.pack_start(self.color_chooser,True,False)
-
-        #vboxProps.pack_start()
         vboxProps.show_all()
-
+        return frame
 
     def add_roi(self,*args):
         dialog = gtk.FileSelection('Choose filename for ROI mask')

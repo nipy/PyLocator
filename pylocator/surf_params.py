@@ -34,7 +34,8 @@ class SurfParams(object):
       imageData   # default None
     """
 
-    label, color_  = colorSeq[0]
+    label = "Surface"
+    colorName, color_  = colorSeq[0]
     intensity     = 80.
 
     useConnect    = True
@@ -166,8 +167,9 @@ class SurfParams(object):
             for renderer in self.renderers:
                 renderer.RemoveActor(self.isoActor)
 
-    def set_color(self,color):
+    def set_color(self,color, color_name=""):
         #print color, type(color)
+        self.colorName = color_name
         if type(color)==gtk.gdk.Color:
             self._color = gdkColor2tuple(color)
             #print self._color
@@ -186,6 +188,15 @@ class SurfParams(object):
 
     def get_opacity(self):
         return self._opacity
+
+    def set_visibility(self, visible):
+        if visible:
+            self.isoActor.GetProperty().VisibilityOn()
+        else:
+            self.isoActor.GetProperty().VisibilityOff()
+
+    def get_visibility(self):
+        return self.isoActor.GetProperty().GetVisibility()
 
     color = property(get_color,set_color)
     opacity = property(get_opacity,set_opacity)

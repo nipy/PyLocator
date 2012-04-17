@@ -5,6 +5,15 @@ class Shared(object):
     lastSel = ''
     labels = ["L","R","P","A","I","S"]
     #lastSel = os.getcwd() + os.sep
+    ratio = 3
+    #screenshot_magnification = 3
+    screenshot_cnt = 1
+
+    planes_opacity = 1.
+    markers_opacity = 1.
+    marker_size = 3.
+
+    lastLabel = ""
 
     def set_file_selection(self, name):
         """
@@ -21,15 +30,6 @@ class Shared(object):
         else:
             return os.path.dirname(self.lastSel) + os.sep
 
-    ratio = 3
-    #screenshot_magnification = 3
-    screenshot_cnt = 1
-
-    planes_opacity = 1.
-    markers_opacity = 1.
-    marker_size = 3.
-
-    lastLabel = ""
 
 
         

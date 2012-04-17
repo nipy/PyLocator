@@ -8,12 +8,13 @@ from gtk import gdk
 
 from gtkutils import error_msg, simple_msg, ButtonAltLabel, \
      str2posint_or_err, str2posnum_or_err, ProgressBarDialog, make_option_menu
+from dialogs import edit_label
 
 from events import EventHandler, UndoRegistry
 from markers import Marker
 from shared import shared
 
-from colors import ColorChooser, colord, colorSeq
+from colors import ColorChooser, ColorChooserWithPredefinedColors, colord, colorSeq, tuple2gdkColor
 
 from list_toolbar import ListToolbar
 from surf_params import SurfParams
@@ -29,12 +30,15 @@ class SurfRendererProps(gtk.VBox):
 
     SCROLLBARSIZE = 150,20
     lastColor = SurfParams.color_
-    paramd = {}   # a dict from names to SurfParam instances
+    lastColorName = SurfParams.colorName
+
+    paramd = {}   # a dict from ids (indices) to SurfParam instances
 
     def __init__(self, sr, pwxyz):
         """sr is a SurfRenderer"""
 
         self.nsurf=0
+        self.pickerIdx=None
         self.ignore_pipeline_updates = False
 
         gtk.VBox.__init__(self)
@@ -62,8 +66,6 @@ class SurfRendererProps(gtk.VBox):
         self.pack_start(self.scrolled_window)
 
         self._make_segment_list()
-        self._make_intensity_frame()
-        self._make_picker_frame()
 
         def hide(*args):
             self.hide()
@@ -79,13 +81,19 @@ class SurfRendererProps(gtk.VBox):
         conf = [
                 [gtk.STOCK_ADD,
                  'Add',
-                 'Load ROI from file and render it',
+                 'Create a now iso-surface with default settings',
                  self.add_segment
                 ],
                 [gtk.STOCK_REMOVE, 
                  'Remove', 
-                 'Remove selected ROI',
-                 self.add_segment
+                 'Remove selected surface',
+                 self.cb_remove
+                ],
+                "-",
+                [gtk.STOCK_BOLD, 
+                 'name', 
+                 'Edit name of surface',
+                 self.cb_edit_name
                 ],
                ]
         return ListToolbar(conf)
@@ -118,6 +126,8 @@ class SurfRendererProps(gtk.VBox):
         self.props_frame.set_border_width(5)
         self.inner_vbox.pack_start(self.props_frame,False,False)
         vboxProps = gtk.VBox()
+        vboxProps.set_spacing(20)
+        vboxProps.show()
         self.props_frame.add(vboxProps)
         general_expander = self._make_general_properties_expander()
         vboxProps.pack_start(general_expander, False)
@@ -127,99 +137,57 @@ class SurfRendererProps(gtk.VBox):
     def _make_general_properties_expander(self):
         expander = gtk.Expander('General settings')
         expander.set_expanded(True)
+        expander.show()
 
         vbox = gtk.VBox()
         vbox.show()
-        vbox.set_spacing(10)
+        vbox.set_spacing(5)
         expander.add(vbox)
 
-        vbox.pack_start(gtk.Label("Opacity"))
+        frame = gtk.Frame("Threshold")
+        frame.show()
+        vbox.pack_start(frame)
+        scrollbar = gtk.HScrollbar()
+        scrollbar.set_update_policy(gtk.UPDATE_DELAYED)
+        #scrollbar.set_draw_value(True)
+        scrollbar.show()
+        scrollbar.set_size_request(*self.SCROLLBARSIZE)
+        scrollbar.set_range(0, 100)
+        scrollbar.set_increments(1, 5)
+        scrollbar.set_value(80)
+        scrollbar.connect('value-changed', self.change_threshold_of_surf)
+        self.scrollbar_threshold = scrollbar
+        frame.add(scrollbar)
+
+        frame = gtk.Frame("Opacity")
+        frame.show()
+        vbox.pack_start(frame)
         scrollbar = gtk.HScrollbar()
         scrollbar.show()
         scrollbar.set_size_request(*self.SCROLLBARSIZE)
         scrollbar.set_range(0, 1)
         scrollbar.set_increments(.05, .2)
         scrollbar.set_value(1.0)
-        scrollbar.connect('value_changed', self.change_opacity_of_surf)
-        vbox.pack_start(scrollbar)
+        scrollbar.connect('value-changed', self.change_opacity_of_surf)
         self.scrollbar_opacity = scrollbar
-        tmp = gtk.HBox()
-        vbox.pack_start(tmp)
-        tmp.pack_start(gtk.Label("Color"),False,False)
-        self.color_chooser = ColorChooser()
-        self.color_chooser.connect("color_changed",self.change_color_of_surf)
-        tmp.pack_start(self.color_chooser,True,False)
+        frame.add(scrollbar)
+
+        frame = self._make_color_chooser_frame()
+        vbox.pack_start(frame)
         
         self.visibility_toggle = gtk.ToggleButton("Visible")
         vbox.pack_start(self.visibility_toggle, False, False)
 
         return expander
-
-    def key_press(self, interactor, event):
-        key = interactor.GetKeySym()
-        #XXX this is annoying in dwm (and probably elsewhere)
-        #if self.pickerName is None:
-            #error_msg('You must select the pick segment in the Picker tab')
-            #return
-        def checkPickerName():
-            if self.pickerName is None:
-                error_msg('You must select the pick segment in the Picker tab')
-                return False
-            return True
-
-        if key.lower()=='q': #hehehe
-            gtk.main_quit()
-        if key.lower()=='i':
-            if not checkPickerName():
-                return
-            print "Inserting Marker"
-            x,y = interactor.GetEventPosition()
-            picker = vtk.vtkCellPicker()
-            picker.PickFromListOn()
-            o = self.paramd[self.pickerName]
-            picker.AddPickList(o.isoActor)
-            picker.SetTolerance(0.005)
-            picker.Pick(x, y, 0, self.sr.renderer)
-            points = picker.GetPickedPositions()
-            numPoints = points.GetNumberOfPoints()
-            if numPoints<1: return
-            pnt = points.GetPoint(0)
-
-            marker = Marker(xyz=pnt,
-                            rgb=EventHandler().get_default_color(),
-                            radius=shared.ratio*shared.marker_size)
-
-            EventHandler().add_marker(marker)
-        elif key.lower()=='x':
-            if not checkPickerName():
-                return
-            x,y = interactor.GetEventPosition()
-            picker = vtk.vtkCellPicker()
-            picker.PickFromListOn()
-            for o in self.paramd.values():
-                picker.AddPickList(o.isoActor)
-            picker.SetTolerance(0.01)
-            picker.Pick(x, y, 0, self.sr.renderer)
-            cellId = picker.GetCellId()
-            if cellId==-1:
-                pass
-            else:
-                o = self.paramd.values()[0]
-                o.remove.RemoveCell(cellId)
-                interactor.Render()
-        elif key.lower()=='e':
-            if not checkPickerName():
-                return
-            o = self.paramd.values()[0]
-            pw = o.planeWidget
-            if pw.GetEnabled():
-                pw.EnabledOff()
-            else:
-                pw.EnabledOn()
-
-    def render(self, *args):
-        self.sr.Render()
             
+    def _make_color_chooser_frame(self):
+        frame = gtk.Frame("Color")
+        frame.show()
+        self.color_chooser = ColorChooserWithPredefinedColors(colorSeq)
+        self.color_chooser.connect("color_changed", self.change_color_of_surf)
+        frame.add(self.color_chooser)
+        return frame
+
     def _make_pipeline_expander(self):
         def decimate_toggled(button):
             frameDecimateFilter.set_sensitive(button.get_active())
@@ -246,6 +214,8 @@ class SurfRendererProps(gtk.VBox):
                 apply_()
 
         def apply_(*args):
+            if self.ignore_pipeline_updates:
+                return
             id_ = self.__get_selected_id()
             self.paramd[id_].useConnect = self.buttonUseConnect.get_active()
             self.paramd[id_].useDecimate = self.buttonUseDecimate.get_active()
@@ -253,7 +223,6 @@ class SurfRendererProps(gtk.VBox):
             set_connect_mode(id_)
             set_decimate_params(id_)
             pa = self.paramd[id_]
-            print pa.deci.targetReduction
             self.paramd[id_].update_properties()
             self.render()
 
@@ -330,12 +299,72 @@ class SurfRendererProps(gtk.VBox):
         vboxFrame.pack_start(scrollbar)
         frameDecimateFilter.add(vboxFrame)
 
-        #button = gtk.Button(stock=gtk.STOCK_APPLY)
-        #vbox.pack_start(button, True, True)
-        #button.connect('clicked', apply)
-        #expander.show_all()
-
+        expander.show_all()
         return expander
+
+    def key_press(self, interactor, event):
+        key = interactor.GetKeySym()
+        #XXX this is annoying in dwm (and probably elsewhere)
+        #if self.pickerName is None:
+            #error_msg('You must select the pick segment in the Picker tab')
+            #return
+        def checkPickerIdx():
+            if self.pickerIdx is None:
+                error_msg('Cannot insert marker. Choose surface first.')
+                return False
+            return True
+
+        if key.lower()=='q': #hehehe
+            gtk.main_quit()
+        if key.lower()=='i':
+            if not checkPickerIdx():
+                return
+            if shared.debug: print "Inserting Marker"
+            x,y = interactor.GetEventPosition()
+            picker = vtk.vtkCellPicker()
+            picker.PickFromListOn()
+            o = self.paramd[self.pickerIdx]
+            picker.AddPickList(o.isoActor)
+            picker.SetTolerance(0.005)
+            picker.Pick(x, y, 0, self.sr.renderer)
+            points = picker.GetPickedPositions()
+            numPoints = points.GetNumberOfPoints()
+            if numPoints<1: return
+            pnt = points.GetPoint(0)
+
+            marker = Marker(xyz=pnt,
+                            rgb=EventHandler().get_default_color(),
+                            radius=shared.ratio*shared.marker_size)
+            EventHandler().add_marker(marker)
+        elif key.lower()=='x':
+            if not checkPickerName():
+                return
+            x,y = interactor.GetEventPosition()
+            picker = vtk.vtkCellPicker()
+            picker.PickFromListOn()
+            for o in self.paramd.values():
+                picker.AddPickList(o.isoActor)
+            picker.SetTolerance(0.01)
+            picker.Pick(x, y, 0, self.sr.renderer)
+            cellId = picker.GetCellId()
+            if cellId==-1:
+                pass
+            else:
+                o = self.paramd.values()[0]
+                o.remove.RemoveCell(cellId)
+                interactor.Render()
+        elif key.lower()=='e':
+            if not checkPickerName():
+                return
+            o = self.paramd.values()[0]
+            pw = o.planeWidget
+            if pw.GetEnabled():
+                pw.EnabledOff()
+            else:
+                pw.EnabledOn()
+
+    def render(self, *args):
+        self.sr.Render()
 
     def update_pipeline_params(self, *args):
         id_ = self.__get_selected_id()
@@ -344,7 +373,6 @@ class SurfRendererProps(gtk.VBox):
         self.buttonUseConnect.set_active(self.paramd[id_].useConnect)
         self.buttonUseDecimate.set_active(self.paramd[id_].useDecimate)
         connect_mode = self.paramd[id_].connect.mode
-        print connect_mode
         activeButton = self.connectExtractButtons[connect_mode]
         activeButton.set_active(True)
 
@@ -453,23 +481,6 @@ class SurfRendererProps(gtk.VBox):
                      xoptions=gtk.EXPAND|gtk.FILL, yoptions=0)
 
 
-        def func(menuitem, *args):
-            if shared.debug: print "option menu changed", menuitem
-            s = menuitem.get_active_text()
-            if s=='custom...':
-                self.lastColor = self.choose_color()
-            else:
-                self.entryName.set_text(s)
-                self.lastColor = colord[s]
-
-        colors = [ name for name, color in colorSeq]
-        colors.append('custom...')
-        label = gtk.Label('Color: ')
-        label.show()
-        label.set_alignment(xalign=1.0, yalign=0.5)
-        optmenu = make_option_menu(
-            colors, func)
-        optmenu.show()
         table.attach(label, 0, 1, 1, 2,
                      xoptions=gtk.FILL, yoptions=0)
         table.attach(optmenu, 1, 2, 1, 2,
@@ -500,25 +511,6 @@ class SurfRendererProps(gtk.VBox):
 
         self.vboxSegPropsFrame = vboxFrame
         self.update_segments_frame() 
-
-    def _make_picker_frame(self):
-        """
-        Controls to clean up the rendered segments
-        """
-
-        frame = gtk.Frame('Add marks only on ...')
-        frame.show()
-        frame.set_border_width(5)
-        self.inner_vbox.pack_start(frame, False, False)
-
-        vboxFrame = gtk.VBox()
-        vboxFrame.show()
-        vboxFrame.set_spacing(3)
-        frame.add(vboxFrame)
-
-        self.vboxPickerFrame = vboxFrame
-        self.pickerName = None
-        self.update_picker_frame() 
 
     def update_picker_frame(self):
         'Update the picker frame with the latest segments'
@@ -589,12 +581,16 @@ class SurfRendererProps(gtk.VBox):
             self.intensityCnt += 1
 
     def add_segment(self, button):
+        if self.nsurf==0:
+            self.__adjust_scrollbar_threshold_for_data()
         self.nsurf +=1
-        val = self.get_intensity()
+        self.pickerIdx=self.nsurf
+
+        val = self.__calculate_intensity_threshold()
         if val is None: return
-        name = self.entryName.get_text()
-        if not len(name):
-            error_msg('You must enter a name in the Intensity tab')
+
+        name = self.__create_segment_name(self.nsurf)
+        if (not name) or name=="":
             return
 
         tree_iter = self.tree_surf.append(None)
@@ -606,15 +602,22 @@ class SurfRendererProps(gtk.VBox):
         params = self.paramd[self.nsurf]
         params.label = name
         params.intensity = val
-        params.set_color(self.lastColor)
+        params.set_color(self.lastColor, self.lastColorName)
         params.set_image_data(self.sr.imageData)
-        print "Add:", params.connect.mode
         params.update_properties()
         
         self.__update_treeview_visibility()
-        #self.update_segments_frame() 
-        #self.update_picker_frame()
+
+        self.render()
+    
+    def __calculate_intensity_threshold(self):
+        min_, median_, max_ = EventHandler().get_nifti_stats()
+        return median_
         
+    def __create_segment_name(self, idx):
+        return "Surface %i" % idx
+
+
     def interaction_event(self, observer, event):
         if not self.collecting: return 
         xyzv = [0,0,0,0]
@@ -622,39 +625,17 @@ class SurfRendererProps(gtk.VBox):
         self.add_intensity(xyzv[3])
         self.entryIntensity.set_text('%1.1f' % (self.intensitySum/self.intensityCnt))
 
-    def get_intensity(self):
-        """
-        Get the intensity of value if valid.
-
-        If not warn and return None
-        """
-        
-        val = str2posnum_or_err(self.entryIntensity.get_text(),
-                                self.labelIntensity, parent=self)
-        return val
-
-    def choose_color(self, *args):
-        dialog = gtk.ColorSelectionDialog('Choose segment color')
-            
-        colorsel = dialog.colorsel
-
-        da = gtk.DrawingArea()
-        cmap = da.get_colormap()
-
-        r,g,b = [int(65535*val) for val in self.lastColor]
-        color = cmap.alloc_color(r,g,b)
-        colorsel.set_previous_color(color)
-        colorsel.set_current_color(color)
-        colorsel.set_has_palette(True)
-    
-        response = dialog.run()
-        
-        if response == gtk.RESPONSE_OK:
-            color = colorsel.get_current_color()
-            self.lastColor = [val/65535 for val in (color.red, color.green, color.blue)]
-
-        dialog.destroy()
-        return self.lastColor
+    def __adjust_scrollbar_threshold_for_data(self):
+        valid_increments = sorted([1.*10**e for e in range(-2,3)] +
+                                    [2.*10**e for e in range(-2,3)] +
+                                    [5.*10**e for e in range(-2,3)]
+                                    )
+        min_, max_, median_ = EventHandler().get_nifti_stats()
+        incr1 = [i for i in valid_increments if i<(max_-min_)/100][-1]
+        incr2 = [i for i in valid_increments if i<(max_-min_)/20][-1]
+        self.scrollbar_threshold.set_range(min_, max_)
+        self.scrollbar_threshold.set_increments(incr1, incr2)
+        self.scrollbar_threshold.set_value(median_)
 
     def __get_selected_id(self):
         treeiter = self.treev_sel.get_selected()[1]
@@ -663,20 +644,34 @@ class SurfRendererProps(gtk.VBox):
         else:
             return None
 
-    def treev_sel_changed(self, selection):
+    def __get_selected_surface(self):
         surf_id = self.__get_selected_id()
         if not surf_id:
+            return None
+        else:
+            return self.paramd[surf_id]
+
+
+    def treev_sel_changed(self, selection):
+        param = self.__get_selected_surface()
+        treeiter = self.treev_sel.get_selected()[1]
+        if not treeiter:
             self.props_frame.hide()
             return
-
-        self.props_frame.show_all()
-        #print "selection changed", self.tree_roi.get(treeiter,0,1)
+        self.props_frame.show()
         try:
-            self.color_chooser.color = gtk.gdk.Color(*(self.paramd[surf_id].color))
+            self.scrollbar_threshold.set_value(param.intensity)
+        except Exception, e:
+            print "During setting value of threshold scrollbar:", type(e),e
+        try:
+            if param.colorName==self.color_chooser.custom_str:
+                self.color_chooser._set_color(param.color)
+            else:
+                self.color_chooser._set_color(param.colorName)
         except Exception, e:
             print "During setting color of color chooser:", type(e),e
         try:
-            self.scrollbar_opacity.set_value(self.paramd[surf_id].opacity)
+            self.scrollbar_opacity.set_value(param.opacity)
         except Exception, e:
             print "During setting value of opacity scrollbar:", type(e),e
         try:
@@ -685,19 +680,42 @@ class SurfRendererProps(gtk.VBox):
         finally:
             self.ignore_pipeline_updates = False
 
+    def change_threshold_of_surf(self,*args):
+        param = self.__get_selected_surface()
+        param.intensity = self.scrollbar_threshold.get_value()
+        param.update_pipeline()
+        self.render()
+
     def change_opacity_of_surf(self,*args):
-        surf_id = self.__get_selected_id()
-        if not surf_id:
-            return
-        self.paramd[surf_id].set_opacity(self.scrollbar_opacity.get_value())
+        param = self.__get_selected_surface()
+        param.set_opacity(self.scrollbar_opacity.get_value())
         self.render()
 
     def change_color_of_surf(self,*args):
-        surf_id = self.__get_selected_id()
-        if not surf_id:
-            return
-        self.paramd[surf_id].set_color(self.color_chooser.color)
+        param = self.__get_selected_surface()
+        self.lastColor = self.color_chooser.color
+        self.lastColorName = self.color_chooser.colorName
+        param.set_color(self.lastColor,self.lastColorName)
         self.render()
+
+    def cb_remove(self, *args):
+        surf_id = self.__get_selected_id()
+        treestore, treeiter = self.treev_sel.get_selected()
+        if treeiter:
+            treestore.remove(treeiter)
+            self.paramd[surf_id].destroy()
+            del self.paramd[surf_id]
+            self.__update_treeview_visibility()
+            self.render()
+
+    def cb_edit_name(self, *args):
+        param = self.__get_selected_surface()
+        new_name = edit_label(param.label, "Please enter a new name\nfor the selected surface")
+        if not new_name or new_name==param.label: return
+        param.label = new_name
+        treeiter = self.treev_sel.get_selected()[1]
+        if treeiter:
+            return self.tree_surf.set(treeiter,1,str(new_name))
 
     def __update_treeview_visibility(self):
         if self.tree_surf.get_iter_first()==None: 

@@ -6,13 +6,16 @@ from colors import gdkColor2tuple, tuple2gdkColor
 from events import EventHandler
 from shared import shared
 
-def edit_label(oldLabel=""):
+
+def edit_label(oldLabel="", description=None):
     builder = gtk.Builder()
     builder.add_from_file(edit_label_dialog)
     dialog = builder.get_object("dialog")
     entry = builder.get_object("entry")
-
     entry.set_text(oldLabel)
+    if description!=None:
+        label1 = builder.get_object("label1")
+        label1.set_text(description)
 
     response = dialog.run()
 
@@ -27,17 +30,21 @@ def edit_label(oldLabel=""):
 def edit_label_of_marker(marker):
     label = marker.get_label()
     defaultLabel = label
+    print defaultLabel, shared.lastLabel
     if defaultLabel=='' and shared.lastLabel is not None:
         m = re.match('(.+?)(\d+)', shared.lastLabel)
         if m:
-            defaultLabel = m.group(1) + str(int(m.group(2))+1)
+            num = str(int(m.group(2))+1).zfill(len(m.group(2)))
+            defaultLabel = m.group(1) + num
+    print defaultLabel
         
     new_label = edit_label(defaultLabel)
     if shared.debug: print new_label, label
 
     if new_label==None or new_label==label: return
     EventHandler().notify('label marker', marker, new_label)
-    shared.lastLabel = label
+    print "Set lastLabel"
+    shared.lastLabel = new_label
 
     
 def edit_coordinates(X=0,Y=0,Z=0, description=None):

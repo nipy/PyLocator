@@ -191,7 +191,7 @@ class PyLocatorController(object):
             imageData = reader.GetOutput()
             EventHandler().notify('set image data', imageData)
             EventHandler().notify("set axes directions")
-            EventHandler().setNifti(reader.GetQForm(),reader.nifti_voxdim,reader.shape)
+            EventHandler().set_nifti(reader)
             self.store_current_camera_fpus()
             EventHandler().notify("render now")
             return True
