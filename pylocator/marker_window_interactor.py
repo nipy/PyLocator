@@ -1,6 +1,5 @@
 import gtk
 import vtk
-from GtkGLExtVTKRenderWindowInteractor import GtkGLExtVTKRenderWindowInteractor
 from render_window import PyLocatorRenderWindow
 from events import EventHandler, UndoRegistry
 from shared import shared
@@ -241,10 +240,6 @@ class MarkerWindowInteractor(PyLocatorRenderWindow):
 
         try: self.pressHooks[event.button]()
         except KeyError: pass
-
-        button = event.button
-
-        True
 
     def OnButtonUp(self, wid, event):
         """Mouse button released."""

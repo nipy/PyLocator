@@ -2,7 +2,6 @@ from nibabel import load
 #from numpy import oldnumeric as Numeric
 import numpy as np
 import vtk
-import os
 from shared import shared
 from vtkutils import array_to_vtkmatrix4x4
 

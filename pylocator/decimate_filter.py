@@ -3,14 +3,9 @@ import sys, os
 import vtk
 
 import gtk
-from gtk import gdk
 
-from gtkutils import error_msg, simple_msg, ButtonAltLabel, \
-     str2posint_or_err, str2posnum_or_err, ProgressBarDialog, make_option_menu
+from gtkutils import ProgressBarDialog, str2posnum_or_err
 
-from events import EventHandler, UndoRegistry
-from markers import Marker
-from shared import shared
 
 # vtkDecimate is patented and no longer in VTK5. we will try vtkDecimatePro (argh)
 # class DecimateFilter(vtk.vtkDecimate):

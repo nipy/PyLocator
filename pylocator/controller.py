@@ -17,7 +17,7 @@ from marker_list import MarkerList
 from gtkutils import simple_msg
 
 import pylocator
-from pylocator_glade import main_window
+from resources import main_window
 from dialogs import SettingsController, about
 
 from colors import gdkColor2tuple

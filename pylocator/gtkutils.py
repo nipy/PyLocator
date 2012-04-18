@@ -1,9 +1,9 @@
 import os, sys
-import errno, StringIO, traceback
+import StringIO, traceback
 
 import gobject, gtk
 from gtk import gdk
-
+from shared import shared
 import datetime
 
 def is_string_like(obj):

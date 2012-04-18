@@ -1,17 +1,7 @@
 from __future__ import division
-import sys, os
 import vtk
-
 import gtk
-from gtk import gdk
-
-from gtkutils import error_msg, simple_msg, ButtonAltLabel, \
-     str2posint_or_err, str2posnum_or_err, ProgressBarDialog, make_option_menu
-
-from events import EventHandler, UndoRegistry
-from markers import Marker
-from shared import shared
-
+from gtkutils import ProgressBarDialog
 
 class ConnectFilter(vtk.vtkPolyDataConnectivityFilter):
     """

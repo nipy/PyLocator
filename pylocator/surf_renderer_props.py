@@ -1,20 +1,14 @@
 from __future__ import division
-import sys, os
-import vtk
 
 import gobject
 import gtk
-from gtk import gdk
 
-from gtkutils import error_msg, simple_msg, ButtonAltLabel, \
-     str2posint_or_err, str2posnum_or_err, ProgressBarDialog, make_option_menu
+from gtkutils import error_msg, ButtonAltLabel
 from dialogs import edit_label
 
-from events import EventHandler, UndoRegistry
-from markers import Marker
-from shared import shared
+from events import EventHandler
 
-from colors import ColorChooser, ColorChooserWithPredefinedColors, colord, colorSeq, tuple2gdkColor
+from colors import ColorChooserWithPredefinedColors, colorSeq
 
 from list_toolbar import ListToolbar
 from surf_params import SurfParams
@@ -228,7 +222,7 @@ class SurfRendererProps(gtk.VBox):
             set_connect_mode(id_)
             set_decimate_params(id_)
             pa = self.paramd[id_]
-            self.paramd[id_].update_pipeline()
+            pa.update_pipeline()
             self.render()
 
         expander = gtk.Expander('Pipeline settings')
@@ -374,7 +368,7 @@ class SurfRendererProps(gtk.VBox):
                                     [2.*10**e for e in range(-2,3)] +
                                     [5.*10**e for e in range(-2,3)]
                                     )
-        min_, max_, median_ = EventHandler().get_nifti_stats()
+        min_, median_, max_ = EventHandler().get_nifti_stats()
         incr1 = [i for i in valid_increments if i<(max_-min_)/100][-1]
         incr2 = [i for i in valid_increments if i<(max_-min_)/20][-1]
         self.scrollbar_threshold.set_range(min_, max_)

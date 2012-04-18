@@ -1,4 +1,3 @@
-import traceback
 from gtk import gdk
 import gtk
 import vtk
@@ -31,7 +30,7 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
 
         self.camera = self.renderer.GetActiveCamera()
 
-        self.ringActors = vtk.vtkActorCollection()
+        self.ringActors = {}
         self.defaultRingLine = 1
         self.textActors = {}
         self.hasData = 0
@@ -344,13 +343,9 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
         self.lastTime = time.time()
 
     def update_rings(self):
-        self.ringActors.InitTraversal()
-        numActors = self.ringActors.GetNumberOfItems()
-        for i in range(numActors):
-            actor = self.ringActors.GetNextActor()
-            #if shared.debug: print i, actor
+        for actor in self.get_ring_actors_as_list():
             vis = actor.update()
-            textActor = self.textActors[actor.get_marker()]
+            textActor = self.textActors[actor.get_marker().uuid]
             if vis and EventHandler().get_labels_on():
                 textActor.VisibilityOn()
             else:
@@ -358,7 +353,7 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
 
     def update_rois(self):
         for actor in self.roi_actors.values():
-            vis = actor.update()
+            actor.update()
 
     def interaction_event(self, *args):
         self.update_plane()
@@ -410,7 +405,7 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
             # ring actor will update automatically because it shares
             # the sphere source
             marker, pos = args
-            textActor = self.textActors[marker]
+            textActor = self.textActors[marker.uuid]
             textActor.SetPosition(pos)
         elif event=='color marker':
             marker, color = args
@@ -430,7 +425,8 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
         elif event=='unselect marker':
             marker = args[0]
             actor = self.get_actor_for_marker(marker)
-            actor.set_selected(False)
+            if actor!=None:
+                actor.set_selected(False)
         elif event=='observers update plane':
             self.update_plane()
         elif event=="set axes directions":
@@ -443,13 +439,7 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
         ringActor = RingActor(marker, self.pw, lineWidth=self.defaultRingLine)
         vis = ringActor.update()
         self.renderer.AddActor(ringActor)
-        self.ringActors.AddItem(ringActor)
-
-
-        # a hack to keep vtk from casting my class when I put it in
-        # the collection.  If I don't register some func, I lose all
-        # the derived methods        
-        self.observer.AddObserver('EndInteractionEvent', ringActor.silly_hack)
+        self.ringActors[marker.uuid] = ringActor
 
         text = vtk.vtkVectorText()
         text.SetText(marker.get_label())
@@ -469,19 +459,21 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
         else:
             textActor.VisibilityOff()
 
-        self.textActors[marker] = textActor
+        self.textActors[marker.uuid] = textActor
         self.renderer.AddActor(textActor)
 
 
     def remove_ring_actor(self, marker):
         actor = self.get_actor_for_marker(marker)
-        if actor is not None:
-            self.renderer.RemoveActor(actor)
-            self.ringActors.RemoveItem(actor)
+        if actor is None:
+            return
 
-        textActor = self.textActors[marker]
+        self.renderer.RemoveActor(actor)
+        del self.ringActors[marker.uuid]
+
+        textActor = self.textActors[marker.uuid]
         self.renderer.RemoveActor(textActor)
-        del self.textActors[marker]
+        del self.textActors[marker.uuid]
         
     def label_ring_actor(self, marker, label):
         marker.set_label(label)
@@ -489,26 +481,16 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
         text.SetText(marker.get_label())
         textMapper = vtk.vtkPolyDataMapper()
         textMapper.SetInput(text.GetOutput())
-        textActor = self.textActors[marker]
+        textActor = self.textActors[marker.uuid]
         textActor.SetMapper(textMapper)
 
     def get_actor_for_marker(self, marker):
-        self.ringActors.InitTraversal()
-        numActors = self.ringActors.GetNumberOfItems()
-        for i in range(numActors):
-            actor = self.ringActors.GetNextActor()
-            if marker is actor.get_marker():
-                return actor
+        if self.ringActors.has_key(marker.uuid):
+            return self.ringActors[marker.uuid]
         return None
 
     def get_ring_actors_as_list(self):
-
-        self.ringActors.InitTraversal()
-        numActors = self.ringActors.GetNumberOfItems()
-        l = [None]*numActors
-        for i in range(numActors):
-            l[i] = self.ringActors.GetNextActor()
-        return l
+        return self.ringActors.values()
 
     def get_cursor_position_world(self):
         x, y = self.GetEventPosition()

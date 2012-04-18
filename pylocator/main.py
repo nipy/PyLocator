@@ -4,7 +4,6 @@ import gtk
 import os.path
 from controller import PyLocatorController
 from shared import shared
-from gtkutils import error_msg
 
 def run_pylocator(filename=None, surface=None):
     """main method to run when PyLocator is started"""
@@ -26,11 +25,9 @@ def __find_userdir():
     try:
         from win32com.shell import shellcon, shell
         userdir = shell.SHGetFolderPath(0,shellcon.CSIDL_PERSONAL,0,0)
-    except ImportError,ie:
+    except ImportError:
         userdir = os.path.expanduser("~")
     return userdir
 
 if __name__=="__main__":
-    win = create_new_mainwindow_using_glade()
-    win.show_all()
-    gtk.main()
+    run_pylocator()

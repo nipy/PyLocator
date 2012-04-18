@@ -1,13 +1,9 @@
 from __future__ import division
-import sys, os
-import vtk
 
 import gobject
 import gtk
-from gtk import gdk
 
-from gtkutils import error_msg, simple_msg, ButtonAltLabel, \
-     str2posint_or_err, str2posnum_or_err, ProgressBarDialog, make_option_menu
+from gtkutils import make_option_menu
 
 colorSeq = (
     ( 'light skin' , (0.953, 0.875, 0.765)    ),

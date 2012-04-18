@@ -6,13 +6,14 @@ A program for localisation of EEG-electrodes from CT/MRI-volumes.
 
 Dependencies:
 python
+nibabel
 numpy
-Numeric (needed for VTK)
 vtk
 pygtk, gtkglext
 """
 
-from main import run_pylocator
+import main
 
-__version__ = "0.30"
+run_pylocator = main.run_pylocator
+__version__ = "1.0 beta"
 

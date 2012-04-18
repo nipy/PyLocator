@@ -1,7 +1,5 @@
-import math
 import vtk
 from events import EventHandler
-from numpy import zeros
 from vtkutils import vtkmatrix4x4_to_array, array_to_vtkmatrix4x4
 
 class VTKSurface(vtk.vtkActor):

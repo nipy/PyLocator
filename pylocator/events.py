@@ -1,9 +1,6 @@
 import vtk
 from markers import Marker
-
 import pickle
-
-from numpy import array, zeros
 from shared import shared
 from vtkutils import vtkmatrix4x4_to_array
 
@@ -106,7 +103,7 @@ class EventHandler:
     def save_markers_as(self, fname):
         self.markers.InitTraversal()
         numMarkers = self.markers.GetNumberOfItems()
-        lines = []; conv_lines = []
+        lines = [];
 
         for i in range(numMarkers):
             marker = self.markers.GetNextActor()
@@ -119,7 +116,6 @@ class EventHandler:
         fh.write('\n'.join(lines) + '\n')
 
     def set_nifti(self,reader):
-        if shared.debug: print "setNifti:", QForm, spacings, shape
         reader.GetQForm(),reader.nifti_voxdim,reader.shape
         self.__NiftiQForm=reader.GetQForm()
         self.__NiftiSpacings=reader.nifti_voxdim
@@ -175,8 +171,12 @@ class EventHandler:
 
     def notify(self, event, *args):
         for observer in self.observers.keys():
-            if shared.debug: print "EventHandler.notify(", event, "): calling update_viewer for ", observer
-            observer.update_viewer(event, *args)
+            if shared.debug: 
+                print "EventHandler.notify(", event, "): calling update_viewer for ", observer
+            try:
+                observer.update_viewer(event, *args)
+            except Exception, e:
+                print "Error while updating observer", observer, type(e), e
 
     def get_labels_on(self):
         return self.labelsOn

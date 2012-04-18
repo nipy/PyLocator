@@ -1,6 +1,4 @@
 import gtk
-import vtk
-from events import EventHandler, UndoRegistry
 
 class ListToolbar(gtk.Toolbar):
     """

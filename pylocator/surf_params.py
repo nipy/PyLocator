@@ -1,22 +1,11 @@
 from __future__ import division
-import sys, os
 import uuid
-
 import vtk
-
 import gtk
-from gtk import gdk
-
-from gtkutils import error_msg, simple_msg, ButtonAltLabel, \
-     str2posint_or_err, str2posnum_or_err, ProgressBarDialog, make_option_menu
-
-from events import EventHandler, UndoRegistry
-from markers import Marker
-from shared import shared
-
+from gtkutils import ProgressBarDialog
+from events import EventHandler
 from connect_filter import ConnectFilter
 from decimate_filter import DecimateFilter
-
 from colors import colorSeq, gdkColor2tuple
 
 class SurfParams(object):
@@ -133,15 +122,6 @@ class SurfParams(object):
 
     def get_opacity(self):
         return self._opacity
-
-    #def set_visibility(self, visible):
-    #    if visible:
-    #        self.isoActor.GetProperty().VisibilityOn()
-    #    else:
-    #        self.isoActor.GetProperty().VisibilityOff()
-
-    #def get_visibility(self):
-    #    return self.isoActor.GetProperty().GetVisibility()
 
     def get_uuid(self):
         return self._uuid

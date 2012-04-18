@@ -168,7 +168,7 @@
   <object class="GtkTextBuffer" id="textbuffer1">
     <property name="text" translatable="yes">Localization of EEG electrodes in MRI recordings.
 
-PyLocator has been mainly developed by Thorsten Kranz (thorstenkranz@gmail.com). Please visit out website for more information, documentation und a tutorial.
+PyLocator has been mainly developed by Thorsten Kranz (thorstenkranz@gmail.com). Please visit our website for more information, documentation und a tutorial.
 
 Thank you for using PyLocator!</property>
   </object>

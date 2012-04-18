@@ -1,6 +1,6 @@
 import gtk
 import re
-from pylocator_glade import edit_label_dialog, edit_coordinates_dialog, edit_settings_dialog, about_dialog
+from resources import edit_label_dialog, edit_coordinates_dialog, edit_settings_dialog, about_dialog
 from gtkutils import str2num_or_err
 from colors import gdkColor2tuple, tuple2gdkColor
 from events import EventHandler
@@ -87,7 +87,7 @@ def about(version="0.xyz"):
 
     label.set_text(label.get_text().replace("__version__",version))
 
-    response = dialog.run()
+    dialog.run()
 
     dialog.destroy()
     return label

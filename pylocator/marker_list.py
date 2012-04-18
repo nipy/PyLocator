@@ -1,17 +1,10 @@
 from __future__ import division
-import sys, os
-import vtk
-
 import gobject
 import gtk
-from gtk import gdk
-
-from gtkutils import error_msg, simple_msg, ButtonAltLabel, \
-     str2posint_or_err, str2posnum_or_err, ProgressBarDialog, make_option_menu, get_three_nums
 
 from dialogs import edit_coordinates, edit_label_of_marker
 
-from events import EventHandler, UndoRegistry
+from events import EventHandler
 from colors import choose_one_color, tuple2gdkColor, gdkColor2tuple
 from markers import Marker
 from list_toolbar import ListToolbar
@@ -158,9 +151,7 @@ class MarkerList(gtk.VBox):
     def cb_choose_color(self,*args):
         marker = self.__get_selected_marker()
         old_color = marker.get_color()
-        print old_color
         new_color = choose_one_color("New color for marker",tuple2gdkColor(old_color))
-        print new_color
         EventHandler().notify('color marker', marker, gdkColor2tuple(new_color))
 
     def cb_move_up(self, *args):

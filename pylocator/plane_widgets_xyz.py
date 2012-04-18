@@ -1,13 +1,9 @@
-import gtk
 import vtk
 
 from events import EventHandler, UndoRegistry
 from render_window import ThreeDimRenderWindow
 from marker_window_interactor import MarkerWindowInteractor
-from vtkutils import create_box_actor_around_marker
-
 import numpy as np
-from numpy import array, zeros
 
 from shared import shared
 
@@ -60,8 +56,8 @@ class PlaneWidgetsXYZ(ThreeDimRenderWindow, MarkerWindowInteractor):
         self.set_image_data(imageData)
         self.Render()
 
-        self.vtk_translation = zeros(3, 'd')
-        self.vtk_rotation = zeros(3, 'd')
+        self.vtk_translation = np.zeros(3, 'd')
+        self.vtk_rotation = np.zeros(3, 'd')
 
 
     def translate_vtk(self, axis, value):
@@ -163,7 +159,7 @@ class PlaneWidgetsXYZ(ThreeDimRenderWindow, MarkerWindowInteractor):
         #idx_sup = labels.index("S")
         camera_up = [0,0,0]
         camera_up[2] = 1
-        if shared.debug: print idx_sup, camera_up
+        if shared.debug: print camera_up
         fpu = center, pos, tuple(camera_up)
         if shared.debug: print "***fpu2:", fpu
         self.set_camera(fpu)

@@ -1,11 +1,7 @@
 from __future__ import division
-import sys, os
 import vtk
-
 import gtk
-
-from gtkutils import error_msg, simple_msg, ButtonAltLabel, \
-     str2posint_or_err, str2posnum_or_err, ProgressBarDialog, make_option_menu
+from gtkutils import error_msg
 
 from events import EventHandler
 from markers import Marker
@@ -25,7 +21,7 @@ class SurfRenderWindow(ThreeDimRenderWindow, PyLocatorRenderWindow):
         self.imageData = imageData
         if imageData is None: return
         center = imageData.GetCenter()
-        spacing = imageData.GetSpacing()
+        #spacing = imageData.GetSpacing()
         bounds = imageData.GetBounds()
         pos = center[0], center[1], center[2] - max(bounds)*2
         fpu = center, pos, (0,-1,0)

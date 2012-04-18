@@ -5,7 +5,7 @@ def vtkmatrix4x4_to_array(vtkmat):
     numpy_array = np.zeros((4,4), 'd')
     for i in range(0,4):
         for j in range(0,4):
-            numpy_array[i,j] = mat.GetElement(i,j)
+            numpy_array[i,j] = vtkmat.GetElement(i,j)
     return numpy_array 
 
 def array_to_vtkmatrix4x4(numpy_array):

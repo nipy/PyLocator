@@ -1,12 +1,9 @@
-from gtk import gdk
 import gtk
 import vtk
 from GtkGLExtVTKRenderWindowInteractor import GtkGLExtVTKRenderWindowInteractor
 from events import EventHandler
 from gtkutils import error_msg
 from vtkutils import create_box_actor_around_marker
-
-from pylocator_glade import camera_small_fn
 
 from shared import shared
 
@@ -191,9 +188,11 @@ class PyLocatorRenderWindow(GtkGLExtVTKRenderWindowInteractor):
 class ThreeDimRenderWindow(object):
     textActors = {}
 
+    def __init__(self):
+        self.boxes = {}
+
     def add_marker(self, marker):
         self.renderer.AddActor(marker)
-        self.boxes = {}
 
         text = vtk.vtkVectorText()
         text.SetText(marker.get_label())

@@ -1,18 +1,19 @@
+"""Define vtkActors for use in PyLocatorRenderWindow"""
+
 import math
 import vtk
-import copy
 import uuid
 
 import numpy as n
-from vtkutils import create_box_source
 
 class Marker(vtk.vtkActor):
     """
     CLASS: Marker
     DESCR: Represents, e.g., an individual grid location as a vtk sphere
     """
-    def __init__(self, xyz, radius, rgb=None):
-        if rgb is None: rgb = (0,0,1)
+    def __init__(self, xyz, radius, rgb = None, uuid_=None):
+        if rgb is None: 
+            rgb = (0, 0, 1)
 
         self.sphere = vtk.vtkSphereSource()
         self.sphere.SetRadius(radius)
@@ -31,19 +32,23 @@ class Marker(vtk.vtkActor):
         self.set_lighting()
 
         self.label = ''
-        self.labelColor = (1,1,0.5)
+        self.label_color = (1, 1, 0.5)
 
         #create ID
-        self.uuid = uuid.uuid1()
+        if not uuid_:
+            self.uuid = uuid.uuid1()
+        else:
+            self.uuid = uuid_
 
     def set_lighting(self):
+        """Set the lighting of the marker actor"""
         prop = self.GetProperty()
         prop.SetAmbient(0.)
         prop.SetDiffuse(0.)
         prop.SetSpecular(1.0)
 
     def contains(self, xyz):
-        'return true if point xyz is in the marker'
+        """Return true if point xyz is in the marker"""
         if xyz is None: return 0
         d = math.sqrt(vtk.vtkMath.Distance2BetweenPoints(
             self.sphere.GetCenter(), xyz))
@@ -61,10 +66,10 @@ class Marker(vtk.vtkActor):
         return self.label
 
     def get_label_color(self):
-        return self.labelColor
+        return self.label_color
 
     def set_label_color(self, color):
-        self.labelColor = color
+        self.label_color = color
 
     def get_center(self):
         return self.sphere.GetCenter()
@@ -85,11 +90,11 @@ class Marker(vtk.vtkActor):
     def get_color(self):
         return self.GetProperty().GetColor()
 
-
     def deep_copy(self):
         m = Marker(xyz=self.sphere.GetCenter(),
                    radius=self.sphere.GetRadius(),
-                   rgb=self.GetProperty().GetColor())
+                   rgb=self.GetProperty().GetColor(),
+                   uuid_=self.uuid)
         m.set_label(self.get_label())
         return m
 
@@ -100,22 +105,6 @@ class Marker(vtk.vtkActor):
         label = self.get_label()
         s = label + ',' + ','.join(map(str, (x,y,z,radius,r,g,b)))
         return s
-
-    def convert_coordinates(self,QForm,spacing,shape):
-        #R=QForm[:3,:3]
-        #T=QForm[:-1,-1]
-        #print "convert_coordinates:", QForm,spacing,shape
-        spacing = spacing[::-1]
-        x=n.array(self.get_center())
-        for i in range(3):
-            if spacing[i]<0:
-                #print "convert_coordinates:", i, QForm,spacing,shape
-                x[i] = shape[i]-1-x[i]
-        x = n.r_[x,[1]]
-        x=n.dot(QForm,x)
-        copy_self=self.deep_copy()
-        copy_self.set_center(x[:3])
-        return copy_self
 
     def from_string(s):
         #todo; use csv module
@@ -229,6 +218,3 @@ class RingActor(vtk.vtkActor):
         self.ringPoly.Update()
         return self.ringPoly.GetNumberOfPolys()
 
-    def silly_hack(self, *args):
-        # vtk strips my attributes if I don't register a func as an observer
-        pass

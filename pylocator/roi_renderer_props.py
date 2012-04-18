@@ -1,21 +1,16 @@
 from __future__ import division
-import sys, os
-import vtk
-
+import os.path
 import gobject
 import gtk
-from gtk import gdk
+from gtkutils import error_msg, ButtonAltLabel
 
-from gtkutils import error_msg, simple_msg, ButtonAltLabel, \
-     str2posint_or_err, str2posnum_or_err, ProgressBarDialog, make_option_menu
-
-from events import EventHandler, UndoRegistry
+from events import EventHandler
 from shared import shared
 
 from surf_params import SurfParams
 
 from list_toolbar import ListToolbar
-from colors import ColorChooser, colord, colorSeq
+from colors import ColorChooser
 from vtkNifti import vtkNiftiImageReader
 from rois import RoiParams
 

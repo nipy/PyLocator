@@ -8,7 +8,7 @@ pygtk-2 rather than pygtk-0.  It requires pygtk-2.0.0 or later.
 John Hunter jdhunter@ace.bsd.uchicago.edu
 """
 
-import math, sys
+import sys
 import gtk
 from gtk import gdk
 import gtk.gtkgl
