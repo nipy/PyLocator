@@ -10,25 +10,39 @@ from gtkutils import error_msg, simple_msg, ButtonAltLabel, \
      str2posint_or_err, str2posnum_or_err, ProgressBarDialog, make_option_menu
 
 from events import EventHandler, UndoRegistry
-from markers import Marker
 from shared import shared
 
 from surf_params import SurfParams
 
 from list_toolbar import ListToolbar
-from decimate_filter import DecimateFilter
-from connect_filter import ConnectFilter
 from colors import ColorChooser, colord, colorSeq
 from vtkNifti import vtkNiftiImageReader
 
 class RoiParams(SurfParams):
     intensity = 0.5
 
+    def __init__(self, imageData, color=None):
+        if color==None:
+            color = colord["electrodes"]
+        SurfParams.__init__(self, imageData, self.intensity, color)
+
     def set_lighting(self):
         surf_prop = self.isoActor.GetProperty()
         surf_prop.SetAmbient(.2)
         surf_prop.SetDiffuse(.3)
         surf_prop.SetSpecular(.5)
+
+    def notify_add_surface(self, pipe):
+        EventHandler().notify("add roi", self._uuid, pipe, self._color)
+
+    def notify_remove_surface(self):
+        EventHandler().notify("remove roi", self._uuid)
+
+    def notify_color_surface(self, color):
+        EventHandler().notify("color roi", self._uuid, color)
+
+    def notify_change_surface_opacity(self, opacity):
+        EventHandler().notify("change roi opacity", self._uuid, opacity)
 
 class RoiRendererProps(gtk.VBox):
     """
@@ -138,6 +152,7 @@ class RoiRendererProps(gtk.VBox):
         f1.show()
         vboxProps.pack_start(f1, False)
         self.scrollbar_opacity = gtk.HScrollbar()
+        self.scrollbar_opacity.set_update_policy(gtk.UPDATE_DELAYED)
         self.scrollbar_opacity.show()
         self.scrollbar_opacity.set_size_request(*self.SCROLLBARSIZE)
         self.scrollbar_opacity.set_range(0, 1)
@@ -175,12 +190,9 @@ class RoiRendererProps(gtk.VBox):
                 roi_image_reader.SetFileName(fname)
                 roi_image_reader.Update()
                 roi_id = self.tree_roi.get(tree_iter,0) 
-                if not self.paramd.has_key(roi_id):
-                    self.paramd[roi_id] = RoiParams([self.sr.renderer,self.pwxyz.renderer], self.sr.interactor)
-                    self.paramd[roi_id].set_image_data(roi_image_reader.GetOutput())
-                    self.paramd[roi_id].update_pipeline()
-                    print self.paramd[roi_id].intensity
-                    self.sr.Render()
+                self.paramd[roi_id] = RoiParams(roi_image_reader.GetOutput())
+                #self.paramd[roi_id].update_pipeline()
+                #print self.paramd[roi_id].intensity
                 shared.set_file_selection(fname)
             except IOError:
                 error_msg(
@@ -207,7 +219,7 @@ class RoiRendererProps(gtk.VBox):
             #print "selection changed", self.tree_roi.get(treeiter,0,1,2)
             roi_id = self.tree_roi.get(treeiter,0)
             try:
-                self.color_chooser.color = gtk.gdk.Color(*(self.paramd[roi_id].color))
+                self.color_chooser._set_color(self.paramd[roi_id].color)
             except Exception, e:
                 print "During setting color of color chooser:", type(e),e
             try:

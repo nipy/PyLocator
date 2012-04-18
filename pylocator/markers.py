@@ -3,7 +3,6 @@ import vtk
 import copy
 import uuid
 
-from image_reader import widgets
 import numpy as n
 from vtkutils import create_box_source
 
@@ -13,17 +12,6 @@ class Marker(vtk.vtkActor):
     DESCR: Represents, e.g., an individual grid location as a vtk sphere
     """
     def __init__(self, xyz, radius, rgb=None):
-        # if radius is not defined, force it to be some percentage of
-        # the total dimensions of the scanz..
-
-        #if (radius == None):
-        #    pars = widgets.get_params()
-        #    print "pars.dfov is ", pars.dfov
-        #    print "pars.dimensions[0] is" , pars.dimensions[0]
-        #    ratio = float(pars.dfov)/float(pars.dimensions[0])
-        #    radius = ratio * 3
-        #    print "setting radius=", radius
-
         if rgb is None: rgb = (0,0,1)
 
         self.sphere = vtk.vtkSphereSource()

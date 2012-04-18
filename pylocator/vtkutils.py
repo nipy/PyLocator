@@ -2,17 +2,17 @@ import vtk
 import numpy as np
 
 def vtkmatrix4x4_to_array(vtkmat):
-    scipy_array = np.zeros((4,4), 'd')
+    numpy_array = np.zeros((4,4), 'd')
     for i in range(0,4):
         for j in range(0,4):
-            scipy_array[i,j] = mat.GetElement(i,j)
-    return scipy_array 
+            numpy_array[i,j] = mat.GetElement(i,j)
+    return numpy_array 
 
-def array_to_vtkmatrix4x4(scipy_array):
+def array_to_vtkmatrix4x4(numpy_array):
     mat = vtk.vtkMatrix4x4()
     for i in range(0,4):
         for j in range(0,4):
-            mat.SetElement(i,j, scipy_array[i,j])
+            mat.SetElement(i,j, numpy_array[i,j])
     return mat
 
 def create_box_actor_around_marker(marker):

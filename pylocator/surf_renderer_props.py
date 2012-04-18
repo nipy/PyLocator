@@ -163,6 +163,7 @@ class SurfRendererProps(gtk.VBox):
         frame.show()
         vbox.pack_start(frame)
         scrollbar = gtk.HScrollbar()
+        scrollbar.set_update_policy(gtk.UPDATE_DELAYED)
         scrollbar.show()
         scrollbar.set_size_request(*self.SCROLLBARSIZE)
         scrollbar.set_range(0, 1)
@@ -223,7 +224,7 @@ class SurfRendererProps(gtk.VBox):
             set_connect_mode(id_)
             set_decimate_params(id_)
             pa = self.paramd[id_]
-            self.paramd[id_].update_properties()
+            self.paramd[id_].update_pipeline()
             self.render()
 
         expander = gtk.Expander('Pipeline settings')
@@ -289,6 +290,7 @@ class SurfRendererProps(gtk.VBox):
         vboxFrame.set_spacing(3)
         vboxFrame.pack_start(gtk.Label("Target Reduction"))
         scrollbar = gtk.HScrollbar()
+        scrollbar.set_update_policy(gtk.UPDATE_DELAYED)
         scrollbar.show()
         scrollbar.set_size_request(*self.SCROLLBARSIZE)
         scrollbar.set_range(0, 0.99)
@@ -321,13 +323,19 @@ class SurfRendererProps(gtk.VBox):
                 return
             if shared.debug: print "Inserting Marker"
             x,y = interactor.GetEventPosition()
+            print "e add1"
             picker = vtk.vtkCellPicker()
             picker.PickFromListOn()
             o = self.paramd[self.pickerIdx]
+            print "e add2"
             picker.AddPickList(o.isoActor)
+            print "e add2"
             picker.SetTolerance(0.005)
+            print "e add2"
             picker.Pick(x, y, 0, self.sr.renderer)
+            print "e add2"
             points = picker.GetPickedPositions()
+            print "e add2"
             numPoints = points.GetNumberOfPoints()
             if numPoints<1: return
             pnt = points.GetPoint(0)
@@ -335,9 +343,11 @@ class SurfRendererProps(gtk.VBox):
             marker = Marker(xyz=pnt,
                             rgb=EventHandler().get_default_color(),
                             radius=shared.ratio*shared.marker_size)
+            print "e add3"
             EventHandler().add_marker(marker)
+            print "e add4"
         elif key.lower()=='x':
-            if not checkPickerName():
+            if not checkPickerIdx():
                 return
             x,y = interactor.GetEventPosition()
             picker = vtk.vtkCellPicker()
@@ -353,18 +363,21 @@ class SurfRendererProps(gtk.VBox):
                 o = self.paramd.values()[0]
                 o.remove.RemoveCell(cellId)
                 interactor.Render()
-        elif key.lower()=='e':
-            if not checkPickerName():
-                return
-            o = self.paramd.values()[0]
-            pw = o.planeWidget
-            if pw.GetEnabled():
-                pw.EnabledOff()
-            else:
-                pw.EnabledOn()
 
     def render(self, *args):
         self.sr.Render()
+
+    def update_pipeline_params(self, *args):
+        id_ = self.__get_selected_id()
+
+        # set the active props of the filter frames
+        self.buttonUseConnect.set_active(self.paramd[id_].useConnect)
+        self.buttonUseDecimate.set_active(self.paramd[id_].useDecimate)
+        connect_mode = self.paramd[id_].connect.mode
+        activeButton = self.connectExtractButtons[connect_mode]
+        activeButton.set_active(True)
+
+        self.scrollbar_target_reduction.set_value(self.paramd[id_].deci.targetReduction)
 
     def add_segment(self, button):
         if self.nsurf==0:
@@ -372,8 +385,8 @@ class SurfRendererProps(gtk.VBox):
         self.nsurf +=1
         self.pickerIdx=self.nsurf
 
-        val = self.__calculate_intensity_threshold()
-        if val is None: return
+        intensity = self.__calculate_intensity_threshold()
+        if intensity is None: return
 
         name = self.__create_segment_name(self.nsurf)
         if (not name) or name=="":
@@ -382,14 +395,11 @@ class SurfRendererProps(gtk.VBox):
         tree_iter = self.tree_surf.append(None)
         self.tree_surf.set(tree_iter, 0,self.nsurf, 1, name)
 
-        if not self.paramd.has_key(self.nsurf):
-            self.paramd[self.nsurf] = SurfParams(self.sr.renderer, self.sr.interactor)
-
+        self.paramd[self.nsurf] = SurfParams(self.sr.imageData, intensity, self.lastColor)
         params = self.paramd[self.nsurf]
         params.label = name
-        params.intensity = val
+        params.intensity = intensity
         params.set_color(self.lastColor, self.lastColorName)
-        params.set_image_data(self.sr.imageData)
         params.update_properties()
         
         self.__update_treeview_visibility()
@@ -403,13 +413,13 @@ class SurfRendererProps(gtk.VBox):
     def __create_segment_name(self, idx):
         return "Surface %i" % idx
 
-
     def interaction_event(self, observer, event):
-        if not self.collecting: return 
-        xyzv = [0,0,0,0]
-        observer.GetCursorData(xyzv)
-        self.add_intensity(xyzv[3])
-        self.entryIntensity.set_text('%1.1f' % (self.intensitySum/self.intensityCnt))
+        return
+        #if not self.collecting: return 
+        #xyzv = [0,0,0,0]
+        #observer.GetCursorData(xyzv)
+        #self.add_intensity(xyzv[3])
+        #self.entryIntensity.set_text('%1.1f' % (self.intensitySum/self.intensityCnt))
 
     def __adjust_scrollbar_threshold_for_data(self):
         valid_increments = sorted([1.*10**e for e in range(-2,3)] +
@@ -468,6 +478,8 @@ class SurfRendererProps(gtk.VBox):
 
     def change_threshold_of_surf(self,*args):
         param = self.__get_selected_surface()
+        if not param:
+            return
         param.intensity = self.scrollbar_threshold.get_value()
         param.update_pipeline()
         self.render()

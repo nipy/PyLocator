@@ -2,7 +2,6 @@ from gtk import gdk
 import gtk
 import vtk
 import time
-from scipy import array
 from markers import Marker, RingActor
 from events import EventHandler, UndoRegistry
 
@@ -67,11 +66,6 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
         self.observer.On()
         self.observer.InteractionOff()
         self.update_plane()
-        #if self.orientation==0: up = (0,0,-1)
-        #elif self.orientation==1: up = (0,0,-1)
-        #elif self.orientation==2: up = (-1,0,0)
-        #else:
-        #    raise ValueError, 'orientation must be in 0,1,2'
 
 
         #self.sliceIncrement = spacing[self.orientation]
@@ -80,6 +74,7 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
         spacing = self.imageData.GetSpacing()
         self._ratio = np.mean(np.abs(spacing)) #For marker sizes
         shared.ratio = self._ratio
+
 
     def add_axes_labels(self):
         #if shared.debug: print "***Adding axes labels"
@@ -137,12 +132,11 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
         elif self.orientation == 2:
             pos[2] += max((bounds[1::2]-bounds[0::2]))*2
             camera_up[0] = -1
-        #idx_pos = labels.index(lb_pos)
-        #pos[idx_pos/2] +=  (-1+2*idx_pos%2)*max((bounds[1::2]-bounds[0::2]))*2
         if shared.debug: print camera_up
         fpu = center, pos, tuple(camera_up)
         #if shared.debug: print "***fpu2:", fpu
         self.set_camera(fpu)
+        self.scroll_depth(self.sliceIncrement)
 
     def mouse1_mode_change(self, event):
         try: self.moveEvent
@@ -159,8 +153,6 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
 
         
     def set_mouse1_to_move(self):
-
-
         self.markerAtPoint = None
         self.pressed1 = 0
 
@@ -276,8 +268,8 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
 
     def scroll_depth(self, step):
         # step along the normal
-        p1 = array(self.pw.GetPoint1())
-        p2 = array(self.pw.GetPoint2())
+        p1 = np.array(self.pw.GetPoint1())
+        p2 = np.array(self.pw.GetPoint2())
 
         origin = self.pw.GetOrigin()
         normal = self.pw.GetNormal()
@@ -287,7 +279,7 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
         newPlane.Push(step)
         newOrigin = newPlane.GetOrigin()
 
-        delta = array(newOrigin) - array(origin) 
+        delta = np.array(newOrigin) - np.array(origin) 
         p1 += delta
         p2 += delta
             
@@ -355,8 +347,6 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
             self.scroll_axis2(step)
         else:
             self.scroll_depth(step*self.sliceIncrement)
-        
-        
 
         self.get_pwxyz().Render()
         self.update_rings()
@@ -364,7 +354,6 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
         self.lastTime = time.time()
 
     def update_rings(self):
-            
         self.ringActors.InitTraversal()
         numActors = self.ringActors.GetNumberOfItems()
         for i in range(numActors):
@@ -559,4 +548,7 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
         transform = vtk.vtkTransform()
         transform.Scale(spacing)
         return transform.TransformPoint(pnt)
+    
+    def color_roi(self, uuid, color):
+        pass
 

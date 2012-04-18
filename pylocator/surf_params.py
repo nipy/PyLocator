@@ -1,5 +1,7 @@
 from __future__ import division
 import sys, os
+import uuid
+
 import vtk
 
 import gtk
@@ -37,18 +39,26 @@ class SurfParams(object):
     label = "Surface"
     colorName, color_  = colorSeq[0]
     intensity     = 80.
+    _opacity = 1.0
 
     useConnect    = True
     useDecimate   = False
 
-    def __init__(self, renderers, interactor):
-
-        self._color = SurfParams.color_
-        self._opacity = 1.0
+    def __init__(self, imageData, intensity, color=None):
+        self._uuid = uuid.uuid1()
+        if intensity!=None:
+            self.intensity = intensity
+        if color==None:
+            color=self.color_
+        self.set_color(color)
 
         self.connect = ConnectFilter()
         self.deci = DecimateFilter()
         self.marchingCubes = vtk.vtkMarchingCubes()
+        self.marchingCubes.SetInput(imageData)
+
+
+        self.output = vtk.vtkPassThrough()
 
         self.prog = ProgressBarDialog(
             title='Rendering surface %s' % self.label,
@@ -75,84 +85,41 @@ class SurfParams(object):
         self.marchingCubes.AddObserver('StartEvent', start)
         self.marchingCubes.AddObserver('ProgressEvent', progress)
         self.marchingCubes.AddObserver('EndEvent', end)
-        #Make sure we have a list ef renderer (even if length 1)
-        try:
-            renderers = list(renderers)
-        except TypeError, te:
-            renderers = [renderers]
-        self.renderers = renderers
-        self.interactor = interactor
-        self.isoActor = None
         
         self.update_pipeline()
 
+        self.notify_add_surface(self.output)
+
+
     def update_pipeline(self):
-
-        if self.isoActor is not None:
-            for renderer in self.renderers:
-                renderer.RemoveActor(self.isoActor)
-
-        
-        
         pipe = self.marchingCubes
 
-
         if self.useConnect:
-            self.connect.SetInput( pipe.GetOutput())
+            self.connect.SetInputConnection( pipe.GetOutputPort())
             pipe = self.connect
 
         if self.useDecimate:
-            self.deci.SetInput( pipe.GetOutput())
+            self.deci.SetInputConnection( pipe.GetOutputPort())
             pipe = self.deci
 
-        if 0:
-            plane = vtk.vtkPlane()
-            clipper = vtk.vtkClipPolyData()
-            polyData = pipe.GetOutput()
-
-            clipper.SetInput(polyData)
-            clipper.SetClipFunction(plane)
-            clipper.InsideOutOff()
-            pipe = clipper
-
-            def callback(pw, event):
-                pw.GetPlane(plane)
-                self.interactor.Render()
-            self.planeWidget = vtk.vtkImplicitPlaneWidget()
-            self.planeWidget.SetInteractor(self.interactor)
-            self.planeWidget.On()
-            self.planeWidget.SetPlaceFactor(1.0)
-            self.planeWidget.SetInput(polyData)
-            self.planeWidget.PlaceWidget()
-            self.planeWidget.AddObserver("InteractionEvent", callback)
-        
-        
-        self.isoMapper = vtk.vtkPolyDataMapper()
-        self.isoMapper.SetInput(pipe.GetOutput())
-        self.isoMapper.ScalarVisibilityOff()
-
-        self.isoActor = vtk.vtkActor()
-        self.isoActor.SetMapper(self.isoMapper)
-        self.set_lighting()
-        for renderer in self.renderers:
-            renderer.AddActor(self.isoActor)
+        self.output.SetInputConnection( pipe.GetOutputPort() )
         self.update_properties()
 
-    def set_lighting(self):
-        #self.isoActor.GetProperty().SetSpecular(1.0)
-        pass
+    def notify_add_surface(self, pipe):
+        EventHandler().notify("add surface", self._uuid, pipe, self._color)
 
-    def set_image_data(self, imageData):
-        #print "SurfParams.set_image_data(", imageData,")"
-        self.marchingCubes.SetInput(imageData)
-        x1,x2,y1,y2,z1,z2 = imageData.GetExtent()
-        sx, sy, sz = imageData.GetSpacing()
-        if 0:
-            self.planeWidget.PlaceWidget((x1*sx, x2*sx, y1*sy, y2*sy, z1*sz, z2*sz))
+    def notify_remove_surface(self):
+        EventHandler().notify("remove surface", self._uuid)
+
+    def notify_color_surface(self, color):
+        EventHandler().notify("color surface", self._uuid, color)
+
+    def notify_change_surface_opacity(self, opacity):
+        EventHandler().notify("change surface opacity", self._uuid, opacity)
 
     def update_properties(self):
         self.marchingCubes.SetValue(0, self.intensity)
-        self.isoActor.GetProperty().SetColor(self.color)
+        self.notify_color_surface(self.color)
 
         if self.useConnect:  self.connect.update()
         if self.useDecimate: self.deci.update()
@@ -163,45 +130,42 @@ class SurfParams(object):
             self.set_image_data(imageData)       
 
     def __del__(self):
-        if self.isoActor is not None:
-            for renderer in self.renderers:
-                renderer.RemoveActor(self.isoActor)
+        self.notify_remove_surface()
 
     def set_color(self,color, color_name=""):
         #print color, type(color)
         self.colorName = color_name
         if type(color)==gtk.gdk.Color:
             self._color = gdkColor2tuple(color)
-            #print self._color
         else:
             self._color = color
-        self.isoActor.GetProperty().SetColor(self._color)
-        for renderer in self.renderers:
-            renderer.Render()
+        self.notify_color_surface(self._color)
 
     def get_color(self):
         return self._color
 
     def set_opacity(self,opacity):
         self._opacity = opacity
-        self.isoActor.GetProperty().SetOpacity(self._opacity)
+        self.notify_change_surface_opacity(self._opacity)
 
     def get_opacity(self):
         return self._opacity
 
-    def set_visibility(self, visible):
-        if visible:
-            self.isoActor.GetProperty().VisibilityOn()
-        else:
-            self.isoActor.GetProperty().VisibilityOff()
+    #def set_visibility(self, visible):
+    #    if visible:
+    #        self.isoActor.GetProperty().VisibilityOn()
+    #    else:
+    #        self.isoActor.GetProperty().VisibilityOff()
 
-    def get_visibility(self):
-        return self.isoActor.GetProperty().GetVisibility()
+    #def get_visibility(self):
+    #    return self.isoActor.GetProperty().GetVisibility()
+
+    def get_uuid(self):
+        return self._uuid
 
     color = property(get_color,set_color)
     opacity = property(get_opacity,set_opacity)
+    uuid = property(get_uuid)
 
     def destroy(self):
-        if self.isoActor is not None:
-            for renderer in self.renderers:
-                renderer.RemoveActor(self.isoActor)
+        self.notify_remove_surface()

@@ -11,18 +11,14 @@ from vtkutils import create_box_actor_around_marker
 from events import EventHandler
 from markers import Marker
 from shared import shared
-from render_window import PyLocatorRenderWindow
+from render_window import PyLocatorRenderWindow, ThreeDimRenderWindow
 
-class SurfRenderWindow(PyLocatorRenderWindow):
-    """
-    CLASS: SurfRenderWindow
-    DESCR: Upper right frame in pylocator window
-    """
+class SurfRenderWindow(ThreeDimRenderWindow, PyLocatorRenderWindow):
 
     def __init__(self, imageData=None):
         PyLocatorRenderWindow.__init__(self)
-        self.textActors = {}
-        self.boxes = {}
+        ThreeDimRenderWindow.__init__(self)
+        self.surface_actors = {}
 
     def set_image_data(self, imageData):
         self.imageData = imageData
@@ -33,6 +29,7 @@ class SurfRenderWindow(PyLocatorRenderWindow):
         pos = center[0], center[1], center[2] - max(bounds)*2
         fpu = center, pos, (0,-1,0)
         self.set_camera(fpu)
+        self.camera = self.renderer.GetActiveCamera()
 
     def set_labels_visibility(self, visible=True):
         if visible:
@@ -54,34 +51,34 @@ class SurfRenderWindow(PyLocatorRenderWindow):
             actor = self.boxes[marker]
             self.renderer.RemoveActor(actor)
 
-    def add_marker(self, marker):
-
-        self.renderer.AddActor(marker)
-
-        text = vtk.vtkVectorText()
-        text.SetText(marker.get_label())
-        textMapper = vtk.vtkPolyDataMapper()
-        textMapper.SetInput(text.GetOutput())
-
-        textActor = vtk.vtkFollower()
-        textActor.SetMapper(textMapper)
-        size = marker.get_size()
-        textActor.SetScale(size, size, size)
-        x,y,z = marker.get_center()
-        textActor.SetPosition(x+size, y+size, z+size)
-        textActor.SetCamera(self.renderer.GetActiveCamera())
-        textActor.GetProperty().SetColor(marker.get_label_color())
-        if EventHandler().get_labels_on():
-            textActor.VisibilityOn()
-        else:
-            textActor.VisibilityOff()
-
-
-        self.textActors[marker] = textActor
-        self.renderer.AddActor(textActor)
-
-    def remove_marker(self, marker):
-        self.renderer.RemoveActor(marker)
-        self.renderer.RemoveActor(self.textActors[marker])
-        del self.textActors[marker]
+    def add_surface(self, uuid, pipe, color):
+        isoActor = self._create_actor(pipe)
+        isoActor.GetProperty().SetColor(color)
+        self._set_surface_lighting(isoActor)
+        self.surface_actors[uuid] = isoActor
         
+    def remove_surface(self, uuid):
+        actor = self.__get_surface_actor(uuid)
+        if actor:
+            self.renderer.RemoveActor(actor)
+            del self.surface_actors[uuid]
+
+    def color_surface(self, uuid, color):
+        actor = self.__get_surface_actor(uuid)
+        if actor:
+            actor.GetProperty().SetColor(color)
+
+    def change_surface_opacity(self, uuid, opacity):
+        actor = self.__get_surface_actor(uuid)
+        if actor:
+            actor.GetProperty().SetOpacity(opacity)
+
+    def __get_surface_actor(self, uuid):
+        if not self.surface_actors.has_key(uuid):
+            return
+        return self.surface_actors[uuid]
+
+    def update_viewer(self, event, *args):
+        PyLocatorRenderWindow.update_viewer(self, event, *args)
+        self.Render()
+

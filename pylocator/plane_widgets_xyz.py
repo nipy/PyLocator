@@ -2,12 +2,12 @@ import gtk
 import vtk
 
 from events import EventHandler, UndoRegistry
+from render_window import ThreeDimRenderWindow
 from marker_window_interactor import MarkerWindowInteractor
-from image_reader import widgets
 from vtkutils import create_box_actor_around_marker
 
 import numpy as np
-from scipy import array, zeros
+from numpy import array, zeros
 
 from shared import shared
 
@@ -29,7 +29,7 @@ def move_pw_to_point(pw, xyz):
     pw.UpdatePlacement()
 
 
-class PlaneWidgetsXYZ(MarkerWindowInteractor):
+class PlaneWidgetsXYZ(ThreeDimRenderWindow, MarkerWindowInteractor):
     """
     CLASS: PlaneWidgetsXYZ
 
@@ -39,6 +39,7 @@ class PlaneWidgetsXYZ(MarkerWindowInteractor):
         
     def __init__(self, imageData=None):
         MarkerWindowInteractor.__init__(self)
+        ThreeDimRenderWindow.__init__(self)
 
         if shared.debug: print "PlaneWidgetsXYZ.__init__()"
 
@@ -54,9 +55,6 @@ class PlaneWidgetsXYZ(MarkerWindowInteractor):
         self.pwZ = vtk.vtkImagePlaneWidget()
 
         
-        self.textActors = {}
-        self.boxes = {}
-
         self.axes_labels = []
 
         self.set_image_data(imageData)
@@ -65,7 +63,6 @@ class PlaneWidgetsXYZ(MarkerWindowInteractor):
         self.vtk_translation = zeros(3, 'd')
         self.vtk_rotation = zeros(3, 'd')
 
-        self.camera = self.renderer.GetActiveCamera()
 
     def translate_vtk(self, axis, value):
         if (axis == 'x'): ax = 0
@@ -124,19 +121,6 @@ class PlaneWidgetsXYZ(MarkerWindowInteractor):
         #self.pwZ.SetResliceInterpolateToNearestNeighbour()
         self.camera = self.renderer.GetActiveCamera()
 
-        #center = self.imageData.GetCenter()
-        #spacing = self.imageData.GetSpacing()
-        #bounds = np.array(self.imageData.GetBounds())
-        #if shared.debug: print "***center,spacing,bounds", center,spacing,bounds
-        #pos = center[0], center[1], center[2] - max((bounds[1::2]-bounds[0::2]))*2
-        #fpu = center, pos, (0,-1,0)
-        #if shared.debug: print "***fpu1:", fpu
-        #self.set_camera(fpu)
-
-        #if shared.debug: print self.pwX.GetResliceOutput().GetSpacing(), imageData.GetSpacing()
-
-        #self.add_axes_labels()
-
     def add_axes_labels(self):
         #if shared.debug: print "***Adding axes labels"
         #if shared.debug: print labels
@@ -151,12 +135,6 @@ class PlaneWidgetsXYZ(MarkerWindowInteractor):
             coords[i/2] = b*1.1
             #Correction for negative spacings
             idx_label = 1*i
-            #if self.imageData.GetSpacing()[i/2]<0:
-            #    if shared.debug: print "Changing for label no.", idx_label, labels[idx_label]
-            #    if idx_label%2==0:
-            #        idx_label += 1
-            #    else:
-            #        idx_label-=1
             label = labels[idx_label]
             if shared.debug: print i,b, coords, label
             #Orientation should be correct due to reading affine in vtkNifti
@@ -200,13 +178,7 @@ class PlaneWidgetsXYZ(MarkerWindowInteractor):
 
     def update_viewer(self, event, *args):
         MarkerWindowInteractor.update_viewer(self, event, *args)
-        if event=='add marker':
-            marker = args[0]
-            self.add_marker(marker)
-        elif event=='remove marker':
-            marker = args[0]
-            self.remove_marker(marker)
-        elif event=='color marker':
+        if event=='color marker':
             marker, color = args
             marker.set_color(color)
         elif event=='label marker':
@@ -264,40 +236,6 @@ class PlaneWidgetsXYZ(MarkerWindowInteractor):
         self.Render()
     
         
-        
-    def add_marker(self, marker):
-        if shared.debug: print "PlaneWidgetsXYZ.add_marker(): self.renderer.AddActor(marker)"
-        self.renderer.AddActor(marker)
-
-        text = vtk.vtkVectorText()
-        text.SetText(marker.get_label())
-        textMapper = vtk.vtkPolyDataMapper()
-        textMapper.SetInput(text.GetOutput())
-
-        textActor = vtk.vtkFollower()
-        textActor.SetMapper(textMapper)
-        size = marker.get_size()
-        textActor.SetScale(size, size, size)
-        x,y,z = marker.get_center()
-        textActor.SetPosition(x+size, y+size, z+size)
-        textActor.SetCamera(self.camera)
-        textActor.GetProperty().SetColor(marker.get_label_color())
-        if EventHandler().get_labels_on():
-            if shared.debug: print "VisibilityOn"
-            textActor.VisibilityOn()
-        else:
-            if shared.debug: print "VisibilityOff"
-            textActor.VisibilityOff()
-
-
-        self.textActors[marker] = textActor
-        if shared.debug: print "PlaneWidgetsXYZ.add_marker(): self.renderer.AddActor(textActor)"
-        self.renderer.AddActor(textActor)
-
-    def remove_marker(self, marker):
-        self.renderer.RemoveActor(marker)
-        self.renderer.RemoveActor(self.textActors[marker])
-        del self.textActors[marker]
 
     def _plane_widget_boilerplate(self, pw, key, color, index, orientation):
 
@@ -362,16 +300,16 @@ class PlaneWidgetsXYZ(MarkerWindowInteractor):
     def OnButtonDown(self, wid, event):
         """Mouse button pressed."""
 
-        #if shared.debug: print "PlaneWidgetsXYZ.OnButtonDown(): event=", event
+        if shared.debug: print "PlaneWidgetsXYZ.OnButtonDown(): event=", event
 
         self.lastPntsXYZ = ( self.get_plane_points(self.pwX),
                              self.get_plane_points(self.pwY),
                              self.get_plane_points(self.pwZ))
-        #if shared.debug: print "PlaneWidgetsXYZ.OnButtonDown(): self.lastPntsXYZ=", self.lastPntsXYZ
+        if shared.debug: print "PlaneWidgetsXYZ.OnButtonDown(): self.lastPntsXYZ=", self.lastPntsXYZ
                              
 
         MarkerWindowInteractor.OnButtonDown(self, wid, event)
-        #if shared.debug: print self.axes_labels
+        if shared.debug: print self.axes_labels
         return True
 
     def OnButtonUp(self, wid, event):

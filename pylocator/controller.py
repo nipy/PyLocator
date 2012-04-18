@@ -62,6 +62,7 @@ class PyLocatorController(object):
         window.screenshot_props.create_buttons()
 
         builder.connect_signals(self)
+        
         return window
 
     def __fill_notebook_pages(self, window, vboxes):

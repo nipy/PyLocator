@@ -3,8 +3,9 @@ from markers import Marker
 
 import pickle
 
-from scipy import array, zeros
+from numpy import array, zeros
 from shared import shared
+from vtkutils import vtkmatrix4x4_to_array
 
 class UndoRegistry:
     __sharedState = {}
@@ -150,16 +151,6 @@ class EventHandler:
         
         if shared.debug: print "EventHandler.save_registration_as(): vtkactor has origin, pos, scale, mat, orient=", loc, pos, scale, mat, orient, "!!"
 
-
-        def vtkmatrix4x4_to_array(vtkmat):
-            scipy_array = zeros((4,4), 'd')
-
-            for i in range(0,4):
-                for j in range(0,4):
-                    scipy_array[i][j] = mat.GetElement(i,j)
-
-            return scipy_array
-
         scipy_mat = vtkmatrix4x4_to_array(mat)
 
         pickle.dump(scipy_mat, fh)
@@ -167,7 +158,6 @@ class EventHandler:
         
         
     def load_markers_from(self, fname):
-
         self.notify('render off')
         for line in file(fname, 'r'):
             marker = Marker.from_string(line)
@@ -198,7 +188,6 @@ class EventHandler:
     def set_labels_off(self):
         self.labelsOn = 0
         self.notify('labels off')
-
 
     def is_selected(self, marker):
         return self.selected.has_key(marker)
