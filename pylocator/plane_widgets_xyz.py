@@ -219,16 +219,18 @@ class PlaneWidgetsXYZ(ThreeDimRenderWindow, MarkerWindowInteractor):
             actors = self.textActors.values()
             for actor in actors:
                 actor.VisibilityOff()
-        elif event=='select marker':
-            marker = args[0]
-            actor = create_box_actor_around_marker(marker)
-            if shared.debug: print "PlaneWidgetsXYZ.update_viewer(): self.renderer.AddActor(actor)"
-            self.renderer.AddActor(actor)
-            self.boxes[marker] = actor
-        elif event=='unselect marker':
-            marker = args[0]
-            actor = self.boxes[marker]
-            self.renderer.RemoveActor(actor)
+        #elif event=='select marker':
+        #    marker = args[0]
+        #    actor = create_box_actor_around_marker(marker)
+        #    if shared.debug: print "PlaneWidgetsXYZ.update_viewer(): self.renderer.AddActor(actor)"
+        #    self.renderer.AddActor(actor)
+        #    self.boxes[marker] = actor
+        #elif event=='unselect marker':
+        #    marker = args[0]
+        #    actor = self.boxes[marker]
+        #    print "pwxyz: u m", repr(marker), repr(actor)
+        #    self.renderer.RemoveActor(actor)
+        #    del self.boxes[marker]
         elif event=="set axes directions":
             self.add_axes_labels()
             EventHandler().notify('observers update plane')

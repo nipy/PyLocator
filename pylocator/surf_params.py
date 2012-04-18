@@ -20,22 +20,6 @@ from decimate_filter import DecimateFilter
 from colors import colorSeq, gdkColor2tuple
 
 class SurfParams(object):
-    """
-    CLASS: SurfParams
-    DESCR:
-
-      Public attrs:
-    
-      color_      # a normed rgb
-      intensity   # intensity to segment on
-      label       # name of segment
-      useConnect  # boolean, whether to use ConnectFilter
-      useDecimate # boolean, whether to use DecimateFilter
-      connect     # a ConnectFilter or None
-      deci        # a DecimateFilter or None
-      imageData   # default None
-    """
-
     label = "Surface"
     colorName, color_  = colorSeq[0]
     intensity     = 80.
@@ -56,7 +40,6 @@ class SurfParams(object):
         self.deci = DecimateFilter()
         self.marchingCubes = vtk.vtkMarchingCubes()
         self.marchingCubes.SetInput(imageData)
-
 
         self.output = vtk.vtkPassThrough()
 

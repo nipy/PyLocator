@@ -43,7 +43,6 @@ def edit_label_of_marker(marker):
 
     if new_label==None or new_label==label: return
     EventHandler().notify('label marker', marker, new_label)
-    print "Set lastLabel"
     shared.lastLabel = new_label
 
     

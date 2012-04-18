@@ -70,10 +70,10 @@ class PyLocatorController(object):
         #window.marker_list._treev_sel.connect("changed",self.on_marker_selection_changed)
         vboxes["Markers"].pack_start(window.marker_list,True,True)
 
-        window.surf_ren_props = SurfRendererProps(window.surfRenWin, window.pwxyz)
+        window.surf_ren_props = SurfRendererProps()
         vboxes["Surfaces"].pack_start(window.surf_ren_props)
 
-        window.roi_props = RoiRendererProps(window.surfRenWin, window.pwxyz)
+        window.roi_props = RoiRendererProps()
         vboxes["ROI"].pack_start(window.roi_props)
 
         window.screenshot_props = ScreenshotProps()

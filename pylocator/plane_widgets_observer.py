@@ -1,3 +1,4 @@
+import traceback
 from gtk import gdk
 import gtk
 import vtk
@@ -9,6 +10,7 @@ import numpy as np
 
 from marker_window_interactor import MarkerWindowInteractor
 from shared import shared
+from rois import RoiEdgeActor
 
 INTERACT_CURSOR, MOVE_CURSOR, COLOR_CURSOR, SELECT_CURSOR, DELETE_CURSOR, LABEL_CURSOR, SCREENSHOT_CURSOR = gtk.gdk.ARROW, gtk.gdk.HAND2, gtk.gdk.SPRAYCAN, gtk.gdk.TCROSS, gtk.gdk.X_CURSOR, gtk.gdk.PENCIL, gtk.gdk.ICON
 
@@ -77,20 +79,16 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
 
 
     def add_axes_labels(self):
-        #if shared.debug: print "***Adding axes labels"
-        #if shared.debug: print labels
         labels = shared.labels
-        #labels = list(np.array(labels)[[4,5,2,3,0,1]])
         self.axes_labels=labels
         self.axes_labels_actors=[]
         size = abs(self.imageData.GetSpacing()[0]) * 5
-        #if shared.debug: print "***size", size
         for i,b in enumerate(self.imageData.GetBounds()):
             coords = list(self.imageData.GetCenter())
             coords[i/2] = b*1.12
             idx_label = 1*i #historical reasons for using this
             label = labels[idx_label]
-            #if shared.debug: print i,b, coords, label
+            if shared.debug: print i,b, coords, label
             if self.orientation == 0:
                 if label in ["R","L"]:
                     continue
@@ -120,7 +118,7 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
         center = self.imageData.GetCenter()
         spacing = self.imageData.GetSpacing()
         bounds = np.array(self.imageData.GetBounds())
-        #if shared.debug: print "***center,spacing,bounds", center,spacing,bounds
+        if shared.debug: print "***center,spacing,bounds", center,spacing,bounds
         pos = [center[0], center[1], center[2]]
         camera_up = [0,0,0]
         if self.orientation == 0:
@@ -134,7 +132,7 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
             camera_up[0] = -1
         if shared.debug: print camera_up
         fpu = center, pos, tuple(camera_up)
-        #if shared.debug: print "***fpu2:", fpu
+        if shared.debug: print "***fpu2:", fpu
         self.set_camera(fpu)
         self.scroll_depth(self.sliceIncrement)
 
@@ -185,10 +183,6 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
         self.pressHooks[1] = button_down
         self.releaseHooks[1] = button_up
 
-        #self.startEvent = self.observer.AddObserver(
-        #    'StartInteractionEvent', start_iact)
-        #self.endEvent = self.observer.AddObserver(
-        #    'EndInteractionEvent', end_iact)
         self.moveEvent = self.observer.AddObserver(
             'InteractionEvent', move)
 
@@ -211,7 +205,6 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
         self.interactButtons = (1,2,3)
         self.set_mouse1_to_move()
         return
-    
         #self.defaultRingLine = 1
         #actors = self.get_ring_actors_as_list()
         #for actor in actors:
@@ -245,12 +238,12 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
         if not self.hasData: return 
         self.lastPnts = self.get_plane_points()
 
-
         if event.button==1:
             self.observer.InteractionOn()
 
         ret =  MarkerWindowInteractor.OnButtonDown(self, wid, event)
         return ret
+
     def OnButtonUp(self, wid, event):
         if not hasattr(self, 'lastPnts'): return
         #calling this before base class freezes the cursor at last pos
@@ -260,7 +253,6 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
         MarkerWindowInteractor.OnButtonUp(self, wid, event)            
 
         pnts = self.get_plane_points()
-
         if pnts != self.lastPnts:
             UndoRegistry().push_command(self.set_plane_points, self.lastPnts)
         return True
@@ -330,14 +322,11 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
         self.set_plane_points((o, p1, p2))
         self.update_plane()
 
-
     def scroll_widget_slice(self, widget, event):
-
         now = time.time()
         elapsed = now - self.lastTime
 
         if elapsed < 0.001: return # swallow repeatede events
-
         if event.direction == gdk.SCROLL_UP: step = 1
         elif event.direction == gdk.SCROLL_DOWN: step = -1
 
@@ -350,6 +339,7 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
 
         self.get_pwxyz().Render()
         self.update_rings()
+        self.update_rois()
         self.Render()
         self.lastTime = time.time()
 
@@ -366,9 +356,14 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
             else:
                 textActor.VisibilityOff()
 
+    def update_rois(self):
+        for actor in self.roi_actors.values():
+            vis = actor.update()
+
     def interaction_event(self, *args):
         self.update_plane()
         self.update_rings()
+        self.update_rois()
         self.Render()
 
     def update_plane(self):
@@ -401,9 +396,7 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
             self.set_camera(self.resetCamera)
             return True
         
-        #ScreenshotTaker.OnKeyPress(self, wid, event)
         return MarkerWindowInteractor.OnKeyPress(self, wid, event)
-
 
     def update_viewer(self, event, *args):
         MarkerWindowInteractor.update_viewer(self, event, *args)
@@ -419,29 +412,17 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
             marker, pos = args
             textActor = self.textActors[marker]
             textActor.SetPosition(pos)
-
         elif event=='color marker':
             marker, color = args
             actor = self.get_actor_for_marker(marker)
             actor.update()
         elif event=='label marker':
             marker, label = args
-            marker.set_label(label)
-            text = vtk.vtkVectorText()
-            text.SetText(marker.get_label())
-            textMapper = vtk.vtkPolyDataMapper()
-            textMapper.SetInput(text.GetOutput())
-            textActor = self.textActors[marker]
-            textActor.SetMapper(textMapper)
-
+            self.label_ring_actor(marker, label)
         elif event=='color marker':
             marker, color = args
             actor = self.get_actor_for_marker(marker)
             actor.update()
-        elif event=='observers update plane':
-            self.update_plane()
-        elif event=="set axes directions":
-            self.add_axes_labels()
         elif event=='select marker':
             marker = args[0]
             actor = self.get_actor_for_marker(marker)
@@ -450,7 +431,12 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
             marker = args[0]
             actor = self.get_actor_for_marker(marker)
             actor.set_selected(False)
+        elif event=='observers update plane':
+            self.update_plane()
+        elif event=="set axes directions":
+            self.add_axes_labels()
         self.update_rings()
+        self.update_rois()
         self.Render()
 
     def add_ring_actor(self, marker):
@@ -497,6 +483,15 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
         self.renderer.RemoveActor(textActor)
         del self.textActors[marker]
         
+    def label_ring_actor(self, marker, label):
+        marker.set_label(label)
+        text = vtk.vtkVectorText()
+        text.SetText(marker.get_label())
+        textMapper = vtk.vtkPolyDataMapper()
+        textMapper.SetInput(text.GetOutput())
+        textActor = self.textActors[marker]
+        textActor.SetMapper(textMapper)
+
     def get_actor_for_marker(self, marker):
         self.ringActors.InitTraversal()
         numActors = self.ringActors.GetNumberOfItems()
@@ -549,6 +544,21 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
         transform.Scale(spacing)
         return transform.TransformPoint(pnt)
     
+    def add_roi(self, uuid, pipe, color):
+        actor = RoiEdgeActor(pipe, color, self.pw)
+        self.renderer.AddActor(actor)
+        actor.color = color
+        self.roi_actors[uuid] = actor
+
+    def remove_roi(self, uuid):
+        actor = self._get_roi_actor(uuid)
+        if actor:
+            self.renderer.RemoveActor(actor)
+            del self.roi_actors[uuid]
+
     def color_roi(self, uuid, color):
-        pass
+        actor = self._get_roi_actor(uuid)
+        if actor:
+            actor.set_color(color)
+
 

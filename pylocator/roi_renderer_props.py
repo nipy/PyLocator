@@ -17,51 +17,16 @@ from surf_params import SurfParams
 from list_toolbar import ListToolbar
 from colors import ColorChooser, colord, colorSeq
 from vtkNifti import vtkNiftiImageReader
-
-class RoiParams(SurfParams):
-    intensity = 0.5
-
-    def __init__(self, imageData, color=None):
-        if color==None:
-            color = colord["electrodes"]
-        SurfParams.__init__(self, imageData, self.intensity, color)
-
-    def set_lighting(self):
-        surf_prop = self.isoActor.GetProperty()
-        surf_prop.SetAmbient(.2)
-        surf_prop.SetDiffuse(.3)
-        surf_prop.SetSpecular(.5)
-
-    def notify_add_surface(self, pipe):
-        EventHandler().notify("add roi", self._uuid, pipe, self._color)
-
-    def notify_remove_surface(self):
-        EventHandler().notify("remove roi", self._uuid)
-
-    def notify_color_surface(self, color):
-        EventHandler().notify("color roi", self._uuid, color)
-
-    def notify_change_surface_opacity(self, opacity):
-        EventHandler().notify("change roi opacity", self._uuid, opacity)
+from rois import RoiParams
 
 class RoiRendererProps(gtk.VBox):
-    """
-    CLASS: RoiRendererProps
-    DESCR: 
-    """
-
     SCROLLBARSIZE = 150,20
     lastColor = SurfParams.color
     paramd = {}   # a dict from names to SurfParam instances
 
-    def __init__(self, sr, pwxyz):
-        """sr is a SurfRenderer"""
+    def __init__(self):
         gtk.VBox.__init__(self)
         self.show()
-
-        self.sr = sr
-        self.pwxyz = pwxyz
-        self.interactorStyle = self.sr.GetInteractorStyle()
 
         toolbar = self.__create_toolbar()
         self.pack_start(toolbar,False,False)
@@ -84,8 +49,7 @@ class RoiRendererProps(gtk.VBox):
 
 
     def render(self, *args):
-        self.pwxyz.Render()
-        self.sr.Render()
+        EventHandler().notify("render now")
             
     def __create_toolbar(self):
         conf = [
@@ -185,6 +149,7 @@ class RoiRendererProps(gtk.VBox):
                 self.nroi+=1
                 tree_iter = self.tree_roi.append(None)
                 self.tree_roi.set(tree_iter,0,self.nroi,1,os.path.split(fname)[1],2,fname,3,True)
+                self.__update_treeview_visibility()
 
                 roi_image_reader = vtkNiftiImageReader()
                 roi_image_reader.SetFileName(fname)
@@ -251,3 +216,4 @@ class RoiRendererProps(gtk.VBox):
         else:
             self.emptyIndicator.hide()
             self.treev_roi.show()
+

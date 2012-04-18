@@ -52,7 +52,7 @@ class ObserverToolbar(gtk.Toolbar):
             pwxyz.Render()
 
         iconw = gtk.Image() # icon widget
-        iconw.set_from_stock(gtk.STOCK_ADD, iconSize)
+        iconw.set_from_stock(gtk.STOCK_HOME, iconSize)
         buttonOrtho = self.append_item(
             'Ortho',
             'Restore orthogonality of plane widget',
@@ -76,7 +76,7 @@ class ObserverToolbar(gtk.Toolbar):
             pwxyz.snap_view_to_point(xyz)
 
         iconw = gtk.Image() # icon widget
-        iconw.set_from_stock(gtk.STOCK_JUMP_TO, iconSize)
+        iconw.set_from_stock(gtk.STOCK_GOTO_LAST, iconSize)
         buttonJump = self.append_item(
             'Jump to',
             'Move the planes to the point under the cursor or\n' +
@@ -134,7 +134,7 @@ class ObserverToolbar(gtk.Toolbar):
             
                        
         iconw = gtk.Image() # icon widget
-        iconw.set_from_stock(gtk.STOCK_REDO, iconSize)
+        iconw.set_from_stock(gtk.STOCK_EXECUTE, iconSize)
         buttonPlaneSelected = self.append_item(
             'Set plane',
             'Set the plane to be coplanar with 3 selected electrodes',

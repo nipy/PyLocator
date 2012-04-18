@@ -4,6 +4,7 @@ import vtk
 from GtkGLExtVTKRenderWindowInteractor import GtkGLExtVTKRenderWindowInteractor
 from events import EventHandler
 from gtkutils import error_msg
+from vtkutils import create_box_actor_around_marker
 
 from pylocator_glade import camera_small_fn
 
@@ -13,6 +14,7 @@ from shared import shared
 INTERACT_CURSOR, MOVE_CURSOR, COLOR_CURSOR, SELECT_CURSOR, DELETE_CURSOR, LABEL_CURSOR, SCREENSHOT_CURSOR = gtk.gdk.ARROW, gtk.gdk.HAND2, gtk.gdk.SPRAYCAN, gtk.gdk.TCROSS, gtk.gdk.X_CURSOR, gtk.gdk.PENCIL, gtk.gdk.ICON
 
 class PyLocatorRenderWindow(GtkGLExtVTKRenderWindowInteractor):
+    background = (0.,0.,0.)
 
     def __init__(self,*args):
         GtkGLExtVTKRenderWindowInteractor.__init__(self,*args)
@@ -26,7 +28,7 @@ class PyLocatorRenderWindow(GtkGLExtVTKRenderWindowInteractor):
         self.Start()
 
         self.renderer = vtk.vtkRenderer()
-        self.renderer.SetBackground(0,0,0)
+        self.renderer.SetBackground(self.background)
         self.renWin = self.GetRenderWindow()
         self.renWin.AddRenderer(self.renderer)
         self.interactor = self.renWin.GetInteractor()
@@ -127,6 +129,11 @@ class PyLocatorRenderWindow(GtkGLExtVTKRenderWindowInteractor):
     def change_roi_opacity(self, uuid, opactiy):
         pass
 
+    def _get_roi_actor(self, uuid):
+        if not self.roi_actors.has_key(uuid):
+            return
+        return self.roi_actors[uuid]
+
     def update_viewer(self, event, *args):
         if event=='render off':
             self.renderOn = 0
@@ -183,10 +190,10 @@ class PyLocatorRenderWindow(GtkGLExtVTKRenderWindowInteractor):
 
 class ThreeDimRenderWindow(object):
     textActors = {}
-    boxes = {}
 
     def add_marker(self, marker):
         self.renderer.AddActor(marker)
+        self.boxes = {}
 
         text = vtk.vtkVectorText()
         text.SetText(marker.get_label())
@@ -218,6 +225,16 @@ class ThreeDimRenderWindow(object):
         except KeyError:
             pass
 
+    def set_marker_selection(self, marker, select=True):
+        if select:
+            actor = create_box_actor_around_marker(marker)
+            if shared.debug: print "PlaneWidgetsXYZ.update_viewer(): self.renderer.AddActor(actor)"
+            self.renderer.AddActor(actor)
+            self.boxes[marker] = actor
+        else:
+            actor = self.boxes[marker]
+            self.renderer.RemoveActor(actor)
+
     def add_roi(self, uuid, pipe, color):
         isoActor = self._create_actor(pipe)
         isoActor.GetProperty().SetColor(color)
@@ -225,25 +242,21 @@ class ThreeDimRenderWindow(object):
         self.roi_actors[uuid] = isoActor
 
     def remove_roi(self, uuid):
-        actor = self.__get_roi_actor(uuid)
+        actor = self._get_roi_actor(uuid)
         if actor:
             self.renderer.RemoveActor(actor)
             del self.roi_actors[uuid]
 
     def color_roi(self, uuid, color):
-        actor = self.__get_roi_actor(uuid)
+        actor = self._get_roi_actor(uuid)
         if actor:
             p = actor.GetProperty()
             p.SetColor(color)
 
     def change_roi_opacity(self, uuid, opacity):
-        actor = self.__get_roi_actor(uuid)
+        actor = self._get_roi_actor(uuid)
         if actor:
             actor.GetProperty().SetOpacity(opacity)
-
-    def __get_roi_actor(self, uuid):
-        if not self.roi_actors.has_key(uuid):
-            return
         return self.roi_actors[uuid]
 
     def _create_actor(self,pipe):
