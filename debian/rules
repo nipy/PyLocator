@@ -11,20 +11,11 @@ override_dh_auto_build:
 	# and docs
 	$(MAKE) htmldoc
 	# but remove jquery copy (later on link to Debian's version)
-	-rm build/html/_static/jquery.js
+	-rm doc/build/html/_static/jquery.js
 	# objects inventory is of no use for the package
-	-rm build/html/objects.inv
+	-rm doc/build/html/objects.inv
 	# also doc source files only consume space
 	-rm -r build/html/_sources
-
-# enable when we believe that the tests should pass
-override_dh_auto_test:
-ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
-	for buildver in $(shell pyversions -vr); do \
-		echo "I: Running NiBabel unittests using python$$buildver"; \
-		$(MAKE) unittest PYTHON=python$$buildver || exit 1 ;\
-	done
-endif
 
 ## immediately useable documentation
 ## and exemplar data (they are small excerpts anyway)
