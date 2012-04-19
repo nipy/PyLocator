@@ -1,0 +1,4 @@
+# Compulsory line, this is a version 3 file
+version=3
+opts="filenamemangle=s/.*\/(.*)/pylocator-$1\.tar\.gz/" \
+  http://github.com/nipy/pylocator/downloads .*tarball/([\d\.a-z]+)
