@@ -3,7 +3,7 @@
 import gobject, gtk
 import getopt,sys,os
 
-from pylocator import run_pylocator
+from pylocator.main import run_pylocator
 
 usage="""usage: %s [options]
 options:
