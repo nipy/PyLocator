@@ -339,7 +339,7 @@
                         <property name="use_action_appearance">False</property>
                         <property name="relief">none</property>
                         <property name="xalign">0.05000000074505806</property>
-                        <property name="uri">http://pylocator.thorstenkranz.de/tutorial.html</property>
+                        <property name="uri">http://pylocator.thorstenkranz.de/faq.html#how-can-i-insert-markers-for-my-mri</property>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -388,7 +388,7 @@
                         <property name="use_action_appearance">False</property>
                         <property name="relief">none</property>
                         <property name="xalign">0.05000000074505806</property>
-                        <property name="uri">http://pylocator.thorstenkranz.de/tutorial.html</property>
+                        <property name="uri">http://pylocator.thorstenkranz.de/faq.html#how-can-i-reconstruct-iso-surfaces</property>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -441,7 +441,7 @@
                         <property name="use_action_appearance">False</property>
                         <property name="relief">none</property>
                         <property name="xalign">0.05000000074505806</property>
-                        <property name="uri">http://pylocator.thorstenkranz.de/tutorial.html</property>
+                        <property name="uri">http://pylocator.thorstenkranz.de/faq.html#how-can-i-render-regions-of-interest</property>
                       </object>
                       <packing>
                         <property name="expand">False</property>

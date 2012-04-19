@@ -22,10 +22,9 @@ Contents
 .. toctree::
     :maxdepth: 2
 
-    install.rst
-    tutorial.rst
-    insert_markers.rst
-    faq.rst
+    install
+    tutorial
+    faq
 
 Information on how to obtain and configure PyLocator correctly can be obtained
 in the :doc:`Installation </install>` section.

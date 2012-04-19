@@ -6,6 +6,14 @@ concepts of Pylocator.  It is arranged as a step-by-step instruction and
 uses a dataset which is available here: 
 `post2std_brain.nii.gz <http://pylocator.thorstenkranz.de/download/post2std_brain.nii.gz>`_.
 
+
+.. warning::
+    The tutorial describes version 0.2 and thus is outdated. We're working on a 
+    new version, but until it is finished, you can still find usefull information 
+    on how to navigate and some other stuff. If you can't find somthing where
+    the tutorial tells you - have a look at the brand new 
+    :doc:`Frequently Asked Questions<faq>` page.
+
 Loading the MR image
 -----------------------------------------------
 After starting the program (refer to :doc:`Installation </install>` for
@@ -21,7 +29,7 @@ details) you'll first see a dialog prompting for a Nifti-file. Choose the
 
   1. first, a pre-implantation image was brain-extracted and normalized to a MNI152_T1_1mm-template. The transformation matrix was saved.
   2. then the post-implantaion image was normalized to the pre-implantation image, also saving the matrix
-  3. these two matrices where then concatenated; using this new matrix the post-implantation image was transformed to the MNI template.
+  3. these two matrices were then concatenated; using this new matrix the post-implantation image was transformed to the MNI template.
   4. finally, the image was brain-extracted.
 
 Then the MRI is loaded and the main window of PyLocator pops up. It consists
@@ -68,6 +76,7 @@ Planes widget
                            <----->    Window
 
                            
+
     When dragged off-plane, you can move your camera into / out of the scene.
 
   Middle mouse button
@@ -78,6 +87,8 @@ Slice widgets
   These slices are automatically synchronized to the cut planes in the planes widget.
   The right and middle mouse button behave mailny the same as *off-plane* in the plane 
   widget. Additionally, you can use the mouse wheel to slowly move the slices back and forth.
+
+.. index:: Markers
 
 Marking electrodes
 ------------------
@@ -165,7 +176,7 @@ If you reload the same image again sometime later, you can also load these
 files back into the program to recover all markers.
 
 .. note::
-  When loading markers from disk, be careful with old files: if they where created
+  When loading markers from disk, be careful with old files: if they were created
   with PyLocator version < 0.2, **do choose the .conv-file**. Otherwise the locations will be messed up
  
 Rendering 3d-surface

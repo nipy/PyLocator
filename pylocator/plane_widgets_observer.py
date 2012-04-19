@@ -16,9 +16,10 @@ INTERACT_CURSOR, MOVE_CURSOR, COLOR_CURSOR, SELECT_CURSOR, DELETE_CURSOR, LABEL_
 
 class PlaneWidgetObserver(MarkerWindowInteractor):
     """
-    CLASS: PlaneWidgetObserver
-    DESCR: Handles interactions with PlaneWidgets
+    Showing a slice view snychronised with planes widget
     """
+    axes_labels_color = (0.,0.82,1.)
+
     def __init__(self, planeWidget, owner, orientation, imageData=None):
         if shared.debug: print "PlaneWidgetObserver.__init__(): orientation=",orientation
         MarkerWindowInteractor.__init__(self)
@@ -108,7 +109,7 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
             textActor.SetScale(size, size, size)
             x,y,z = coords
             textActor.SetPosition(x, y, z)
-            textActor.GetProperty().SetColor((1,1,0))
+            textActor.GetProperty().SetColor(*self.axes_labels_color)
             textActor.SetCamera(self.camera)
             self.axes_labels_actors.append(textActor)
             self.renderer.AddActor(textActor)

@@ -32,6 +32,7 @@ class PlaneWidgetsXYZ(ThreeDimRenderWindow, MarkerWindowInteractor):
     DESCR: Upper left frame of window. Contains 3 rotatable image plane
     widgets, and possibly a .vtk mesh.
     """
+    axes_labels_color = (0.,0.82,1.)
         
     def __init__(self, imageData=None):
         MarkerWindowInteractor.__init__(self)
@@ -143,7 +144,7 @@ class PlaneWidgetsXYZ(ThreeDimRenderWindow, MarkerWindowInteractor):
             textActor.SetScale(size, size, size)
             x,y,z = coords
             textActor.SetPosition(x, y, z)
-            textActor.GetProperty().SetColor((1,1,0))
+            textActor.GetProperty().SetColor(*self.axes_labels_color)
             textActor.SetCamera(self.camera)
             self.axes_labels_actors.append(textActor)
             self.renderer.AddActor(textActor)

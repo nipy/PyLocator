@@ -1,6 +1,8 @@
 Installation
 ============
 
+.. index:: dependencies
+
 Dependencies
 -------------
 PyLocator relies on a bunch of libraries:
@@ -31,20 +33,34 @@ The source code of PyLocator is kept in a public GIT repository:
 
 http://www.github.com/nipy/PyLocator
 
+.. index:: repository
+.. index:: source code
+
 You can simply clone this repository via::
 
   git clone git://github.com/nipy/PyLocator.git
 
 Alternatively, you can download a tarball that is updated once in a while from
 
-http://pylocator.thorstenkranz.de/download/pylocator-0.30.dev.tar.gz
+http://pylocator.thorstenkranz.de/download/pylocator-1.0.beta.dev.tar.gz
 
 Extract this archive using your preferred archive manager or in a terminal using something like::
 
-  tar xfvz pylocator-0.30.dev.tar.gz
+  tar xfvz pylocator-1.0.beta.dev.tar.gz
 
-Installing
--------------
+How to install
+---------------
+From PyPI
+^^^^^^^^^^^^^^^^^^^^
+PyLocator is registered at PyPI, the Python Package Index. This makes 
+installation easy. If you have setuptools installed, simply type::
+
+    sudo easy_install PyLocator
+
+and the setuptools will do the magic for you.
+
+From source
+^^^^^^^^^^^^^^^^^^^^
 Once you obtained the source code, enter the PyLocator-directory and type::
 
   python setup.py build
