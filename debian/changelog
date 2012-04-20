@@ -1,25 +1,6 @@
-pylocator (1.1.0-1) unstable; urgency=low
+pylocator (1.0-1) unstable; urgency=low
 
-  * New upstream release: better gifti and trackvis support, bugfixes.
+  * First debian package for PyLocator
 
- -- Yaroslav Halchenko <debian@onerussian.com>  Wed, 04 May 2011 16:44:55 -0400
+ -- Thorsten Kranz <thorstenkranz@gmail.com>  Fri, 20 April 2012 15:00:00 +0100
 
-pylocator (1.0.2-1) unstable; urgency=low
-
-  * Fresh bugfix upstream release
-  * debian/copyright:
-    - changes to confirm to DEP5 rev 174
-    - added myself
-    - updated years
-  * debian/control:
-    - boosted policy compliance to 3.9.2 (no changes)
-    - purged DM-Upload-Allowed (no need any more)
-    - slight tune up of the long description
-
- -- Yaroslav Halchenko <debian@onerussian.com>  Thu, 28 Apr 2011 10:27:22 -0400
-
-pylocator (1.0.0-1) unstable; urgency=low
-
-  * Initial release (Closes: #600275).
-
- -- Michael Hanke <michael.hanke@gmail.com>  Fri, 15 Oct 2010 08:20:14 -0400
