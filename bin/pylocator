@@ -1,32 +1,43 @@
 #! /usr/bin/python
+"""Run pylocator"""
 
-import gobject, gtk
-import getopt,sys,os
+import getopt
+import sys
 
+from pylocator import __version__
 from pylocator.main import run_pylocator
 
-usage="""usage: %s [options]
+USAGE = """PyLocator Version %s
+Usage: %s [options] <Nifti-file>
 options:
---help -h         print this message
---filename -f     filename""" % sys.argv[0]
+--help -h         print this message""" % (__version__, sys.argv[0])
 
-def main(*args):
+def main():
+    """Reads the command line options and launches PyLocator"""
+    def info_exit(option = None, value = None):
+        """Print usage information and abort execution"""
+        if not (option in ["-h", "--help"] or option == None):
+            print "Wrong argument:", option, ",", value
+        print USAGE
+        sys.exit(0)
     try:
-        options, args = getopt.getopt(sys.argv[1:], 'hf:s:', ['help','filename=','surface'])
+        options, args = getopt.getopt(
+                sys.argv[1:], 
+                'h', ['help'])
     except (getopt.GetoptError):
-            print usage; sys.exit(0)
+        info_exit()
 
-    filename=None
-    surface=None
+    if len(args)>1:
+        info_exit()
+    elif len(args)==1:
+        filename = args[0]
+    else:
+        args = None
     for option, value in options:
         if option in ('-h', '--help'):
-            print usage; sys.exit(0)
-        if option in ('-f', '--file'):
-            filename=value
-        if option in ('-s', '--surface'):
-            surface=value
+            info_exit(option, value)
 
-    run_pylocator(filename=filename,surface=surface)
+    run_pylocator(filename=filename)
 
-if __name__=="__main__":
+if __name__ == "__main__":
     main()
