@@ -27,6 +27,7 @@ def main():
     except (getopt.GetoptError):
         info_exit()
 
+    filename = None
     if len(args)>1:
         info_exit()
     elif len(args)==1:
