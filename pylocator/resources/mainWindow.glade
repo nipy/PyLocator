@@ -29,6 +29,7 @@
     <property name="window_position">center</property>
     <property name="default_width">800</property>
     <property name="default_height">600</property>
+    <property name="icon">pylocator.ico</property>
     <signal name="destroy-event" handler="gtk_main_quit" swapped="no"/>
     <signal name="delete-event" handler="gtk_main_quit" swapped="no"/>
     <child>

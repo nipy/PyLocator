@@ -45,6 +45,7 @@ Program for the localization of EEG-electrodes.
       platforms='any',
       package_data={'pylocator': [
                             'resources/mainWindow.glade',
+                            'resources/pylocator.ico',
                             'resources/markers.png',
                             'resources/surfaces.png',
                             'resources/rois.png',
