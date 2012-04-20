@@ -10,11 +10,10 @@ Vcs-Browser: http://github.com/nipy/PyLocator
 Vcs-Git: git://github.com/nipy/PyLocator.git
 XS-Python-Version: >= 2.5
 
-Package: python-pylocator
+Package: pylocator
 Architecture: all
 Depends: ${misc:Depends}, ${python:Depends}, python-numpy, python-scipy, python-nibabel, python-vtk, python-gtk2, python-gtkglext1
 Recommends: python-dicom
-Suggests: python-pylocator-doc
 Provides: ${python:Provides}
 XB-Python-Version: ${python:Versions}
 Description:  Localization of EEG-electrodes from MRI-volumes
