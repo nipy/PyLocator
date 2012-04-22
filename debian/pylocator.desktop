@@ -1,9 +1,10 @@
 [Desktop Entry]
 Version=1.0b1
 Type=Application
+Categories=Science;
 Name=PyLocator
 Comment=Marking electrode locations in MRI recordings
 TryExec=pylocator
 Exec=pylocator %F
 Icon=pylocator
-MimeType=image/x-foo;
+MimeType=application/x-gzip; data/octet-stream
