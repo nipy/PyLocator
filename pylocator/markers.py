@@ -6,6 +6,8 @@ import uuid
 
 import numpy as n
 
+from shared import shared
+
 class Marker(vtk.vtkActor):
     """
     CLASS: Marker
@@ -84,7 +86,7 @@ class Marker(vtk.vtkActor):
         return self.sphere.SetRadius(s)
 
     def set_color(self, color):
-        print "Marker.GetProperty().SetColor(", color, ")"
+        if shared.debug: print "Marker.GetProperty().SetColor(", color, ")"
         self.GetProperty().SetColor( color )
 
     def get_color(self):

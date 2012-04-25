@@ -430,7 +430,6 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
             self.add_axes_labels()
         self.update_rings()
         self.update_rois()
-        print "render now" 
         self.Render()
 
     def add_ring_actor(self, marker):
