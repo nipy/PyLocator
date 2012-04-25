@@ -1,3 +1,5 @@
+from Queue import Queue, Empty
+from threading import Thread
 import gtk
 import vtk
 from GtkGLExtVTKRenderWindowInteractor import GtkGLExtVTKRenderWindowInteractor
@@ -17,6 +19,10 @@ class PyLocatorRenderWindow(GtkGLExtVTKRenderWindowInteractor):
         GtkGLExtVTKRenderWindowInteractor.__init__(self,*args)
         self.screenshot_button_label = "_render window_"
         self.roi_actors = {}
+        self.event_queue = Queue(10)
+        self.stop_rendering = False
+        self.updating_thread = Thread(target=self.start_event_loop)
+        self.updating_thread.start()
 
         EventHandler().attach(self)
         self.interactButtons = (1,2,3)
@@ -131,6 +137,9 @@ class PyLocatorRenderWindow(GtkGLExtVTKRenderWindowInteractor):
             return
         return self.roi_actors[uuid]
 
+    def enqueue_update(self, event, *args):
+        self.event_queue.put((event, args), timeout=10)
+
     def update_viewer(self, event, *args):
         if event=='render off':
             self.renderOn = 0
@@ -184,6 +193,16 @@ class PyLocatorRenderWindow(GtkGLExtVTKRenderWindowInteractor):
             uuid, opacity = args
             self.change_roi_opacity(uuid, opacity)
         self.Render()
+
+    def start_event_loop(self):
+        while not self.stop_rendering:
+            try:
+                event, args = self.event_queue.get(timeout=1)
+                self.update_viewer(event,*args)
+            except Empty:
+                pass
+            except Exception, e:
+                print type(e), e
 
 class ThreeDimRenderWindow(object):
     textActors = {}

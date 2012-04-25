@@ -131,6 +131,8 @@ class MarkerList(gtk.VBox):
             marker = args[0]
             self.__set_marker_selected(marker,False)
 
+    enqueue_update = update_viewer
+
     def cb_add(self,*args):
         parent_window = self.get_parent_window()
         #print parent_window

@@ -476,3 +476,5 @@ class SurfRendererProps(gtk.VBox):
     def update_viewer(self, event, *args):
         if event=='set image data':
             self.set_image_data(args[0])
+
+    enqueue_update = update_viewer
