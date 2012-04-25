@@ -32,8 +32,12 @@ in the :doc:`Installation </install>` section.
 To get a feeling of what PyLocator can do and in order to get used to the controls, 
 we recommend our little :doc:`Tutorial </tutorial>`.
 
-The :doc:`Frequently Asked Questions </faq>` will start with some little basis of 
-obvious questions and will then grow with time.
+We also have a :doc:`Frequently Asked Questions </faq>` section. If your question is not answered here,
+please write me an E-Mail to info@pylocator.thorstenkranz.de . I will try to reply as soon as possible. 
+
+.. image:: _static/download_deb.png
+   :align: center
+   :target: http://pylocator.thorstenkranz.de/download/pylocator_1.0b3_all.deb
 
 License 
 -------- 
