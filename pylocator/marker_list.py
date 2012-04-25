@@ -153,6 +153,7 @@ class MarkerList(gtk.VBox):
         old_color = marker.get_color()
         new_color = choose_one_color("New color for marker",tuple2gdkColor(old_color))
         EventHandler().notify('color marker', marker, gdkColor2tuple(new_color))
+        EventHandler().notify('render now')
 
     def cb_move_up(self, *args):
         self._move_in_list(up=True)

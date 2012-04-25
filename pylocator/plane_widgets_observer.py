@@ -415,10 +415,6 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
         elif event=='label marker':
             marker, label = args
             self.label_ring_actor(marker, label)
-        elif event=='color marker':
-            marker, color = args
-            actor = self.get_actor_for_marker(marker)
-            actor.update()
         elif event=='select marker':
             marker = args[0]
             actor = self.get_actor_for_marker(marker)
@@ -434,6 +430,7 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
             self.add_axes_labels()
         self.update_rings()
         self.update_rois()
+        print "render now" 
         self.Render()
 
     def add_ring_actor(self, marker):
