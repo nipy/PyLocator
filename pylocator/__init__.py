@@ -12,5 +12,5 @@ vtk
 pygtk, gtkglext
 """
 
-__version__ = "1.0 beta 1"
+__version__ = "1.0.90"
 
