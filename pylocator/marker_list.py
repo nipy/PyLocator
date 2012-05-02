@@ -1,4 +1,5 @@
 from __future__ import division
+from sets import Set
 import gobject
 import gtk
 
@@ -22,6 +23,7 @@ class MarkerList(gtk.VBox):
         self._marker_ids = {}
         self.nmrk=0
         self.__ignore_sel_changed = False
+        self.old_selection=Set([])
 
         #Toolbar
         toolbar = self.__create_toolbar()
@@ -39,7 +41,7 @@ class MarkerList(gtk.VBox):
         self.treev_mrk = gtk.TreeView(self.tree_mrk)
         self._treev_sel = self.treev_mrk.get_selection()
         self._treev_sel.connect("changed",self.treev_sel_changed)
-        self._treev_sel.set_mode(gtk.SELECTION_SINGLE)
+        self._treev_sel.set_mode(gtk.SELECTION_MULTIPLE)
         renderer = gtk.CellRendererText()
         renderer.set_property("xalign",1.0)
         #renderer.set_xalign(0.0)
@@ -147,10 +149,11 @@ class MarkerList(gtk.VBox):
         EventHandler().add_marker(marker)
 
     def cb_remove(self,*args):
-        marker = self.__get_selected_marker()
-        if marker==None:
+        markers = self.__get_selected_markers()
+        if markers==None:
             return
-        EventHandler().remove_marker(marker)
+        for marker in markers:
+            EventHandler().remove_marker(marker)
 
     def cb_choose_color(self,*args):
         marker = self.__get_selected_marker()
@@ -248,17 +251,30 @@ class MarkerList(gtk.VBox):
     def treev_sel_changed(self,selection):
         if self.__ignore_sel_changed:
             return
-        EventHandler().clear_selection()
-        try:
-            treeiter = selection.get_selected()[1]
-            if treeiter:
+        model, rows = selection.get_selected_rows()
+        if rows!=None:
+            new_selection = Set(rows)
+            newly_selected = new_selection - self.old_selection
+            newly_deselected = self.old_selection - new_selection
+            #print self.old_selection
+            #print new_selection
+            #print newly_selected
+            #print newly_deselected
+            for row in newly_selected:
+                treeiter = model.get_iter(row)
                 mrk_id = self.tree_mrk.get(treeiter,0)[0]
                 if mrk_id==None:
                     return
                 marker = self._markers[mrk_id]
-                EventHandler().select_new(marker)
-        except:
-            pass
+                EventHandler().add_selection(marker)
+            for row in newly_deselected:
+                treeiter = model.get_iter(row)
+                mrk_id = self.tree_mrk.get(treeiter,0)[0]
+                if mrk_id==None:
+                    return
+                marker = self._markers[mrk_id]
+                EventHandler().remove_selection(marker)
+        self.old_selection = Set(rows)
 
     def __update_treeview_visibility(self):
         if self.tree_mrk.get_iter_first()==None: 
@@ -269,12 +285,13 @@ class MarkerList(gtk.VBox):
             self.emptyIndicator.hide()
             self.scrolledwindow.show()
 
-    def __get_selected_marker(self):
-        treeiter = self._treev_sel.get_selected()[1]
-        if not treeiter:
+    def __get_selected_markers(self):
+        model, rows = self._treev_sel.get_selected_rows()
+        if rows==None:
             return
-        mrk_id = self.tree_mrk.get(treeiter,0)[0]
-        return self._markers[mrk_id]
+        treeiters = [model.get_iter(row) for row in rows]
+        mrk_ids = [model.get(treeiter,0)[0] for treeiter in treeiters]
+        return [self._markers[mrk_id] for mrk_id in mrk_ids]
 
     def __format_coord_string(self,x,y,z):
         def fmt(f):
