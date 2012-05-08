@@ -146,13 +146,20 @@ class MarkerList(gtk.VBox):
 
     def cb_remove(self,*args):
         marker = self.__get_selected_marker()
+        if marker==None:
+            return
         EventHandler().remove_marker(marker)
 
     def cb_choose_color(self,*args):
         marker = self.__get_selected_marker()
+        if marker==None:
+            return
         old_color = marker.get_color()
         new_color = choose_one_color("New color for marker",tuple2gdkColor(old_color))
+        if old_color==new_color:
+            return
         EventHandler().notify('color marker', marker, gdkColor2tuple(new_color))
+        EventHandler().notify('render now')
 
     def cb_move_up(self, *args):
         self._move_in_list(up=True)
@@ -162,10 +169,14 @@ class MarkerList(gtk.VBox):
 
     def cb_edit_label(self, *args):
         marker = self.__get_selected_marker()
+        if marker==None:
+            return
         edit_label_of_marker(marker)
 
     def cb_edit_position(self,*args):
         marker = self.__get_selected_marker()
+        if marker==None:
+            return
         x_old,y_old,z_old = marker.get_center()
         #parent_window = self.get_parent_window()
         #print parent_window

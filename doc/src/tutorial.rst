@@ -7,13 +7,6 @@ uses a dataset which is available here:
 `post2std_brain.nii.gz <http://pylocator.thorstenkranz.de/download/post2std_brain.nii.gz>`_.
 
 
-.. warning::
-    The tutorial describes version 0.2 and thus is outdated. We're working on a 
-    new version, but until it is finished, you can still find usefull information 
-    on how to navigate and some other stuff. If you can't find somthing where
-    the tutorial tells you - have a look at the brand new 
-    :doc:`Frequently Asked Questions<faq>` page.
-
 Loading the MR image
 -----------------------------------------------
 After starting the program (refer to :doc:`Installation </install>` for
@@ -107,7 +100,8 @@ the slice widgets) and press the button **I** (as in *insert*) on your keyboard.
 
 Congratulations! You just inserted your first electrode marker.
 
-If you aren't satisfied with it's location, use the "Move" tool to adjust it
+If you aren't satisfied with it's location, use the Interaction Menu to swtich to the "Move Marker" 
+tool to adjust it.
 
 .. figure:: _static/tutorial5.png
    :align: center
@@ -119,7 +113,7 @@ later.
 Labeling the markers
 ....................
 After having marked some electrodes, you can assign labels to the electrodes. Use the corresponding
-tool from the toolbar, and the click on one of the spheres in the plane widget or one of the circles 
+mode from the interaction menu, and the click on one of the spheres in the plane widget or one of the circles 
 in the slice widgets.
 
 A little dialogue will pop up, you can enter a label, hit O.k. Afterwards, the label shows up as
@@ -127,10 +121,16 @@ yellow text next to the marker.
 
 You can reedit the labels anytime later using the same method.
 
+Alternatively, oyu can select the marker to label from the markers list. Click on the corresponding
+toolbar button and the same dialog will appear.
+
+We use some regex-matching to guess the next electrode name, so after labeling one electrode "TL01",
+for the next electrode PyLocator will propose "TL02".
+
 Saving markers to file
 ......................
 Finally, when you want to export the electrode locations, you can save them as a simple text file to 
-disk. Use the **Save to**-button from the main toolbar. Choose a directory and filename and your done.
+disk. Use the **Save to**-entry from the Markers menu. Choose a directory and filename and your done.
 
 electrode_locations.txt::
 
@@ -173,7 +173,9 @@ they contain the marker size and its color.
     ...
 
 If you reload the same image again sometime later, you can also load these
-files back into the program to recover all markers.
+files back into the program to recover all markers. You can also use the locations in other programs, 
+e.g., your own analysis scripts. Althoug reading csv-files is really easy in Python, we offer anobject-oriented 
+API to simplify access to the electrode file. See module pylocator.misc.
 
 .. note::
   When loading markers from disk, be careful with old files: if they were created
@@ -213,13 +215,23 @@ Another little sphere appears, just at the point on the surface you were pointin
 Again, you can correct the marker locations within the slice widgets, label them in the 
 planes widget or one of the slice widgets, and finally save all markers to disc.
 
+Rendering ROIs
+--------------
+To give a better orientation while surfing throw brain structures it might be helpful to 
+show some regions-of-interest in your visualization. You can load binary Nifti files, i.e.,
+images with only intensity values of 0 and 1, as ROIs. For more information, see :ref:`ROIs`
+
+.. figure:: _static/tutorial8.png
+   :align: right
+
+
 Taking screenshots
 --------------------
 A feature recently added to PyLocator is its ability to take screenshots of the 3d-widgets.
 In contrast to using an external program for doing so, we can achieve a higher quality 
 using VTK.
 
-.. figure:: _static/tutorial8.png
+.. figure:: _static/tutorial9.png
    :align: center
 
 Click on the button "Screenshot" in the main toolbar. A dialog appears (see above). 

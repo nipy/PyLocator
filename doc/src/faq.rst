@@ -110,6 +110,7 @@ computers**.
 .. index:: 
     pair: ROI; region-of-interest
     
+.. _ROIs:
 
 How can I render regions-of-interest?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -40,20 +40,42 @@ You can simply clone this repository via::
 
   git clone git://github.com/nipy/PyLocator.git
 
+There is a binary package for Debian-like systems (Debian, Ubuntu, ...) available. 
+It will make sure that all requirements are installed and add an entry to your 
+applications menu.
+
+.. image:: _static/download_deb.png
+   :align: center
+   :target: http://pylocator.thorstenkranz.de/download/pylocator_1.0b3_all.deb
+
+It is tested with Ubuntu Oneiric and Natty. If you successfully installed it on 
+other flavours and versions, please let me know.
+
 Alternatively, you can download a tarball that is updated once in a while from
 
-http://pylocator.thorstenkranz.de/download/pylocator-1.0.beta.dev.tar.gz
+http://pylocator.thorstenkranz.de/download/pylocator_1.0b3.tar.gz
 
 Extract this archive using your preferred archive manager or in a terminal using something like::
 
-  tar xfvz pylocator-1.0.beta.dev.tar.gz
+  tar xfvz pylocator_1.0b3.tar.gz
 
 How to install
 ---------------
+From Debian-package
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Installation of Debian packages should be straight-forward. Usually you just have 
+to double click the downloaded file and confirm the installation. If you prefer to 
+work in a terminal, you can::
+    
+    sudo dpkg -i pylocator_1.0b3_all.deb
+
+That's it!
+
 From PyPI
 ^^^^^^^^^^^^^^^^^^^^
 PyLocator is registered at PyPI, the Python Package Index. This makes 
-installation easy. If you have setuptools installed, simply type::
+installation easy also for non-debian systems. 
+If you have setuptools installed, simply type::
 
     sudo easy_install PyLocator
 

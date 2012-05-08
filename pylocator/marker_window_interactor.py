@@ -211,6 +211,7 @@ class MarkerWindowInteractor(PyLocatorRenderWindow):
             UndoRegistry().push_command(
                 EventHandler().notify, 'color marker', marker, oldColor)
             EventHandler().notify('color marker', marker, color)
+            EventHandler().notify('render now')
 
         self.pressHooks[1] = button_down
         self.releaseHooks[1] = button_up
