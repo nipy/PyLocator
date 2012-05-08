@@ -172,9 +172,9 @@ class EventHandler:
     def notify(self, event, *args):
         for observer in self.observers.keys():
             if shared.debug: 
-                print "EventHandler.notify(", event, "): calling update_viewer for ", observer
+                print "EventHandler.notify(", event, "): calling enqueue_update for ", observer
             try:
-                observer.update_viewer(event, *args)
+                observer.enqueue_update(event, *args)
             except Exception, e:
                 print "Error while updating observer", observer, type(e), e
 
