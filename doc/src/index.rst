@@ -38,7 +38,7 @@ please write me an E-Mail to info@pylocator.thorstenkranz.de . I will try to rep
 
 .. image:: _static/download_deb.png
    :align: center
-   :target: http://pylocator.thorstenkranz.de/download/pylocator_1.0b3_all.deb
+   :target: http://pylocator.thorstenkranz.de/download/pylocator_1.0_all.deb
 
 License 
 -------- 

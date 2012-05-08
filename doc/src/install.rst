@@ -46,7 +46,7 @@ applications menu.
 
 .. image:: _static/download_deb.png
    :align: center
-   :target: http://pylocator.thorstenkranz.de/download/pylocator_1.0b3_all.deb
+   :target: http://pylocator.thorstenkranz.de/download/pylocator_1.0_all.deb
 
 It is tested with Ubuntu Oneiric and Natty. If you successfully installed it on 
 other flavours and versions, please let me know.
