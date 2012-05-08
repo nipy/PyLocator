@@ -369,9 +369,10 @@ class SurfRendererProps(gtk.VBox):
                                     [5.*10**e for e in range(-2,3)]
                                     )
         min_, median_, max_ = EventHandler().get_nifti_stats()
-        incr1 = [i for i in valid_increments if i<(max_-min_)/100][-1]
-        incr2 = [i for i in valid_increments if i<(max_-min_)/20][-1]
-        self.scrollbar_threshold.set_range(min_, max_)
+        upper_limit = min(max_ , median_+4*(median_-min_)) #if max is too high
+        incr1 = [i for i in valid_increments if i<(upper_limit-min_)/100][-1]
+        incr2 = [i for i in valid_increments if i<(upper_limit-min_)/20][-1]
+        self.scrollbar_threshold.set_range(min_, upper_limit)
         self.scrollbar_threshold.set_increments(incr1, incr2)
         self.scrollbar_threshold.set_value(median_)
 

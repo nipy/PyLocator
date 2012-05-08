@@ -22,6 +22,11 @@
     <property name="can_focus">False</property>
     <property name="stock">gtk-revert-to-saved</property>
   </object>
+  <object class="GtkImage" id="image9">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-bold</property>
+  </object>
   <object class="GtkWindow" id="pylocatorMainWindow">
     <property name="can_focus">False</property>
     <property name="border_width">1</property>
@@ -252,6 +257,17 @@
                         <property name="image">image8</property>
                         <property name="use_stock">False</property>
                         <signal name="activate" handler="reset_cameras" swapped="no"/>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkImageMenuItem" id="toggleLabels">
+                        <property name="label" translatable="yes">Toggle Labels</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="use_action_appearance">False</property>
+                        <property name="image">image9</property>
+                        <property name="use_stock">False</property>
+                        <signal name="activate" handler="toggle_labels" swapped="no"/>
                       </object>
                     </child>
                     <child>
