@@ -1,6 +1,16 @@
-pylocator (1.0b3) unstable; urgency=low
+pylocator (1.0) unstable; urgency=low
 
+  [ Thorsten Kranz ]
   * First debian package for PyLocator
+  * Added desktop file to pylocator.install
+  * Next try for desktop & icon installation
+  * DOC: updating tutorial, images.
+  * Updated tutorial
+  * New Logo for documentation
+  * BF: Changing color of marker is not immediatly visible in plan widgets observers
+  * Fixed minor problems, e.g., too verbose output
+  * Increased version number to final release 1.0, still in branch
+  * Added menu entry for toggling labels, again
+  * Adjusted calculation of slider values for surface thresholds
 
- -- Thorsten Kranz <thorstenkranz@gmail.com>  Fri, 20 April 2012 15:00:00 +0100
-
+ -- Thorsten A. Kranz <thorsten@maya>  Tue, 08 May 2012 23:26:00 +0200
