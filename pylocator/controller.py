@@ -234,6 +234,13 @@ class PyLocatorController(object):
         for rw in self.get_render_windows():
             rw.reset_camera_to_default()
 
+    def toggle_labels(self, *args):
+        eh = EventHandler()
+        if eh.get_labels_on():
+            eh.set_labels_off()
+        else:
+            eh.set_labels_on()
+
     def show_settings_dialog(self,*args):
         settings = SettingsController(self.window.pwxyz)
         settings.dialog.run()
