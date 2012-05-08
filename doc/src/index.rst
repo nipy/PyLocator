@@ -3,7 +3,7 @@ PyLocator
 Localization of EEG-electrodes from MRI-volumes
 -----------------------------------------------
 
-PyLocator is a little program for localizing EEG electrodes from MR-images.
+PyLocator is an application for localizing EEG electrodes from MR-images.
 It uses VTK to show a neat GUI for marking electrode locations in 3d-space.
 
 It is based on previous work by John D. Hunter and Michael Castell as
@@ -29,8 +29,9 @@ Contents
 Information on how to obtain and configure PyLocator correctly can be obtained
 in the :doc:`Installation </install>` section.
 
-To get a feeling of what PyLocator can do and in order to get used to the controls, 
-we recommend our little :doc:`Tutorial </tutorial>`.
+To get a feeling of what PyLocator can do and to get used to the controls, 
+we recommend our little :doc:`Tutorial </tutorial>`. It provides an overview of the main features
+of PyLocator and has severavl screenshots.
 
 We also have a :doc:`Frequently Asked Questions </faq>` section. If your question is not answered here,
 please write me an E-Mail to info@pylocator.thorstenkranz.de . I will try to reply as soon as possible. 
