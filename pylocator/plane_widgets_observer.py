@@ -136,6 +136,10 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
         self.set_camera(fpu)
         self.scroll_depth(self.sliceIncrement)
 
+        # dirty fix for oberserver not updating window/level:
+        # set LookupTable again.
+        self.observer.SetLookupTable(self.pw.GetLookupTable())        
+
     def mouse1_mode_change(self, event):
         try: self.moveEvent
         except AttributeError: pass
