@@ -3,6 +3,7 @@ from markers import Marker
 import pickle
 from shared import shared
 from vtkutils import vtkmatrix4x4_to_array
+from misc import markers_io
 
 class UndoRegistry:
     __sharedState = {}
@@ -155,8 +156,11 @@ class EventHandler:
         
     def load_markers_from(self, fname):
         self.notify('render off')
-        for line in file(fname, 'r'):
-            marker = Marker.from_string(line)
+        for marker_values in markers_io.load_markers(open(fname, 'r')):
+            marker = Marker(xyz=(marker_values[1:4]), 
+                            radius=marker_values[4], 
+                            rgb = marker_values[5:8])
+            marker.set_label(marker_values[0])
             self.add_marker(marker)
         self.notify('render on')
         UndoRegistry().flush()

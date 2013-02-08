@@ -1,14 +1,21 @@
-
 def load_markers(fh):
     if type(fh)==str:
         fh = open(fh,"r")
     rv = []
     for line in fh.readlines():
-        rv.append([])
-        parts = line[:-1].split(",")
-        rv[-1].append(parts[0])
+        data_and_comment = line.split("#")
+        if len(data_and_comment) == 1:
+            data_part = data_and_comment[0][:-1] #strip newline at end
+        else:
+            data_part = data_and_comment[0] # ignore comment
+        if len(data_part.strip()) == 0:
+            continue
+        new_item = []
+        parts = data_part.split(",")
+        new_item.append(parts[0])
         for i in range(1,len(parts)):
-            rv[-1].append(float(parts[i]))
+            new_item.append(float(parts[i]))
+        rv.append(new_item)
     return rv
 
 def load_markers_to_dict(fh):

@@ -15,7 +15,7 @@ from vtkNifti import vtkNiftiImageReader
 from rois import RoiParams
 
 class RoiRendererProps(gtk.VBox):
-    SCROLLBARSIZE = 150,20
+    SCALESIZE = 150,20
     lastColor = SurfParams.color
     paramd = {}   # a dict from names to SurfParam instances
 
@@ -110,15 +110,15 @@ class RoiRendererProps(gtk.VBox):
         f1 = gtk.Frame("Opacity")
         f1.show()
         vboxProps.pack_start(f1, False)
-        self.scrollbar_opacity = gtk.HScrollbar()
-        self.scrollbar_opacity.set_update_policy(gtk.UPDATE_DELAYED)
-        self.scrollbar_opacity.show()
-        self.scrollbar_opacity.set_size_request(*self.SCROLLBARSIZE)
-        self.scrollbar_opacity.set_range(0, 1)
-        self.scrollbar_opacity.set_increments(.05, .2)
-        self.scrollbar_opacity.set_value(1.0)
-        self.scrollbar_opacity.connect('value_changed', self.change_opacity_of_roi)
-        f1.add(self.scrollbar_opacity)
+        self.scale_opacity = gtk.HScale()
+        self.scale_opacity.set_update_policy(gtk.UPDATE_DELAYED)
+        self.scale_opacity.show()
+        self.scale_opacity.set_size_request(*self.SCALESIZE)
+        self.scale_opacity.set_range(0, 1)
+        self.scale_opacity.set_increments(.05, .2)
+        self.scale_opacity.set_value(1.0)
+        self.scale_opacity.connect('value_changed', self.change_opacity_of_roi)
+        f1.add(self.scale_opacity)
 
         f2 = gtk.Frame("Color")
         f2.show()
@@ -183,9 +183,9 @@ class RoiRendererProps(gtk.VBox):
             except Exception, e:
                 print "During setting color of color chooser:", type(e),e
             try:
-                self.scrollbar_opacity.set_value(self.paramd[roi_id].opacity)
+                self.scale_opacity.set_value(self.paramd[roi_id].opacity)
             except Exception, e:
-                print "During setting value of opacity scrollbar:", type(e),e
+                print "During setting value of opacity scale:", type(e),e
         else:
             self.props_frame.hide()
 
@@ -200,7 +200,7 @@ class RoiRendererProps(gtk.VBox):
         treeiter = self.treev_sel.get_selected()[1]
         if treeiter:
             roi_id = self.tree_roi.get(treeiter,0)
-            self.paramd[roi_id].set_opacity(self.scrollbar_opacity.get_value())
+            self.paramd[roi_id].set_opacity(self.scale_opacity.get_value())
             self.render()
 
     def __update_treeview_visibility(self):
