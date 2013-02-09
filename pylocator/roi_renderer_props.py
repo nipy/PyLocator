@@ -15,7 +15,7 @@ from vtkNifti import vtkNiftiImageReader
 from rois import RoiParams
 
 class RoiRendererProps(gtk.VBox):
-    SCALESIZE = 150,20
+    SCALESIZE = 150,40
     lastColor = SurfParams.color
     paramd = {}   # a dict from names to SurfParam instances
 

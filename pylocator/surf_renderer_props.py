@@ -17,7 +17,7 @@ from decimate_filter import DecimateFilter
 from connect_filter import ConnectFilter
 
 class SurfRendererProps(gtk.VBox):
-    SCALESIZE = 150,20
+    SCALESIZE = 150,40
     lastColor = SurfParams.color_
     lastColorName = SurfParams.colorName
     picker_surface_id = None
@@ -151,7 +151,7 @@ class SurfRendererProps(gtk.VBox):
         scale.show()
         scale.set_size_request(*self.SCALESIZE)
         scale.set_range(0, 1)
-        scale.set_increments(.05, .2)
+        scale.set_increments(.025, .1)
         scale.set_value(1.0)
         scale.connect('value-changed', self.change_opacity_of_surf)
         self.scale_opacity = scale
