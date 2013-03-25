@@ -364,9 +364,9 @@ class SurfRendererProps(gtk.VBox):
         #self.entryIntensity.set_text('%1.1f' % (self.intensitySum/self.intensityCnt))
 
     def __adjust_scrollbar_threshold_for_data(self):
-        valid_increments = sorted([1.*10**e for e in range(-2,3)] +
-                                    [2.*10**e for e in range(-2,3)] +
-                                    [5.*10**e for e in range(-2,3)]
+        valid_increments = sorted([1.*10**e for e in range(-4,3)] +
+                                    [2.*10**e for e in range(-4,3)] +
+                                    [5.*10**e for e in range(-4,3)]
                                     )
         min_, median_, max_ = EventHandler().get_nifti_stats()
         upper_limit = min(max_ , median_+4*(median_-min_)) #if max is too high
