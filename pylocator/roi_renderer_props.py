@@ -13,9 +13,12 @@ from list_toolbar import ListToolbar
 from colors import ColorChooser
 from vtkNifti import vtkNiftiImageReader
 from rois import RoiParams
+from dialogs import select_existing_file
+
+from misc import persistence
 
 class RoiRendererProps(gtk.VBox):
-    SCROLLBARSIZE = 150,20
+    SCALESIZE = 150,40
     lastColor = SurfParams.color
     paramd = {}   # a dict from names to SurfParam instances
 
@@ -51,19 +54,24 @@ class RoiRendererProps(gtk.VBox):
                 [gtk.STOCK_ADD,
                  'Add',
                  'Load ROI from file and render it',
-                 self.add_roi
+                 self.cb_add_roi
                 ],
                 [gtk.STOCK_REMOVE, 
                  'Remove', 
                  'Remove selected ROI',
                  self.rm_roi
                 ],
-                #"-",
-                #[gtk.STOCK_GO_UP, 
-                # 'Move up', 
-                # 'Move selected marker up in list',
-                # self.cb_move_up
-                #],
+                "-",
+                [gtk.STOCK_OPEN, 
+                 'Load', 
+                 'Load ROI settings from a file. Will discard all currently used ROIs',
+                 self.load_rois
+                ],
+                [gtk.STOCK_SAVE_AS, 
+                 'Save', 
+                 'Save all ROI settings to a file.',
+                 self.save_rois
+                ],
                 #[gtk.STOCK_GO_DOWN, 
                 # 'Move down', 
                 # 'Move selected marker down in list',
@@ -110,15 +118,15 @@ class RoiRendererProps(gtk.VBox):
         f1 = gtk.Frame("Opacity")
         f1.show()
         vboxProps.pack_start(f1, False)
-        self.scrollbar_opacity = gtk.HScrollbar()
-        self.scrollbar_opacity.set_update_policy(gtk.UPDATE_DELAYED)
-        self.scrollbar_opacity.show()
-        self.scrollbar_opacity.set_size_request(*self.SCROLLBARSIZE)
-        self.scrollbar_opacity.set_range(0, 1)
-        self.scrollbar_opacity.set_increments(.05, .2)
-        self.scrollbar_opacity.set_value(1.0)
-        self.scrollbar_opacity.connect('value_changed', self.change_opacity_of_roi)
-        f1.add(self.scrollbar_opacity)
+        self.scale_opacity = gtk.HScale()
+        self.scale_opacity.set_update_policy(gtk.UPDATE_DELAYED)
+        self.scale_opacity.show()
+        self.scale_opacity.set_size_request(*self.SCALESIZE)
+        self.scale_opacity.set_range(0, 1)
+        self.scale_opacity.set_increments(.05, .2)
+        self.scale_opacity.set_value(1.0)
+        self.scale_opacity.connect('value_changed', self.change_opacity_of_roi)
+        f1.add(self.scale_opacity)
 
         f2 = gtk.Frame("Color")
         f2.show()
@@ -131,38 +139,35 @@ class RoiRendererProps(gtk.VBox):
         vboxProps.show_all()
         return frame
 
-    def add_roi(self,*args):
-        dialog = gtk.FileSelection('Choose filename for ROI mask')
-        dialog.set_filename(shared.get_last_dir())
-        dialog.show()
-        response = dialog.run()
-        if response==gtk.RESPONSE_OK:
-            fname = dialog.get_filename()
-            dialog.destroy()
-            try: 
-                #Actually add ROI 
-                self.nroi+=1
-                tree_iter = self.tree_roi.append(None)
-                self.tree_roi.set(tree_iter,0,self.nroi,1,os.path.split(fname)[1],2,fname,3,True)
-                self.__update_treeview_visibility()
-
-                roi_image_reader = vtkNiftiImageReader()
-                roi_image_reader.SetFileName(fname)
-                roi_image_reader.Update()
-                roi_id = self.tree_roi.get(tree_iter,0) 
-                self.paramd[roi_id] = RoiParams(roi_image_reader.GetOutput())
-                #self.paramd[roi_id].update_pipeline()
-                #print self.paramd[roi_id].intensity
-                shared.set_file_selection(fname)
-            except IOError:
-                error_msg(
-                    'Could not load ROI mask from %s' % fname, 
-                    )
-            finally:
-                self.__update_treeview_visibility()
-        else: dialog.destroy()
+    def cb_add_roi(self,*args):
+        fname = select_existing_file('Choose filename for ROI mask')
+        try:
+            if fname is not None:
+                self._do_add_roi(fname)
+            shared.set_file_selection(fname)
+        except IOError:
+            error_msg(
+                'Could not load ROI mask from %s' % fname, 
+                )
+        finally:
+            self.__update_treeview_visibility()
         self.render()
 
+    def _do_add_roi(self, fname, *args):
+        self.nroi+=1
+        tree_iter = self.tree_roi.append(None)
+        self.tree_roi.set(tree_iter,0,self.nroi,1,os.path.split(fname)[1],2,fname,3,True)
+        self.__update_treeview_visibility()
+
+        roi_image_reader = vtkNiftiImageReader()
+        roi_image_reader.SetFileName(fname)
+        roi_image_reader.Update()
+        roi_id = self.tree_roi.get(tree_iter,0) 
+        self.paramd[roi_id] = RoiParams(roi_image_reader, *args)
+        return roi_id
+        #self.paramd[roi_id].update_pipeline()
+        #print self.paramd[roi_id].intensity
+                
     def rm_roi(self,*args):
         treestore,treeiter = self.treev_sel.get_selected()
         roi_id = treestore.get(treeiter,0)
@@ -171,6 +176,75 @@ class RoiRendererProps(gtk.VBox):
         del self.paramd[roi_id]
         self.__update_treeview_visibility()
         self.render()
+        
+    def save_rois(self,*args):
+        if len(self.paramd.keys())==0:
+            error_msg("Cannot save to file as no ROIs are defined yet.",self.get_toplevel(),title="Not possible" )
+            return
+            
+        rois = [dict(absolute_path=os.path.abspath(roi.image.GetFilename()),
+                     relative_path=os.path.relpath(roi.image.GetFilename()),
+                     opacity=roi.opacity, color=roi.color) for roi in self.paramd.values()]
+        
+        def ok_clicked(w):
+            fname = dialog.get_filename()
+            shared.set_file_selection(fname)
+            try: 
+                persistence.save_rois(rois, fname)
+            except IOError:
+                error_msg('Could not save data to %s' % fname,
+                          )
+            else:
+                dialog.destroy()
+
+        dialog = gtk.FileSelection('Choose filename for ROIs')
+        dialog.set_filename(shared.get_last_dir())
+        dialog.ok_button.connect("clicked", ok_clicked)
+        dialog.cancel_button.connect("clicked", lambda w: dialog.destroy())
+        dialog.show()
+        
+    def load_rois(self, *args):
+        filename = select_existing_file("Please choose the file containing ROIs")
+        if filename is None:
+            return
+        rois = persistence.load_rois(filename)
+        self._precheck_rois_sanity() 
+        self._clear_all_rois()
+        for roi in rois["Data"]:
+            if (self._relpath_exists(roi)):
+                self._do_add_roi(roi["relative_path"], roi["color"], roi["opacity"])
+            elif (self._abspath_exists(roi)):
+                self._do_add_roi(roi["absolute_path"], roi["color"], roi["opacity"])       
+            else:
+                error_msg("Cannot load ROIs from file. Path to Nifti is not valid." + \
+                          "Searched at: \n%s and \n%s" % (roi["relative_path"], roi["absolut_path"]),
+                          self.get_toplevel(),title="Loading failed")
+                return
+        self.render()
+    
+    def _relpath_exists(self, roi):
+        path = roi["relative_path"]
+        return os.path.isfile(path)
+        
+    def _abspath_exists(self, roi):
+        path = roi["absolute_path"]
+        return os.path.isfile(path)
+    
+    def _clear_all_rois(self):
+        self.tree_roi.clear()
+        for k in self.paramd.keys():
+            self.paramd[k].destroy()
+            del self.paramd[k]
+        self.nroi = 0
+        
+    def _precheck_rois_sanity(self):
+        pass
+    
+#    def _set_properties_for_roi(self, roi_id, roi_dict):
+#        roi = self.paramd[roi_id]
+#        print "_set_properties_for_roi:", roi.uuid
+#        roi.set_opacity(roi_dict["opacity"])
+#        roi.set_color(roi_dict["color"])
 
     def treev_sel_changed(self,selection):
         treeiter = selection.get_selected()[1]
@@ -183,9 +257,9 @@ class RoiRendererProps(gtk.VBox):
             except Exception, e:
                 print "During setting color of color chooser:", type(e),e
             try:
-                self.scrollbar_opacity.set_value(self.paramd[roi_id].opacity)
+                self.scale_opacity.set_value(self.paramd[roi_id].opacity)
             except Exception, e:
-                print "During setting value of opacity scrollbar:", type(e),e
+                print "During setting value of opacity scale:", type(e),e
         else:
             self.props_frame.hide()
 
@@ -200,7 +274,7 @@ class RoiRendererProps(gtk.VBox):
         treeiter = self.treev_sel.get_selected()[1]
         if treeiter:
             roi_id = self.tree_roi.get(treeiter,0)
-            self.paramd[roi_id].set_opacity(self.scrollbar_opacity.get_value())
+            self.paramd[roi_id].set_opacity(self.scale_opacity.get_value())
             self.render()
 
     def __update_treeview_visibility(self):

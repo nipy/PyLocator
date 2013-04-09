@@ -31,7 +31,4 @@ class Shared(object):
             return os.path.dirname(self.lastSel) + os.sep
 
 
-
-        
-
 shared = Shared()

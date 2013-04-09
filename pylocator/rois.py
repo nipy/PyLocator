@@ -3,14 +3,16 @@ import vtk
 from events import EventHandler
 from surf_params import SurfParams
 
+from shared import shared
+
 
 class RoiParams(SurfParams):
     intensity = 0.5
 
-    def __init__(self, imageData, color=None):
+    def __init__(self, image, color=None, opacity=None):
         if color==None:
             color = (0.,0.,1.)
-        SurfParams.__init__(self, imageData, self.intensity, color)
+        SurfParams.__init__(self, image, self.intensity, color, opacity)
 
     def set_lighting(self):
         surf_prop = self.isoActor.GetProperty()
@@ -19,7 +21,7 @@ class RoiParams(SurfParams):
         surf_prop.SetSpecular(.5)
 
     def notify_add_surface(self, pipe):
-        EventHandler().notify("add roi", self._uuid, pipe, self._color)
+        EventHandler().notify("add roi", self._uuid, pipe, self._color, self._opacity)
 
     def notify_remove_surface(self):
         EventHandler().notify("remove roi", self._uuid)
@@ -108,7 +110,13 @@ class RoiEdgeActor(vtk.vtkActor):
 
     def set_color(self, color):
         self._color = color
+        old_color = self.GetProperty().GetColor()
         self.GetProperty().SetColor(color)
+        new_color = self.GetProperty().GetColor()
+        if shared.debug:
+            print "old_color, color_to_set, new_color:", old_color, color, new_color
+            
+        self.update()
 
     color = property(get_color, set_color)
 

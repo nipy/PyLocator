@@ -157,3 +157,17 @@ class SettingsController(object):
         pwz = self.pwxyz.pwZ
         return pwx, pwy, pwz
 
+def select_existing_file(title="Please choose a file"):
+    try:
+        dialog = gtk.FileSelection(title)
+        dialog.set_filename(shared.get_last_dir())
+        response = dialog.run()
+        if response == gtk.RESPONSE_OK:
+            filename = dialog.get_filename()
+            dialog.destroy()
+            return filename
+        else:
+            dialog.destroy()
+            return None            
+    except Exception:
+        return None

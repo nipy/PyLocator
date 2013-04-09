@@ -126,7 +126,7 @@ class VTKSurface(vtk.vtkActor):
         renderer.AddActor(self.contours)
         # XXX: mcc will this work?!?
 
-        print "PlaneWidgetsXYZ.set_image_data: setting EventHandler.set_vtkactor(self.contours)!"
+        print "PlaneWidgetsXYZ.set_image: setting EventHandler.set_vtkactor(self.contours)!"
         EventHandler().set_vtkactor(self.contours)
 
         #writer = vtk.vtkSTLWriter()

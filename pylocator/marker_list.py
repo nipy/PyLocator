@@ -3,7 +3,9 @@ from sets import Set
 import gobject
 import gtk
 
-from dialogs import edit_coordinates, edit_label_of_marker
+from dialogs import (edit_coordinates, edit_label_of_marker,
+                     select_existing_file)
+from gtkutils import error_msg
 
 from events import EventHandler
 from colors import choose_one_color, tuple2gdkColor, gdkColor2tuple
@@ -99,7 +101,23 @@ class MarkerList(gtk.VBox):
                  'Color', 
                  'Select color for marker',
                  self.cb_choose_color
-                ]
+                ],
+                "-",
+                [gtk.STOCK_OPEN, 
+                 'Load', 
+                 'Load markers from file',
+                 self.cb_load
+                ],
+                [gtk.STOCK_SAVE, 
+                 'Save', 
+                 'Save markers to file',
+                 self.cb_save
+                ],
+                [gtk.STOCK_SAVE_AS, 
+                 'Save as', 
+                 'Choose a file and save markers',
+                 self.cb_save_as
+                ],
                ]
         return ListToolbar(conf)
 
@@ -191,6 +209,44 @@ class MarkerList(gtk.VBox):
         x,y,z = coordinates
         EventHandler().notify("move marker",marker, (x,y,z))
         self.treev_sel_changed(self._treev_sel)
+
+    def cb_load(self, *args):
+        fname = select_existing_file("Choose file containing marker information")
+        if fname is not None:
+            try: 
+                EventHandler().load_markers_from(fname)
+            except IOError:
+                error_msg(
+                    'Could not load markers from %s' % fname, 
+                    )            
+            else:
+                shared.set_file_selection(fname)
+                self.markersFileName = fname
+
+    def cb_save(self, *args):
+        try: self.markersFileName
+        except AttributeError:
+            self.save_as(*args)
+        else: EventHandler().save_markers_as(self.markersFileName)
+
+    def cb_save_as(self, *args):
+        def ok_clicked(w):
+            fname = dialog.get_filename()
+            shared.set_file_selection(fname)
+            try: EventHandler().save_markers_as(fname)
+            except IOError:
+                error_msg('Could not save data to %s' % fname,
+                          )
+            else:
+                self.markersFileName = fname
+                dialog.destroy()
+
+        dialog = gtk.FileSelection('Choose filename for marker')
+        dialog.set_filename(shared.get_last_dir())
+        dialog.ok_button.connect("clicked", ok_clicked)
+        dialog.cancel_button.connect("clicked", lambda w: dialog.destroy())
+        dialog.show()
+        pass
 
     def _move_in_list(self,up=True):
         if self._treev_sel.count_selected_rows == 0:

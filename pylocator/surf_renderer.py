@@ -11,18 +11,19 @@ from render_window import PyLocatorRenderWindow, ThreeDimRenderWindow
 class SurfRenderWindow(ThreeDimRenderWindow, PyLocatorRenderWindow):
     picker_id = None
 
-    def __init__(self, imageData=None):
+    def __init__(self, image=None):
         PyLocatorRenderWindow.__init__(self)
         ThreeDimRenderWindow.__init__(self)
         self.surface_actors = {}
         self.AddObserver('KeyPressEvent', self.key_press)
 
-    def set_image_data(self, imageData):
-        self.imageData = imageData
-        if imageData is None: return
-        center = imageData.GetCenter()
-        #spacing = imageData.GetSpacing()
-        bounds = imageData.GetBounds()
+    def set_image(self, image):
+        self.image = image
+        if image is None: return
+        self.imageData = image.GetOutput()
+        center = self.imageData.GetCenter()
+        #spacing = self.imageData.GetSpacing()
+        bounds = self.imageData.GetBounds()
         pos = center[0], center[1], center[2] - max(bounds)*2
         fpu = center, pos, (0,-1,0)
         self.set_camera(fpu)
@@ -41,9 +42,10 @@ class SurfRenderWindow(ThreeDimRenderWindow, PyLocatorRenderWindow):
     def set_picker_surface(self, uuid):
         self.picker_id = uuid
 
-    def add_surface(self, uuid, pipe, color):
+    def add_surface(self, uuid, pipe, color, opacity):
         isoActor = self._create_actor(pipe)
         isoActor.GetProperty().SetColor(color)
+        isoActor.GetProperty().SetOpacity(opacity)
         self._set_surface_lighting(isoActor)
         self.surface_actors[uuid] = isoActor
         if not self.picker_id:

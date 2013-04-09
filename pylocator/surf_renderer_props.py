@@ -17,12 +17,12 @@ from decimate_filter import DecimateFilter
 from connect_filter import ConnectFilter
 
 class SurfRendererProps(gtk.VBox):
-    SCROLLBARSIZE = 150,20
+    SCALESIZE = 150,40
     lastColor = SurfParams.color_
     lastColorName = SurfParams.colorName
     picker_surface_id = None
     pickerIdx = None
-    imageData = None
+    image = None
     ignore_settings_updates = False
 
     paramd = {}   # a dict from ids (indices) to SurfParam instances
@@ -131,31 +131,31 @@ class SurfRendererProps(gtk.VBox):
         frame = gtk.Frame("Threshold")
         frame.show()
         vbox.pack_start(frame)
-        scrollbar = gtk.HScrollbar()
-        scrollbar.set_update_policy(gtk.UPDATE_DELAYED)
-        #scrollbar.set_draw_value(True)
-        scrollbar.show()
-        scrollbar.set_size_request(*self.SCROLLBARSIZE)
-        scrollbar.set_range(0, 100)
-        scrollbar.set_increments(1, 5)
-        scrollbar.set_value(80)
-        scrollbar.connect('value-changed', self.change_threshold_of_surf)
-        self.scrollbar_threshold = scrollbar
-        frame.add(scrollbar)
+        scale = gtk.HScale()
+        scale.set_update_policy(gtk.UPDATE_DELAYED)
+        #scale.set_draw_value(True)
+        scale.show()
+        scale.set_size_request(*self.SCALESIZE)
+        scale.set_range(0, 100)
+        scale.set_increments(1, 5)
+        scale.set_value(80)
+        scale.connect('value-changed', self.change_threshold_of_surf)
+        self.scale_threshold = scale
+        frame.add(scale)
 
         frame = gtk.Frame("Opacity")
         frame.show()
         vbox.pack_start(frame)
-        scrollbar = gtk.HScrollbar()
-        scrollbar.set_update_policy(gtk.UPDATE_DELAYED)
-        scrollbar.show()
-        scrollbar.set_size_request(*self.SCROLLBARSIZE)
-        scrollbar.set_range(0, 1)
-        scrollbar.set_increments(.05, .2)
-        scrollbar.set_value(1.0)
-        scrollbar.connect('value-changed', self.change_opacity_of_surf)
-        self.scrollbar_opacity = scrollbar
-        frame.add(scrollbar)
+        scale = gtk.HScale()
+        scale.set_update_policy(gtk.UPDATE_DELAYED)
+        scale.show()
+        scale.set_size_request(*self.SCALESIZE)
+        scale.set_range(0, 1)
+        scale.set_increments(.025, .1)
+        scale.set_value(1.0)
+        scale.connect('value-changed', self.change_opacity_of_surf)
+        self.scale_opacity = scale
+        frame.add(scale)
 
         hbox = gtk.HBox()
         hbox.show()
@@ -206,7 +206,7 @@ class SurfRendererProps(gtk.VBox):
 
         def set_decimate_params(id_):
             if self.paramd[id_].useDecimate:
-                self.paramd[id_].deci.targetReduction = self.scrollbar_target_reduction.get_value()
+                self.paramd[id_].deci.targetReduction = self.scale_target_reduction.get_value()
 
         def connect_method_changed(button):
             if button.get_active():
@@ -287,16 +287,16 @@ class SurfRendererProps(gtk.VBox):
         vboxFrame = gtk.VBox()
         vboxFrame.set_spacing(3)
         vboxFrame.pack_start(gtk.Label("Target Reduction"))
-        scrollbar = gtk.HScrollbar()
-        scrollbar.set_update_policy(gtk.UPDATE_DELAYED)
-        scrollbar.show()
-        scrollbar.set_size_request(*self.SCROLLBARSIZE)
-        scrollbar.set_range(0, 0.99)
-        scrollbar.set_increments(.05, .2)
-        scrollbar.set_value(0.8)
-        scrollbar.connect('value_changed', apply_)
-        self.scrollbar_target_reduction = scrollbar
-        vboxFrame.pack_start(scrollbar)
+        scale = gtk.HScale()
+        scale.set_update_policy(gtk.UPDATE_DELAYED)
+        scale.show()
+        scale.set_size_request(*self.SCALESIZE)
+        scale.set_range(0, 0.99)
+        scale.set_increments(.05, .2)
+        scale.set_value(0.8)
+        scale.connect('value_changed', apply_)
+        self.scale_target_reduction = scale
+        vboxFrame.pack_start(scale)
         frameDecimateFilter.add(vboxFrame)
 
         expander.show_all()
@@ -322,7 +322,7 @@ class SurfRendererProps(gtk.VBox):
             error_msg("Cannot create surface. Image data of surface renderer is not set.")
             return
         if self.nsurf==0:
-            self.__adjust_scrollbar_threshold_for_data()
+            self.__adjust_scale_threshold_for_data()
         self.nsurf +=1
 
         intensity = self.__calculate_intensity_threshold()
@@ -337,7 +337,7 @@ class SurfRendererProps(gtk.VBox):
         
         self.__update_treeview_visibility()
 
-        self.paramd[self.nsurf] = SurfParams(self.imageData, intensity, self.lastColor)
+        self.paramd[self.nsurf] = SurfParams(self.image, intensity, self.lastColor, 1.0)
         params = self.paramd[self.nsurf]
         if self.nsurf==1:
             self.picker_surface_id = params.uuid
@@ -363,18 +363,18 @@ class SurfRendererProps(gtk.VBox):
         #self.add_intensity(xyzv[3])
         #self.entryIntensity.set_text('%1.1f' % (self.intensitySum/self.intensityCnt))
 
-    def __adjust_scrollbar_threshold_for_data(self):
-        valid_increments = sorted([1.*10**e for e in range(-2,3)] +
-                                    [2.*10**e for e in range(-2,3)] +
-                                    [5.*10**e for e in range(-2,3)]
+    def __adjust_scale_threshold_for_data(self):
+        valid_increments = sorted([1.*10**e for e in range(-4,3)] +
+                                    [2.*10**e for e in range(-4,3)] +
+                                    [5.*10**e for e in range(-4,3)]
                                     )
         min_, median_, max_ = EventHandler().get_nifti_stats()
         upper_limit = min(max_ , median_+4*(median_-min_)) #if max is too high
         incr1 = [i for i in valid_increments if i<(upper_limit-min_)/100][-1]
         incr2 = [i for i in valid_increments if i<(upper_limit-min_)/20][-1]
-        self.scrollbar_threshold.set_range(min_, upper_limit)
-        self.scrollbar_threshold.set_increments(incr1, incr2)
-        self.scrollbar_threshold.set_value(median_)
+        self.scale_threshold.set_range(min_, upper_limit)
+        self.scale_threshold.set_increments(incr1, incr2)
+        self.scale_threshold.set_value(median_)
 
     def __get_selected_id(self):
         treeiter = self.treev_sel.get_selected()[1]
@@ -400,12 +400,12 @@ class SurfRendererProps(gtk.VBox):
         self.props_frame.show()
         try:
             self.ignore_settings_updates = True
-            self.scrollbar_threshold.set_value(param.intensity)
+            self.scale_threshold.set_value(param.intensity)
             if param.colorName==self.color_chooser.custom_str:
                 self.color_chooser._set_color(param.color)
             else:
                 self.color_chooser._set_color(param.colorName)
-            self.scrollbar_opacity.set_value(param.opacity)
+            self.scale_opacity.set_value(param.opacity)
             self.update_pipeline_params()
             is_picker_surface = param.uuid==self.picker_surface_id
             self.pickerButton.set_active(is_picker_surface)
@@ -419,13 +419,13 @@ class SurfRendererProps(gtk.VBox):
         param = self.__get_selected_surface()
         if not param:
             return
-        param.intensity = self.scrollbar_threshold.get_value()
+        param.intensity = self.scale_threshold.get_value()
         param.update_pipeline()
         self.render()
 
     def change_opacity_of_surf(self,*args):
         param = self.__get_selected_surface()
-        param.set_opacity(self.scrollbar_opacity.get_value())
+        param.set_opacity(self.scale_opacity.get_value())
         self.render()
 
     def change_color_of_surf(self,*args):
@@ -471,11 +471,12 @@ class SurfRendererProps(gtk.VBox):
             self.emptyIndicator.hide()
             self.treev_surf.show()
 
-    def set_image_data(self, data):
-        self.imageData = data
+    def set_image(self, image):
+        self.image = image
+        self.imageData = self.image.GetOutput()
 
     def update_viewer(self, event, *args):
-        if event=='set image data':
-            self.set_image_data(args[0])
+        if event=='set image':
+            self.set_image(args[0])
 
     enqueue_update = update_viewer

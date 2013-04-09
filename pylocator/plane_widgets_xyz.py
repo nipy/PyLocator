@@ -34,7 +34,7 @@ class PlaneWidgetsXYZ(ThreeDimRenderWindow, MarkerWindowInteractor):
     """
     axes_labels_color = (0.,0.82,1.)
         
-    def __init__(self, imageData=None):
+    def __init__(self, image=None):
         MarkerWindowInteractor.__init__(self)
         ThreeDimRenderWindow.__init__(self)
 
@@ -54,7 +54,7 @@ class PlaneWidgetsXYZ(ThreeDimRenderWindow, MarkerWindowInteractor):
         
         self.axes_labels = []
 
-        self.set_image_data(imageData)
+        self.set_image(image)
         self.Render()
 
         self.vtk_translation = np.zeros(3, 'd')
@@ -85,10 +85,11 @@ class PlaneWidgetsXYZ(ThreeDimRenderWindow, MarkerWindowInteractor):
         self.scaleTransform.Translate(self.vtk_translation[0],self.vtk_translation[1],self.vtk_translation[2])
         self.Render()
 
-    def set_image_data(self, imageData):
-        if shared.debug: print "PlaneWidgetsXYZ.set_image_data()!!"
-        if imageData is None: return 
-        self.imageData = imageData
+    def set_image(self, image):
+        if shared.debug: print "PlaneWidgetsXYZ.set_image()!!"
+        if image is None: return 
+        self.image = image
+        self.imageData = image.GetOutput()
         extent = self.imageData.GetBounds()#Extent()
         if shared.debug: print "***Extent:", extent
         frac = 0.3

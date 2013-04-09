@@ -38,7 +38,7 @@ class Marker(vtk.vtkActor):
 
         #create ID
         if not uuid_:
-            self.uuid = uuid.uuid1()
+            self.uuid = uuid.uuid4()
         else:
             self.uuid = uuid_
 

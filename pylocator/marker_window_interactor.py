@@ -66,7 +66,7 @@ class MarkerWindowInteractor(PyLocatorRenderWindow):
     def get_marker_at_point(self):    
         raise NotImplementedError
 
-    def set_image_data(self, imageData):
+    def set_image(self, image):
         pass
     
     def set_select_mode(self):
