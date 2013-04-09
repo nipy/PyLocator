@@ -17,18 +17,21 @@ class SurfParams(object):
     useConnect    = True
     useDecimate   = False
 
-    def __init__(self, imageData, intensity, color=None):
-        self._uuid = uuid.uuid1()
+    def __init__(self, image, intensity, color=None, opacity = None):
+        self.image = image
+        self._uuid = uuid.uuid4()
         if intensity!=None:
             self.intensity = intensity
         if color==None:
             color=self.color_
         self.set_color(color)
+        
+        self.set_opacity(opacity)
 
         self.connect = ConnectFilter()
         self.deci = DecimateFilter()
         self.marchingCubes = vtk.vtkMarchingCubes()
-        self.marchingCubes.SetInput(imageData)
+        self.marchingCubes.SetInput(self.image.GetOutput())
 
         self.output = vtk.vtkPassThrough()
 
@@ -78,7 +81,7 @@ class SurfParams(object):
         self.update_properties()
 
     def notify_add_surface(self, pipe):
-        EventHandler().notify("add surface", self._uuid, pipe, self._color)
+        EventHandler().notify("add surface", self._uuid, pipe, self._color, self._opacity)
 
     def notify_remove_surface(self):
         EventHandler().notify("remove surface", self._uuid)
@@ -97,9 +100,9 @@ class SurfParams(object):
         if self.useDecimate: self.deci.update()
 
     def update_viewer(self, event, *args):
-        if event=='set image data':
-            imageData = args[0]
-            self.set_image_data(imageData)       
+        if event=='set image':
+            image = args[0]
+            self.set_image(image)       
 
     def __del__(self):
         self.notify_remove_surface()

@@ -20,7 +20,7 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
     """
     axes_labels_color = (0.,0.82,1.)
 
-    def __init__(self, planeWidget, owner, orientation, imageData=None):
+    def __init__(self, planeWidget, owner, orientation, image=None):
         if shared.debug: print "PlaneWidgetObserver.__init__(): orientation=",orientation
         MarkerWindowInteractor.__init__(self)
         self.interactButtons = (1,2,3)
@@ -36,17 +36,18 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
         self.textActors = {}
         self.hasData = 0
 
-        self.set_image_data(imageData)
+        self.set_image(image)
         self.lastTime = 0
         self.set_mouse1_to_move()
         
-    def set_image_data(self, imageData):
-        if imageData is None: return 
-        self.imageData = imageData
+    def set_image(self, image):
+        if image is None: return 
+        self.image = image
+        self.imageData = image.GetOutput()
         if not self.hasData:
             if shared.debug: print "PlaneWidgetObserver(", self.orientation,").. AddObserver(self.interaction_event)"
             foo = self.pw.AddObserver('InteractionEvent', self.interaction_event)
-            if shared.debug: print "PlaneWidgetObserver.set_image_data(): AddObserver call returns ", foo
+            if shared.debug: print "PlaneWidgetObserver.set_image(): AddObserver call returns ", foo
             self.connect("scroll_event", self.scroll_widget_slice)
             self.hasData = 1
 
@@ -63,7 +64,7 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
         self.observer.SetLookupTable(self.pw.GetLookupTable())        
         self.observer.DisplayTextOn()
         #self.observer.GetMarginProperty().EdgeVisibilityOff()  # turn off edges??
-        self.observer.SetInput(imageData)
+        self.observer.SetInput(self.imageData)
         self.observer.SetInteractor(self.interactor)
         self.observer.On()
         self.observer.InteractionOff()
@@ -527,7 +528,7 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
         transform.Scale(spacing)
         return transform.TransformPoint(pnt)
     
-    def add_roi(self, uuid, pipe, color):
+    def add_roi(self, uuid, pipe, color, opacity):
         actor = RoiEdgeActor(pipe, color, self.pw)
         self.renderer.AddActor(actor)
         actor.color = color
@@ -541,7 +542,17 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
 
     def color_roi(self, uuid, color):
         actor = self._get_roi_actor(uuid)
+        if shared.debug:
+            print "pwo.color_roi:"
+            print self.roi_actors.keys()
+            print uuid
+            #from pprint import pprint
+            #pprint(self.roi_actors)
+            print color
         if actor:
+            if shared.debug:
+                print color
             actor.set_color(color)
+        self.update_rois()
 
 

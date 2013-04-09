@@ -22,7 +22,7 @@ class SurfRendererProps(gtk.VBox):
     lastColorName = SurfParams.colorName
     picker_surface_id = None
     pickerIdx = None
-    imageData = None
+    image = None
     ignore_settings_updates = False
 
     paramd = {}   # a dict from ids (indices) to SurfParam instances
@@ -337,7 +337,7 @@ class SurfRendererProps(gtk.VBox):
         
         self.__update_treeview_visibility()
 
-        self.paramd[self.nsurf] = SurfParams(self.imageData, intensity, self.lastColor)
+        self.paramd[self.nsurf] = SurfParams(self.image, intensity, self.lastColor, 1.0)
         params = self.paramd[self.nsurf]
         if self.nsurf==1:
             self.picker_surface_id = params.uuid
@@ -471,11 +471,12 @@ class SurfRendererProps(gtk.VBox):
             self.emptyIndicator.hide()
             self.treev_surf.show()
 
-    def set_image_data(self, data):
-        self.imageData = data
+    def set_image(self, image):
+        self.image = image
+        self.imageData = self.image.GetOutput()
 
     def update_viewer(self, event, *args):
-        if event=='set image data':
-            self.set_image_data(args[0])
+        if event=='set image':
+            self.set_image(args[0])
 
     enqueue_update = update_viewer

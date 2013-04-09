@@ -189,8 +189,7 @@ class PyLocatorController(object):
         if not reader:
             return False
         else:
-            imageData = reader.GetOutput()
-            EventHandler().notify('set image data', imageData)
+            EventHandler().notify('set image', reader)
             EventHandler().notify("set axes directions")
             EventHandler().set_nifti(reader)
             self.store_current_camera_fpus()

@@ -19,7 +19,7 @@ class PyLocatorRenderWindow(GtkGLExtVTKRenderWindowInteractor):
         GtkGLExtVTKRenderWindowInteractor.__init__(self,*args)
         self.screenshot_button_label = "_render window_"
         self.roi_actors = {}
-        self.event_queue = Queue(10)
+        self.event_queue = Queue(1000)
 
         EventHandler().attach(self)
         self.interactButtons = (1,2,3)
@@ -90,7 +90,7 @@ class PyLocatorRenderWindow(GtkGLExtVTKRenderWindowInteractor):
     def set_screenshot_props(self, label):
         self.screenshot_button_label = label
 
-    def set_image_data(self, image_data):
+    def set_image(self, image):
         pass
 
     def add_marker(self, marker):
@@ -105,7 +105,7 @@ class PyLocatorRenderWindow(GtkGLExtVTKRenderWindowInteractor):
     def set_marker_selection(self, marker, select=True):
         pass
 
-    def add_surface(self, uuid, pipe, color):
+    def add_surface(self, uuid, pipe, color, opacity):
         pass
 
     def remove_surface(self, uuid):
@@ -146,9 +146,9 @@ class PyLocatorRenderWindow(GtkGLExtVTKRenderWindowInteractor):
             self.Render()
         elif event=='render now':
             self.Render()
-        elif event=='set image data':
-            imageData = args[0]
-            self.set_image_data(imageData)
+        elif event=='set image':
+            image = args[0]
+            self.set_image(image)
             self.Render()
         elif event=='add marker':
             marker = args[0]
@@ -167,8 +167,8 @@ class PyLocatorRenderWindow(GtkGLExtVTKRenderWindowInteractor):
             marker = args[0]
             self.set_marker_selection(marker, False)
         elif event=='add surface':
-            uuid, pipe, color = args
-            self.add_surface(uuid, pipe, color)
+            uuid, pipe, color, opacity = args
+            self.add_surface(uuid, pipe, color, opacity)
         elif event=='remove surface':
             uuid = args[0]
             self.remove_surface(uuid)
@@ -176,8 +176,8 @@ class PyLocatorRenderWindow(GtkGLExtVTKRenderWindowInteractor):
             uuid, color = args
             self.color_surface(uuid, color)
         elif event=='add roi':
-            uuid, pipe, color = args
-            self.add_roi(uuid, pipe, color)
+            uuid, pipe, color, opacity = args
+            self.add_roi(uuid, pipe, color, opacity)
         elif event=='remove roi':
             uuid = args[0]
             self.remove_roi(uuid)
@@ -248,9 +248,10 @@ class ThreeDimRenderWindow(object):
             actor = self.boxes[marker]
             self.renderer.RemoveActor(actor)
 
-    def add_roi(self, uuid, pipe, color):
+    def add_roi(self, uuid, pipe, color, opacity):
         isoActor = self._create_actor(pipe)
         isoActor.GetProperty().SetColor(color)
+        isoActor.GetProperty().SetOpacity(opacity)
         self._set_roi_lighting(isoActor)
         self.roi_actors[uuid] = isoActor
 
@@ -270,7 +271,7 @@ class ThreeDimRenderWindow(object):
         actor = self._get_roi_actor(uuid)
         if actor:
             actor.GetProperty().SetOpacity(opacity)
-        return self.roi_actors[uuid]
+            return self.roi_actors[uuid]
 
     def _create_actor(self,pipe):
         isoMapper = vtk.vtkPolyDataMapper()
