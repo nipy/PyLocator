@@ -1,11 +1,11 @@
 import gtk
 import vtk
-from GtkGLExtVTKRenderWindowInteractor import GtkGLExtVTKRenderWindowInteractor
-from events import EventHandler
-from gtkutils import error_msg
-from vtkutils import create_box_actor_around_marker
+from .GtkGLExtVTKRenderWindowInteractor import GtkGLExtVTKRenderWindowInteractor
+from .events import EventHandler
+from .gtkutils import error_msg
+from .vtkutils import create_box_actor_around_marker
 
-from shared import shared
+from .shared import shared
 
 
 INTERACT_CURSOR, MOVE_CURSOR, COLOR_CURSOR, SELECT_CURSOR, DELETE_CURSOR, LABEL_CURSOR, SCREENSHOT_CURSOR = gtk.gdk.ARROW, gtk.gdk.HAND2, gtk.gdk.SPRAYCAN, gtk.gdk.TCROSS, gtk.gdk.X_CURSOR, gtk.gdk.PENCIL, gtk.gdk.ICON
@@ -127,7 +127,7 @@ class PyLocatorRenderWindow(GtkGLExtVTKRenderWindowInteractor):
         pass
 
     def _get_roi_actor(self, uuid):
-        if not self.roi_actors.has_key(uuid):
+        if uuid not in self.roi_actors:
             return
         return self.roi_actors[uuid]
 
@@ -208,10 +208,10 @@ class ThreeDimRenderWindow(object):
         textActor.SetCamera(self.camera)
         textActor.GetProperty().SetColor(marker.get_label_color())
         if EventHandler().get_labels_on():
-            if shared.debug: print "VisibilityOn"
+            if shared.debug: print("VisibilityOn")
             textActor.VisibilityOn()
         else:
-            if shared.debug: print "VisibilityOff"
+            if shared.debug: print("VisibilityOff")
             textActor.VisibilityOff()
         self.textActors[marker] = textActor
         self.renderer.AddActor(textActor)
@@ -227,7 +227,7 @@ class ThreeDimRenderWindow(object):
     def set_marker_selection(self, marker, select=True):
         if select:
             actor = create_box_actor_around_marker(marker)
-            if shared.debug: print "PlaneWidgetsXYZ.update_viewer(): self.renderer.AddActor(actor)"
+            if shared.debug: print("PlaneWidgetsXYZ.update_viewer(): self.renderer.AddActor(actor)")
             self.renderer.AddActor(actor)
             self.boxes[marker] = actor
         else:

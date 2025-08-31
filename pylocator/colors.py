@@ -1,9 +1,9 @@
-from __future__ import division
+
 
 import gobject
 import gtk
 
-from gtkutils import make_option_menu
+from .gtkutils import make_option_menu
 
 colorSeq = (
     ( 'light skin' , (0.953, 0.875, 0.765)    ),
@@ -74,7 +74,7 @@ gobject.signal_new("color_changed",
 class ColorChooserWithPredefinedColors(gtk.HBox):
     custom_str = "custom..."
     def __init__(self, colorSeq=colorSeq):
-        names, self.colors= zip(*colorSeq)
+        names, self.colors= list(zip(*colorSeq))
         self.colorDict = dict(colorSeq)
 
         self.colorNames = list(names)
@@ -181,7 +181,7 @@ def gdkColor2tuple(color):
 
 if __name__=="__main__":
     def func(cc):
-        print "Color changed", cc.get_color()
+        print("Color changed", cc.get_color())
 
     win = gtk.Window()
     box = gtk.VBox()

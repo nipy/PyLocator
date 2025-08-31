@@ -1,10 +1,10 @@
 import gtk
 import re
-from resources import edit_label_dialog, edit_coordinates_dialog, edit_settings_dialog, about_dialog
-from gtkutils import str2num_or_err
-from colors import gdkColor2tuple, tuple2gdkColor
-from events import EventHandler
-from shared import shared
+from .resources import edit_label_dialog, edit_coordinates_dialog, edit_settings_dialog, about_dialog
+from .gtkutils import str2num_or_err
+from .colors import gdkColor2tuple, tuple2gdkColor
+from .events import EventHandler
+from .shared import shared
 
 
 def edit_label(oldLabel="", description=None):
@@ -30,16 +30,16 @@ def edit_label(oldLabel="", description=None):
 def edit_label_of_marker(marker):
     label = marker.get_label()
     defaultLabel = label
-    print defaultLabel, shared.lastLabel
+    print(defaultLabel, shared.lastLabel)
     if defaultLabel=='' and shared.lastLabel is not None:
         m = re.match('(.+?)(\d+)', shared.lastLabel)
         if m:
             num = str(int(m.group(2))+1).zfill(len(m.group(2)))
             defaultLabel = m.group(1) + num
-    print defaultLabel
+    print(defaultLabel)
         
     new_label = edit_label(defaultLabel)
-    if shared.debug: print new_label, label
+    if shared.debug: print(new_label, label)
 
     if new_label==None or new_label==label: return
     EventHandler().notify('label marker', marker, new_label)
@@ -147,7 +147,7 @@ class SettingsController(object):
         EventHandler().set_default_color(gdkColor2tuple(color))
 
     def close_dialog(self, *args):
-        print "close dialog"
+        print("close dialog")
         self.dialog.hide()
         self.dialog.destroy()
 

@@ -25,7 +25,7 @@ def load_markers_to_dict(fh):
 
 if __name__=="__main__":
     fn = "/media/Extern/public/Experimente/AudioStroop/kombinierte_analyse/elec_pos/443.txt"
-    print load_markers(fn)
+    print(load_markers(fn))
     fh = open(fn,"r")
-    print load_markers(fh)
+    print(load_markers(fh))
 

@@ -1,18 +1,18 @@
-from __future__ import division
+
 import os.path
 import gobject
 import gtk
-from gtkutils import error_msg, ButtonAltLabel
+from .gtkutils import error_msg, ButtonAltLabel
 
-from events import EventHandler
-from shared import shared
+from .events import EventHandler
+from .shared import shared
 
-from surf_params import SurfParams
+from .surf_params import SurfParams
 
-from list_toolbar import ListToolbar
-from colors import ColorChooser
-from vtkNifti import vtkNiftiImageReader
-from rois import RoiParams
+from .list_toolbar import ListToolbar
+from .colors import ColorChooser
+from .vtkNifti import vtkNiftiImageReader
+from .rois import RoiParams
 
 class RoiRendererProps(gtk.VBox):
     SCROLLBARSIZE = 150,20
@@ -180,12 +180,12 @@ class RoiRendererProps(gtk.VBox):
             roi_id = self.tree_roi.get(treeiter,0)
             try:
                 self.color_chooser._set_color(self.paramd[roi_id].color)
-            except Exception, e:
-                print "During setting color of color chooser:", type(e),e
+            except Exception as e:
+                print("During setting color of color chooser:", type(e),e)
             try:
                 self.scrollbar_opacity.set_value(self.paramd[roi_id].opacity)
-            except Exception, e:
-                print "During setting value of opacity scrollbar:", type(e),e
+            except Exception as e:
+                print("During setting value of opacity scrollbar:", type(e),e)
         else:
             self.props_frame.hide()
 

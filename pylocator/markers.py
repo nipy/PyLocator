@@ -6,7 +6,7 @@ import uuid
 
 import numpy as n
 
-from shared import shared
+from .shared import shared
 
 class Marker(vtk.vtkActor):
     """
@@ -86,7 +86,7 @@ class Marker(vtk.vtkActor):
         return self.sphere.SetRadius(s)
 
     def set_color(self, color):
-        if shared.debug: print "Marker.GetProperty().SetColor(", color, ")"
+        if shared.debug: print("Marker.GetProperty().SetColor(", color, ")")
         self.GetProperty().SetColor( color )
 
     def get_color(self):
@@ -112,7 +112,7 @@ class Marker(vtk.vtkActor):
         #todo; use csv module
         vals = s.replace('"', '').split(',')
         label = vals[0]
-        x,y,z,radius,r,g,b = map(float, vals[1:])
+        x,y,z,radius,r,g,b = list(map(float, vals[1:]))
         marker = Marker(xyz=(x,y,z), radius=radius, rgb=(r,g,b))
         marker.set_label(label)
         return marker

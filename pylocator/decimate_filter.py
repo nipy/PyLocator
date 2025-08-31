@@ -1,10 +1,10 @@
-from __future__ import division
+
 import sys, os
 import vtk
 
 import gtk
 
-from gtkutils import ProgressBarDialog, str2posnum_or_err
+from .gtkutils import ProgressBarDialog, str2posnum_or_err
 
 
 # vtkDecimate is patented and no longer in VTK5. we will try vtkDecimatePro (argh)

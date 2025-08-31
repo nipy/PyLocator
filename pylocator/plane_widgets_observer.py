@@ -2,14 +2,14 @@ from gtk import gdk
 import gtk
 import vtk
 import time
-from markers import Marker, RingActor
-from events import EventHandler, UndoRegistry
+from .markers import Marker, RingActor
+from .events import EventHandler, UndoRegistry
 
 import numpy as np
 
-from marker_window_interactor import MarkerWindowInteractor
-from shared import shared
-from rois import RoiEdgeActor
+from .marker_window_interactor import MarkerWindowInteractor
+from .shared import shared
+from .rois import RoiEdgeActor
 
 INTERACT_CURSOR, MOVE_CURSOR, COLOR_CURSOR, SELECT_CURSOR, DELETE_CURSOR, LABEL_CURSOR, SCREENSHOT_CURSOR = gtk.gdk.ARROW, gtk.gdk.HAND2, gtk.gdk.SPRAYCAN, gtk.gdk.TCROSS, gtk.gdk.X_CURSOR, gtk.gdk.PENCIL, gtk.gdk.ICON
 
@@ -21,7 +21,7 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
     axes_labels_color = (0.,0.82,1.)
 
     def __init__(self, planeWidget, owner, orientation, imageData=None):
-        if shared.debug: print "PlaneWidgetObserver.__init__(): orientation=",orientation
+        if shared.debug: print("PlaneWidgetObserver.__init__(): orientation=",orientation)
         MarkerWindowInteractor.__init__(self)
         self.interactButtons = (1,2,3)
         self.pw = planeWidget
@@ -44,9 +44,9 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
         if imageData is None: return 
         self.imageData = imageData
         if not self.hasData:
-            if shared.debug: print "PlaneWidgetObserver(", self.orientation,").. AddObserver(self.interaction_event)"
+            if shared.debug: print("PlaneWidgetObserver(", self.orientation,").. AddObserver(self.interaction_event)")
             foo = self.pw.AddObserver('InteractionEvent', self.interaction_event)
-            if shared.debug: print "PlaneWidgetObserver.set_image_data(): AddObserver call returns ", foo
+            if shared.debug: print("PlaneWidgetObserver.set_image_data(): AddObserver call returns ", foo)
             self.connect("scroll_event", self.scroll_widget_slice)
             self.hasData = 1
 
@@ -88,7 +88,7 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
             coords[i/2] = b*1.12
             idx_label = 1*i #historical reasons for using this
             label = labels[idx_label]
-            if shared.debug: print i,b, coords, label
+            if shared.debug: print(i,b, coords, label)
             if self.orientation == 0:
                 if label in ["R","L"]:
                     continue
@@ -118,7 +118,7 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
         center = self.imageData.GetCenter()
         spacing = self.imageData.GetSpacing()
         bounds = np.array(self.imageData.GetBounds())
-        if shared.debug: print "***center,spacing,bounds", center,spacing,bounds
+        if shared.debug: print("***center,spacing,bounds", center,spacing,bounds)
         pos = [center[0], center[1], center[2]]
         camera_up = [0,0,0]
         if self.orientation == 0:
@@ -130,9 +130,9 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
         elif self.orientation == 2:
             pos[2] += max((bounds[1::2]-bounds[0::2]))*2
             camera_up[0] = -1
-        if shared.debug: print camera_up
+        if shared.debug: print(camera_up)
         fpu = center, pos, tuple(camera_up)
-        if shared.debug: print "***fpu2:", fpu
+        if shared.debug: print("***fpu2:", fpu)
         self.set_camera(fpu)
         self.scroll_depth(self.sliceIncrement)
 
@@ -357,7 +357,7 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
                 textActor.VisibilityOff()
 
     def update_rois(self):
-        for actor in self.roi_actors.values():
+        for actor in list(self.roi_actors.values()):
             actor.update()
 
     def interaction_event(self, *args):
@@ -486,12 +486,12 @@ class PlaneWidgetObserver(MarkerWindowInteractor):
         textActor.SetMapper(textMapper)
 
     def get_actor_for_marker(self, marker):
-        if self.ringActors.has_key(marker.uuid):
+        if marker.uuid in self.ringActors:
             return self.ringActors[marker.uuid]
         return None
 
     def get_ring_actors_as_list(self):
-        return self.ringActors.values()
+        return list(self.ringActors.values())
 
     def get_cursor_position_world(self):
         x, y = self.GetEventPosition()

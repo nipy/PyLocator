@@ -1,7 +1,7 @@
 import gtk
-from gtkutils import error_msg
+from .gtkutils import error_msg
 import vtk
-from events import EventHandler
+from .events import EventHandler
 
 def move_pw_to_point(pw, xyz):
 

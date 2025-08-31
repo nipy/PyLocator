@@ -1,8 +1,8 @@
 import vtk
-from markers import Marker
+from .markers import Marker
 import pickle
-from shared import shared
-from vtkutils import vtkmatrix4x4_to_array
+from .shared import shared
+from .vtkutils import vtkmatrix4x4_to_array
 
 class UndoRegistry:
     __sharedState = {}
@@ -50,12 +50,12 @@ class EventHandler:
         self.notify('select marker', marker)
         
     def remove_selection(self, marker):
-        if self.selected.has_key(marker):
+        if marker in self.selected:
             del self.selected[marker]
             self.notify('unselect marker', marker)
         
     def clear_selection(self):
-        for oldMarker in self.selected.keys():
+        for oldMarker in list(self.selected.keys()):
             self.remove_selection(oldMarker)
 
     def select_new(self, marker):
@@ -130,11 +130,11 @@ class EventHandler:
                 self.__NiftiMax)
 
     def set_vtkactor(self, vtkactor):
-        if shared.debug: print "EventHandler.set_vtkactor()"
+        if shared.debug: print("EventHandler.set_vtkactor()")
         self.vtkactor = vtkactor
 
     def save_registration_as(self, fname):
-        if shared.debug: print "EventHandler.save_registration_as(", fname,")"
+        if shared.debug: print("EventHandler.save_registration_as(", fname,")")
         fh = file(fname, 'w')
 
         # XXX mcc: somehow get the transform for the VTK actor. aiieeee
@@ -145,7 +145,7 @@ class EventHandler:
         mat = self.vtkactor.GetMatrix()
         orient = self.vtkactor.GetOrientation()
         
-        if shared.debug: print "EventHandler.save_registration_as(): vtkactor has origin, pos, scale, mat, orient=", loc, pos, scale, mat, orient, "!!"
+        if shared.debug: print("EventHandler.save_registration_as(): vtkactor has origin, pos, scale, mat, orient=", loc, pos, scale, mat, orient, "!!")
 
         scipy_mat = vtkmatrix4x4_to_array(mat)
 
@@ -170,13 +170,13 @@ class EventHandler:
         except KeyError: pass
 
     def notify(self, event, *args):
-        for observer in self.observers.keys():
+        for observer in list(self.observers.keys()):
             if shared.debug: 
-                print "EventHandler.notify(", event, "): calling update_viewer for ", observer
+                print("EventHandler.notify(", event, "): calling update_viewer for ", observer)
             try:
                 observer.update_viewer(event, *args)
-            except Exception, e:
-                print "Error while updating observer", observer, type(e), e
+            except Exception as e:
+                print("Error while updating observer", observer, type(e), e)
 
     def get_labels_on(self):
         return self.labelsOn
@@ -190,10 +190,10 @@ class EventHandler:
         self.notify('labels off')
 
     def is_selected(self, marker):
-        return self.selected.has_key(marker)
+        return marker in self.selected
 
     def get_selected(self):
-        return self.selected.keys()
+        return list(self.selected.keys())
 
     def get_num_selected(self):
         return len(self.selected)

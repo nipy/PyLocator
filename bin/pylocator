@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#!/usr/bin/env python3
 """Run pylocator"""
 
 import getopt
@@ -17,8 +17,8 @@ def main():
     def info_exit(option = None, value = None):
         """Print usage information and abort execution"""
         if not (option in ["-h", "--help"] or option == None):
-            print "Wrong argument:", option, ",", value
-        print USAGE
+            print("Wrong argument:", option, ",", value)
+        print(USAGE)
         sys.exit(0)
     try:
         options, args = getopt.getopt(

@@ -1,7 +1,7 @@
-from __future__ import division
+
 import vtk
-from events import EventHandler
-from surf_params import SurfParams
+from .events import EventHandler
+from .surf_params import SurfParams
 
 
 class RoiParams(SurfParams):

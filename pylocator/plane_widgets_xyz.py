@@ -1,11 +1,11 @@
 import vtk
 
-from events import EventHandler, UndoRegistry
-from render_window import ThreeDimRenderWindow
-from marker_window_interactor import MarkerWindowInteractor
+from .events import EventHandler, UndoRegistry
+from .render_window import ThreeDimRenderWindow
+from .marker_window_interactor import MarkerWindowInteractor
 import numpy as np
 
-from shared import shared
+from .shared import shared
 
 def move_pw_to_point(pw, xyz):
 
@@ -38,7 +38,7 @@ class PlaneWidgetsXYZ(ThreeDimRenderWindow, MarkerWindowInteractor):
         MarkerWindowInteractor.__init__(self)
         ThreeDimRenderWindow.__init__(self)
 
-        if shared.debug: print "PlaneWidgetsXYZ.__init__()"
+        if shared.debug: print("PlaneWidgetsXYZ.__init__()")
 
         self.vtksurface = None
 
@@ -86,11 +86,11 @@ class PlaneWidgetsXYZ(ThreeDimRenderWindow, MarkerWindowInteractor):
         self.Render()
 
     def set_image_data(self, imageData):
-        if shared.debug: print "PlaneWidgetsXYZ.set_image_data()!!"
+        if shared.debug: print("PlaneWidgetsXYZ.set_image_data()!!")
         if imageData is None: return 
         self.imageData = imageData
         extent = self.imageData.GetBounds()#Extent()
-        if shared.debug: print "***Extent:", extent
+        if shared.debug: print("***Extent:", extent)
         frac = 0.3
 
         self._plane_widget_boilerplate(
@@ -133,7 +133,7 @@ class PlaneWidgetsXYZ(ThreeDimRenderWindow, MarkerWindowInteractor):
             #Correction for negative spacings
             idx_label = 1*i
             label = labels[idx_label]
-            if shared.debug: print i,b, coords, label
+            if shared.debug: print(i,b, coords, label)
             #Orientation should be correct due to reading affine in vtkNifti
             text = vtk.vtkVectorText()
             text.SetText(label)
@@ -153,16 +153,16 @@ class PlaneWidgetsXYZ(ThreeDimRenderWindow, MarkerWindowInteractor):
         center = self.imageData.GetCenter()
         spacing = self.imageData.GetSpacing()
         bounds = np.array(self.imageData.GetBounds())
-        if shared.debug: print "***center,spacing,bounds", center,spacing,bounds
+        if shared.debug: print("***center,spacing,bounds", center,spacing,bounds)
         #idx_left = labels.index("L")
         pos = [center[0], center[1], center[2]]
         pos[0] +=  max((bounds[1::2]-bounds[0::2]))*2
         #idx_sup = labels.index("S")
         camera_up = [0,0,0]
         camera_up[2] = 1
-        if shared.debug: print camera_up
+        if shared.debug: print(camera_up)
         fpu = center, pos, tuple(camera_up)
-        if shared.debug: print "***fpu2:", fpu
+        if shared.debug: print("***fpu2:", fpu)
         self.set_camera(fpu)
 
     def get_marker_at_point(self):
@@ -182,7 +182,7 @@ class PlaneWidgetsXYZ(ThreeDimRenderWindow, MarkerWindowInteractor):
             marker, label = args
             marker.set_label(label)
             
-            if shared.debug: print "Create VTK-Text", marker.get_label()
+            if shared.debug: print("Create VTK-Text", marker.get_label())
             text = vtk.vtkVectorText()
             text.SetText(marker.get_label())
             textMapper = vtk.vtkPolyDataMapper()
@@ -200,7 +200,7 @@ class PlaneWidgetsXYZ(ThreeDimRenderWindow, MarkerWindowInteractor):
             x,y,z = marker.get_center()
             textActor.SetPosition(x+size, y+size, z+size)
 
-            if self.boxes.has_key(marker):
+            if marker in self.boxes:
                 selectActor = self.boxes[marker]
                 boxSource = vtk.vtkCubeSource()
                 boxSource.SetBounds(marker.GetBounds())
@@ -209,11 +209,11 @@ class PlaneWidgetsXYZ(ThreeDimRenderWindow, MarkerWindowInteractor):
                 selectActor.SetMapper(mapper)
                 
         elif event=='labels on':
-            actors = self.textActors.values()
+            actors = list(self.textActors.values())
             for actor in actors:
                 actor.VisibilityOn()
         elif event=='labels off':
-            actors = self.textActors.values()
+            actors = list(self.textActors.values())
             for actor in actors:
                 actor.VisibilityOff()
         #elif event=='select marker':
@@ -238,18 +238,18 @@ class PlaneWidgetsXYZ(ThreeDimRenderWindow, MarkerWindowInteractor):
 
     def _plane_widget_boilerplate(self, pw, key, color, index, orientation):
 
-        if shared.debug: print "PlaneWidgetsXYZ._plane_widget_boilerplate(", index , orientation,")"
+        if shared.debug: print("PlaneWidgetsXYZ._plane_widget_boilerplate(", index , orientation,")")
         pw.TextureInterpolateOn()
         #pw.SetResliceInterpolateToCubic()
         pw.SetKeyPressActivationValue(key)
-        if shared.debug: print "pw " , orientation, ".SetPicker(self.sharedPicker)"
+        if shared.debug: print("pw " , orientation, ".SetPicker(self.sharedPicker)")
         pw.SetPicker(self.sharedPicker)
         pw.GetPlaneProperty().SetColor(color)
         pw.DisplayTextOn()
         pw.SetInput(self.imageData)
         pw.SetPlaneOrientation(orientation)
         pw.SetSliceIndex(int(index))
-        if shared.debug: print "pw " , orientation, ".SetInteractor(self.interactor)"
+        if shared.debug: print("pw " , orientation, ".SetInteractor(self.interactor)")
         pw.SetInteractor(self.interactor)
         pw.On()
         pw.UpdatePlacement()
@@ -299,22 +299,22 @@ class PlaneWidgetsXYZ(ThreeDimRenderWindow, MarkerWindowInteractor):
     def OnButtonDown(self, wid, event):
         """Mouse button pressed."""
 
-        if shared.debug: print "PlaneWidgetsXYZ.OnButtonDown(): event=", event
+        if shared.debug: print("PlaneWidgetsXYZ.OnButtonDown(): event=", event)
 
         self.lastPntsXYZ = ( self.get_plane_points(self.pwX),
                              self.get_plane_points(self.pwY),
                              self.get_plane_points(self.pwZ))
-        if shared.debug: print "PlaneWidgetsXYZ.OnButtonDown(): self.lastPntsXYZ=", self.lastPntsXYZ
+        if shared.debug: print("PlaneWidgetsXYZ.OnButtonDown(): self.lastPntsXYZ=", self.lastPntsXYZ)
                              
 
         MarkerWindowInteractor.OnButtonDown(self, wid, event)
-        if shared.debug: print self.axes_labels
+        if shared.debug: print(self.axes_labels)
         return True
 
     def OnButtonUp(self, wid, event):
         """Mouse button released."""
         
-        if shared.debug: print "PlaneWidgetsXYZ.OnButtonUp(): event=", event
+        if shared.debug: print("PlaneWidgetsXYZ.OnButtonUp(): event=", event)
 
         if not hasattr(self, 'lastPntsXYZ'): return
         MarkerWindowInteractor.OnButtonUp(self, wid, event)

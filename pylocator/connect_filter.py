@@ -1,7 +1,7 @@
-from __future__ import division
+
 import vtk
 import gtk
-from gtkutils import ProgressBarDialog
+from .gtkutils import ProgressBarDialog
 
 class ConnectFilter(vtk.vtkPolyDataConnectivityFilter):
     """
@@ -18,7 +18,7 @@ class ConnectFilter(vtk.vtkPolyDataConnectivityFilter):
         'All Regions'          : 5,
         'Closest Point Region' : 6,
         }
-    num2mode = dict([ (v,k) for k,v in mode2num.items()])
+    num2mode = dict([ (v,k) for k,v in list(mode2num.items())])
     mode = 5
 
     def __init__(self):

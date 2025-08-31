@@ -1,7 +1,7 @@
 import gtk
-from gtkutils import error_msg
-from resources import camera_small_fn
-from shared import shared
+from .gtkutils import error_msg
+from .resources import camera_small_fn
+from .shared import shared
 
 INTERACT_CURSOR, MOVE_CURSOR, COLOR_CURSOR, SELECT_CURSOR, DELETE_CURSOR, LABEL_CURSOR, SCREENSHOT_CURSOR = gtk.gdk.ARROW, gtk.gdk.HAND2, gtk.gdk.SPRAYCAN, gtk.gdk.TCROSS, gtk.gdk.X_CURSOR, gtk.gdk.PENCIL, gtk.gdk.ICON
 

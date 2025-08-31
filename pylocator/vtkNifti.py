@@ -2,8 +2,8 @@ from nibabel import load
 #from numpy import oldnumeric as Numeric
 import numpy as np
 import vtk
-from shared import shared
-from vtkutils import array_to_vtkmatrix4x4
+from .shared import shared
+from .vtkutils import array_to_vtkmatrix4x4
 
 #from vtk.util.vtkImageImportFromArray import vtkImageImportFromArray
 
@@ -22,9 +22,9 @@ class vtkNiftiImageReader(object):
         self.__filename=filename
         
     def Update(self):
-        if shared.debug: print "Loading ", self.__filename
+        if shared.debug: print("Loading ", self.__filename)
         self.__nim=load(self.__filename)
-        if shared.debug: print self.__nim
+        if shared.debug: print(self.__nim)
         self.__data=self.__nim.get_data().astype("f").swapaxes(0,2)
         #self.__vtkimport.SetDataExtent(0,self.__data.shape[2]-1,0,self.__data.shape[1]-1,0,self.__data.shape[0]-1)
         self.__vtkimport.SetWholeExtent(0,self.__data.shape[2]-1,0,self.__data.shape[1]-1,0,self.__data.shape[0]-1)
@@ -32,7 +32,7 @@ class vtkNiftiImageReader(object):
         voxdim = self.__nim.get_header()['pixdim'][:3].copy()
         #Export data as string
         self.__data_string = self.__data.tostring()
-        if shared.debug: print voxdim
+        if shared.debug: print(voxdim)
         self.__vtkimport.SetDataSpacing((1.,1.,1.))#to reverse: [::-1]
         self.__vtkimport.CopyImportVoidPointer(self.__data_string,len(self.__data_string))
         self.__vtkimport.UpdateWholeExtent()
@@ -51,9 +51,9 @@ class vtkNiftiImageReader(object):
         
         
         affine = array_to_vtkmatrix4x4(self.__nim.get_affine())
-        if shared.debug: print self._irs.GetResliceAxesOrigin()
+        if shared.debug: print(self._irs.GetResliceAxesOrigin())
         self._irs.SetResliceAxes(affine)
-        if shared.debug: print self._irs.GetResliceAxesOrigin()
+        if shared.debug: print(self._irs.GetResliceAxesOrigin())
         m2t = vtk.vtkMatrixToLinearTransform()
         m2t.SetInput(affine.Invert())
         self._irs.TransformInputSamplingOff()
@@ -62,9 +62,9 @@ class vtkNiftiImageReader(object):
         #print self.__vtkimport.GetOutput().GetBounds()
         #print self._irs.GetOutput().GetBounds()
 
-        if shared.debug: print voxdim, self._irs.GetOutputSpacing()
+        if shared.debug: print(voxdim, self._irs.GetOutputSpacing())
         self._irs.SetOutputSpacing(abs(voxdim))
-        if shared.debug: print self._irs.GetOutputSpacing()
+        if shared.debug: print(self._irs.GetOutputSpacing())
         #print self._irs.GetOutputOrigin()
         #self._irs.SetOutputOrigin((0,0,0))
         # print self._irs.GetOutputOrigin()
@@ -90,7 +90,7 @@ class vtkNiftiImageReader(object):
         return self._irs.GetOutput().GetBouds()[4:]
 
     def GetDataSpacing(self):
-        if shared.debug: print self.__spacing, "*******************"
+        if shared.debug: print(self.__spacing, "*******************")
         return self._irs.GetOutput().GetSpacing()
          
     def GetOutput(self):
@@ -100,7 +100,7 @@ class vtkNiftiImageReader(object):
         return self._irs.GetOutput()
 
     def GetFilename(self):
-        if shared.debug: print self.__filename
+        if shared.debug: print(self.__filename)
         return self.__filename
 
     def GetDataExtent(self):
@@ -140,5 +140,5 @@ if __name__ == "__main__":
     reader = vtkNiftiImageReader()
     reader.SetFileName("/home/thorsten/Dokumente/pylocator-examples/Can7/mri/post2std_brain.nii.gz")
     reader.Update()
-    print reader._irs
-    print reader.GetOutput()
+    print(reader._irs)
+    print(reader.GetOutput())

@@ -41,8 +41,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'PyLocator'
-copyright = u'2011-2012, Thorsten Kranz'
+project = 'PyLocator'
+copyright = '2011-2012, Thorsten Kranz'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -168,8 +168,8 @@ htmlhelp_basename = 'pylocatordoc'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, document class [howto/manual]).
 latex_documents = [
-  ('index', 'pylocator.tex', ur'PyLocator Documentation',
-   ur'Thorsten Kranz', 'manual'),
+  ('index', 'pylocator.tex', r'PyLocator Documentation',
+   r'Thorsten Kranz', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of

@@ -1,14 +1,14 @@
-from __future__ import division
+
 import gobject
 import gtk
 
-from dialogs import edit_coordinates, edit_label_of_marker
+from .dialogs import edit_coordinates, edit_label_of_marker
 
-from events import EventHandler
-from colors import choose_one_color, tuple2gdkColor, gdkColor2tuple
-from markers import Marker
-from list_toolbar import ListToolbar
-from shared import shared
+from .events import EventHandler
+from .colors import choose_one_color, tuple2gdkColor, gdkColor2tuple
+from .markers import Marker
+from .list_toolbar import ListToolbar
+from .shared import shared
 
 
 class MarkerList(gtk.VBox):
@@ -238,8 +238,8 @@ class MarkerList(gtk.VBox):
                 self.tree_mrk.remove(treeiter)
                 del self._markers[id_]
                 del self._marker_ids[marker.uuid]
-        except Exception, e:
-            print "Exception in MarkerList.remove_marker"
+        except Exception as e:
+            print("Exception in MarkerList.remove_marker")
         finally:
             self.__update_treeview_visibility()
 

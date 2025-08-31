@@ -2,8 +2,8 @@
 
 import gtk
 import os.path
-from controller import PyLocatorController
-from shared import shared
+from .controller import PyLocatorController
+from .shared import shared
 
 def run_pylocator(filename=None, surface=None):
     """main method to run when PyLocator is started"""

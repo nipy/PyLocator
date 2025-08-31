@@ -1,20 +1,20 @@
-from __future__ import division
+
 
 import gobject
 import gtk
 
-from gtkutils import error_msg, ButtonAltLabel
-from dialogs import edit_label
+from .gtkutils import error_msg, ButtonAltLabel
+from .dialogs import edit_label
 
-from events import EventHandler
+from .events import EventHandler
 
-from colors import ColorChooserWithPredefinedColors, colorSeq
+from .colors import ColorChooserWithPredefinedColors, colorSeq
 
-from list_toolbar import ListToolbar
-from surf_params import SurfParams
+from .list_toolbar import ListToolbar
+from .surf_params import SurfParams
 
-from decimate_filter import DecimateFilter
-from connect_filter import ConnectFilter
+from .decimate_filter import DecimateFilter
+from .connect_filter import ConnectFilter
 
 class SurfRendererProps(gtk.VBox):
     SCROLLBARSIZE = 150,20
@@ -198,7 +198,7 @@ class SurfRendererProps(gtk.VBox):
 
         def set_connect_mode(id_):
             if self.paramd[id_].useConnect:
-                for num in self.connectExtractButtons.keys():
+                for num in list(self.connectExtractButtons.keys()):
                     bt = self.connectExtractButtons[num]
                     if bt.get_active():
                         self.paramd[id_].connect.mode = num
@@ -234,11 +234,11 @@ class SurfRendererProps(gtk.VBox):
 
         self.vboxPipeline = vbox
 
-        decattrs = DecimateFilter.labels.keys()
+        decattrs = list(DecimateFilter.labels.keys())
         decattrs.sort()
         self.decattrs = decattrs 
 
-        names = self.paramd.keys()
+        names = list(self.paramd.keys())
         names.sort()
 
         # Filter selection
@@ -265,7 +265,7 @@ class SurfRendererProps(gtk.VBox):
         vboxFrame = gtk.VBox()
         vboxFrame.set_spacing(3)
         frameConnectFilter.add(vboxFrame)
-        extractModes = ConnectFilter.num2mode.items()
+        extractModes = list(ConnectFilter.num2mode.items())
         extractModes.sort()
         lastButton = None
         self.connectExtractButtons = {}
@@ -410,7 +410,7 @@ class SurfRendererProps(gtk.VBox):
             is_picker_surface = param.uuid==self.picker_surface_id
             self.pickerButton.set_active(is_picker_surface)
             self.pickerButton.set_sensitive(not is_picker_surface)
-        except Exception, e:
+        except Exception as e:
             "During reacting to treeview selection change:", type(e), e
         finally:
             self.ignore_settings_updates = False

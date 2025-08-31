@@ -1,9 +1,9 @@
 import os, sys
-import StringIO, traceback
+import io, traceback
 
 import gobject, gtk
 from gtk import gdk
-from shared import shared
+from .shared import shared
 import datetime
 
 def is_string_like(obj):
@@ -15,8 +15,8 @@ def is_string_like(obj):
 
 def exception_to_str(s = None):
 
-   sh = StringIO.StringIO()
-   if s is not None: print >>sh, s
+   sh = io.StringIO()
+   if s is not None: print(s, file=sh)
    traceback.print_exc(file=sh)
    return sh.getvalue()
 
@@ -153,7 +153,7 @@ class Dialog_FileSelection(gtk.FileSelection):
         """wrap some of the file selection boilerplate.  okCallback is
         a function that takes a Dialog_FileSelection instance as a
         single arg."""
-        if shared.debug: print "Dialog_FileSelection.__init__"
+        if shared.debug: print("Dialog_FileSelection.__init__")
         self.defaultDir = defaultDir
         self.okCallback = okCallback
         gtk.FileSelection.__init__(self, title=title)
@@ -391,22 +391,22 @@ def get_num_range(minLabel='Min', maxLabel='Max',
         if response==gtk.RESPONSE_OK:
             if (as_times):
                 # mcc XXX: what's the magic code word to unfurl an array into a tuple or untupled comma-separated variables?
-                x= map(int, (entryMin.get_text()).split(':'))
+                x= list(map(int, (entryMin.get_text()).split(':')))
                 try:
                     minVal = datetime.time(x[0], x[1], x[2])
                 except ValueError:
                     msg = exception_to_str('ValueError: minVal not in HH:MM:SS format')
-                if shared.debug: print "get_num_range (as_times=True): minVal = " , str(minVal)
+                if shared.debug: print("get_num_range (as_times=True): minVal = " , str(minVal))
             else:
                 minVal = str2num_or_err(entryMin.get_text(), labelMin, parent)
             if minVal is None: continue
             if (as_times):
-                x= map(int, (entryMax.get_text()).split(':'))
+                x= list(map(int, (entryMax.get_text()).split(':')))
                 try:
                     maxVal = datetime.time(x[0], x[1], x[2])
                 except ValueError:
                     msg = exception_to_str('ValueError: maxVal not in HH:MM:SS format')
-                if shared.debug: print "get_num_range (as_times=True): maxVal = " , str(maxVal)
+                if shared.debug: print("get_num_range (as_times=True): maxVal = " , str(maxVal))
             else:
                 maxVal = str2num_or_err(entryMax.get_text(), labelMax, parent)
             if maxVal is None: continue
@@ -454,7 +454,7 @@ def select_name(names, title='Select Name'):
     response = dlg.run()
 
     if response == gtk.RESPONSE_OK:
-        for button, name in buttond.items():
+        for button, name in list(buttond.items()):
             if button.get_active():
                 dlg.destroy()
                 return name
@@ -616,12 +616,12 @@ def get_three_nums(label1Str='Value 1', label2Str='Value 2',
         try:
             rv = "%.2f"%float(value)
             return rv
-        except Exception, e:
+        except Exception as e:
             return str(value)
 
     dlg = gtk.Dialog(title)
     if parent is not None:
-        print "parent not None:", parent
+        print("parent not None:", parent)
         dlg.set_transient_for(parent)
     vbox = dlg.vbox
 
@@ -764,7 +764,7 @@ class OpenSaveSaveAsHBox(gtk.HBox):
         filename = self.fmanager.get_filename(title='Select input file')
         if filename is not None:
             try: infile = file(filename, 'r')
-            except IOError, msg:
+            except IOError as msg:
                 msg = exception_to_str('Could not open %s' % filename)
                 error_msg(msg, parent=self.parentWin)
             else:
@@ -789,7 +789,7 @@ class OpenSaveSaveAsHBox(gtk.HBox):
 
         try:
             outfile = file(filename, 'w')
-        except IOError, msg:
+        except IOError as msg:
             msg = exception_to_str('Could not write markers to %s' % filename)
             error_msg(msg, parent=self.parentWin)
             return
@@ -919,7 +919,7 @@ gtk.main()
         # todo: add csv extension
         fh = file(filename, 'w', False)
         for row in self.rows:
-            print >>fh, ','.join(row)
+            print(','.join(row), file=fh)
         fh.close()
 
 

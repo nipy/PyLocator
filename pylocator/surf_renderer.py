@@ -1,12 +1,12 @@
-from __future__ import division
+
 import vtk
 import gtk
-from gtkutils import error_msg
+from .gtkutils import error_msg
 
-from events import EventHandler
-from markers import Marker
-from shared import shared
-from render_window import PyLocatorRenderWindow, ThreeDimRenderWindow
+from .events import EventHandler
+from .markers import Marker
+from .shared import shared
+from .render_window import PyLocatorRenderWindow, ThreeDimRenderWindow
 
 class SurfRenderWindow(ThreeDimRenderWindow, PyLocatorRenderWindow):
     picker_id = None
@@ -30,11 +30,11 @@ class SurfRenderWindow(ThreeDimRenderWindow, PyLocatorRenderWindow):
 
     def set_labels_visibility(self, visible=True):
         if visible:
-            actors = self.textActors.values()
+            actors = list(self.textActors.values())
             for actor in actors:
                 actor.VisibilityOn()
         else:
-            actors = self.textActors.values()
+            actors = list(self.textActors.values())
             for actor in actors:
                 actor.VisibilityOff()
 
@@ -66,7 +66,7 @@ class SurfRenderWindow(ThreeDimRenderWindow, PyLocatorRenderWindow):
             actor.GetProperty().SetOpacity(opacity)
 
     def __get_surface_actor(self, uuid):
-        if not self.surface_actors.has_key(uuid):
+        if uuid not in self.surface_actors:
             return
         return self.surface_actors[uuid]
 
@@ -77,7 +77,7 @@ class SurfRenderWindow(ThreeDimRenderWindow, PyLocatorRenderWindow):
         self.Render()
 
     def key_press(self, interactor, event):
-        if shared.debug: print "key press event in SurfRenderWindow"
+        if shared.debug: print("key press event in SurfRenderWindow")
         key = interactor.GetKeySym()
         sas = self.surface_actors
 
@@ -92,7 +92,7 @@ class SurfRenderWindow(ThreeDimRenderWindow, PyLocatorRenderWindow):
         if key.lower()=='i':
             if not checkPickerId():
                 return
-            if shared.debug: print "Inserting Marker"
+            if shared.debug: print("Inserting Marker")
             x,y = interactor.GetEventPosition()
             picker = vtk.vtkCellPicker()
             picker.PickFromListOn()
@@ -124,6 +124,6 @@ class SurfRenderWindow(ThreeDimRenderWindow, PyLocatorRenderWindow):
             if cellId==-1:
                 pass
             else:
-                o = self.paramd.values()[0]
+                o = list(self.paramd.values())[0]
                 o.remove.RemoveCell(cellId)
                 interactor.Render()

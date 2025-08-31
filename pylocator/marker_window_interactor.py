@@ -1,9 +1,9 @@
 import gtk
 import vtk
-from render_window import PyLocatorRenderWindow
-from events import EventHandler, UndoRegistry
-from shared import shared
-from dialogs import edit_label_of_marker
+from .render_window import PyLocatorRenderWindow
+from .events import EventHandler, UndoRegistry
+from .shared import shared
+from .dialogs import edit_label_of_marker
 
 INTERACT_CURSOR, MOVE_CURSOR, COLOR_CURSOR, SELECT_CURSOR, DELETE_CURSOR, LABEL_CURSOR, SCREENSHOT_CURSOR = gtk.gdk.ARROW, gtk.gdk.HAND2, gtk.gdk.SPRAYCAN, gtk.gdk.TCROSS, gtk.gdk.X_CURSOR, gtk.gdk.PENCIL, gtk.gdk.ICON
 
@@ -42,25 +42,25 @@ class MarkerWindowInteractor(PyLocatorRenderWindow):
         if event.find('mouse1')==0:
             self.mouse1_mode_change(event)
         if event=='mouse1 interact':
-            if shared.debug: print "MarkerWindowInteractor.set_mouse1_to_interact()"
+            if shared.debug: print("MarkerWindowInteractor.set_mouse1_to_interact()")
             self.set_mouse1_to_interact()
         elif event=='vtk interact':
-            if shared.debug: print "MarkerWindowInteractor.set_mouse1_to_vtkinteract()"
+            if shared.debug: print("MarkerWindowInteractor.set_mouse1_to_vtkinteract()")
             self.set_mouse1_to_vtkinteract()
         elif event=='mouse1 color':
-            if shared.debug: print "MarkerWindowInteractor.set_mouse1_to_color()"
+            if shared.debug: print("MarkerWindowInteractor.set_mouse1_to_color()")
             self.set_mouse1_to_color()
         elif event=='mouse1 delete':
-            if shared.debug: print "MarkerWindowInteractor.set_mouse1_to_delete()"
+            if shared.debug: print("MarkerWindowInteractor.set_mouse1_to_delete()")
             self.set_mouse1_to_delete()
         elif event=='mouse1 label': 
-            if shared.debug: print "MarkerWindowInteractor.set_mouse1_to_label()"
+            if shared.debug: print("MarkerWindowInteractor.set_mouse1_to_label()")
             self.set_mouse1_to_label()
         elif event=='mouse1 select':
-            if shared.debug: print "MarkerWindowInteractor.set_mouse1_to_select()"
+            if shared.debug: print("MarkerWindowInteractor.set_mouse1_to_select()")
             self.set_mouse1_to_select()
         elif event=='mouse1 move':
-            if shared.debug: print "MarkerWindowInteractor.set_mouse1_to_move()"
+            if shared.debug: print("MarkerWindowInteractor.set_mouse1_to_move()")
             self.set_mouse1_to_move()
 
     def get_marker_at_point(self):    
@@ -73,11 +73,11 @@ class MarkerWindowInteractor(PyLocatorRenderWindow):
         pass
 
     def set_interact_mode(self):
-        if shared.debug: print "set_interact_mode()!!!!"
+        if shared.debug: print("set_interact_mode()!!!!")
         self.vtk_interact_mode = False
     
     def set_vtkinteract_mode(self):
-        if shared.debug: print "set_vtkinteract_mode()!!!!"
+        if shared.debug: print("set_vtkinteract_mode()!!!!")
 
         if (self.vtk_interact_mode == False):
             # mcc XXX: ignore this
@@ -87,7 +87,7 @@ class MarkerWindowInteractor(PyLocatorRenderWindow):
     
     def set_mouse1_to_interact(self):
 
-        if shared.debug: print "MarkerWindowInteractor.set_mouse1_to_interact()"
+        if shared.debug: print("MarkerWindowInteractor.set_mouse1_to_interact()")
 
         self.vtk_interact_mode = False
 
@@ -105,12 +105,12 @@ class MarkerWindowInteractor(PyLocatorRenderWindow):
             self.window.set_cursor (cursor)
 
     def vtkinteraction_event(self, *args):
-        if shared.debug: print "vtkinteraction_event!!!"
+        if shared.debug: print("vtkinteraction_event!!!")
         self.Render()
 
     def set_mouse1_to_vtkinteract(self):
 
-        if shared.debug: print "MarkerWindowInteractor.set_mouse1_to_vtkinteract()"
+        if shared.debug: print("MarkerWindowInteractor.set_mouse1_to_vtkinteract()")
 
         self.set_vtkinteract_mode()
 
@@ -228,14 +228,14 @@ class MarkerWindowInteractor(PyLocatorRenderWindow):
         self.lastCamera = self.get_camera_fpu()
         m = self.get_pointer()
         ctrl, shift = self._GetCtrlShift(event)
-        if shared.debug: print "MarkerWindowInteractor.OnButtonDown(): ctrl=", ctrl,"shift=",shift,"button=",event.button
+        if shared.debug: print("MarkerWindowInteractor.OnButtonDown(): ctrl=", ctrl,"shift=",shift,"button=",event.button)
         self._Iren.SetEventInformationFlipY(m[0], m[1], ctrl, shift,
                                             chr(0), 0, None)
 
-        if shared.debug: print "MarkerWindowInteractor.OnButtonDown(): pressFuncs=", self.pressFuncs, "pressHooks=", self.pressHooks
+        if shared.debug: print("MarkerWindowInteractor.OnButtonDown(): pressFuncs=", self.pressFuncs, "pressHooks=", self.pressHooks)
 
         if event.button in self.interactButtons:
-            if shared.debug: print "self.vtk_interact_mode =", self.vtk_interact_mode
+            if shared.debug: print("self.vtk_interact_mode =", self.vtk_interact_mode)
             if (self.vtk_interact_mode == False):
                 self.pressFuncs[event.button]()            
 
@@ -246,13 +246,13 @@ class MarkerWindowInteractor(PyLocatorRenderWindow):
         """Mouse button released."""
         m = self.get_pointer()
         ctrl, shift = self._GetCtrlShift(event)
-        if shared.debug: print "MarkerWindowInteractor.OnButtonUp(): ctrl=", ctrl,"shift=",shift, "button=",event.button
+        if shared.debug: print("MarkerWindowInteractor.OnButtonUp(): ctrl=", ctrl,"shift=",shift, "button=",event.button)
         self._Iren.SetEventInformationFlipY(m[0], m[1], ctrl, shift,
                                             chr(0), 0, None)
 
 
         if event.button in self.interactButtons:
-            if shared.debug: print "self.vtk_interact_mode =", self.vtk_interact_mode
+            if shared.debug: print("self.vtk_interact_mode =", self.vtk_interact_mode)
             if (self.vtk_interact_mode == False):
                 self.releaseFuncs[event.button]()            
 

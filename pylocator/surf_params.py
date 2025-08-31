@@ -1,12 +1,12 @@
-from __future__ import division
+
 import uuid
 import vtk
 import gtk
-from gtkutils import ProgressBarDialog
-from events import EventHandler
-from connect_filter import ConnectFilter
-from decimate_filter import DecimateFilter
-from colors import colorSeq, gdkColor2tuple
+from .gtkutils import ProgressBarDialog
+from .events import EventHandler
+from .connect_filter import ConnectFilter
+from .decimate_filter import DecimateFilter
+from .colors import colorSeq, gdkColor2tuple
 
 class SurfParams(object):
     label = "Surface"

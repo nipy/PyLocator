@@ -1,26 +1,26 @@
 import os
 import gtk
-from shared import shared
-from events import EventHandler
-from vtkNifti import vtkNiftiImageReader
+from .shared import shared
+from .events import EventHandler
+from .vtkNifti import vtkNiftiImageReader
 
-from surf_renderer import SurfRenderWindow
-from plane_widgets_xyz import PlaneWidgetsXYZ, move_pw_to_point
-from plane_widgets_observer import PlaneWidgetObserver
-from plane_widgets_observer_toolbar import ObserverToolbar
+from .surf_renderer import SurfRenderWindow
+from .plane_widgets_xyz import PlaneWidgetsXYZ, move_pw_to_point
+from .plane_widgets_observer import PlaneWidgetObserver
+from .plane_widgets_observer_toolbar import ObserverToolbar
 
-from surf_renderer_props import SurfRendererProps
-from roi_renderer_props import RoiRendererProps
-from screenshot_props import ScreenshotProps
+from .surf_renderer_props import SurfRendererProps
+from .roi_renderer_props import RoiRendererProps
+from .screenshot_props import ScreenshotProps
 
-from marker_list import MarkerList
-from gtkutils import simple_msg
+from .marker_list import MarkerList
+from .gtkutils import simple_msg
 
 import pylocator
-from resources import main_window
-from dialogs import SettingsController, about
+from .resources import main_window
+from .dialogs import SettingsController, about
 
-from colors import gdkColor2tuple
+from .colors import gdkColor2tuple
 
 class PyLocatorController(object):
     def __init__(self):
@@ -81,7 +81,7 @@ class PyLocatorController(object):
 
     def __add_observer_widgets_to_window(self,win,hbox):
         win.observers = []
-        for orientation, pw in zip(range(3),win.pwxyz.get_plane_widgets_xyz()):
+        for orientation, pw in zip(list(range(3)),win.pwxyz.get_plane_widgets_xyz()):
             vboxObs = gtk.VBox()
             vboxObs.show()
             observer = PlaneWidgetObserver(pw, owner=win, orientation=orientation)
@@ -176,7 +176,7 @@ class PyLocatorController(object):
             filename = dialog.get_filename()
             dialog.destroy()
             if response == gtk.RESPONSE_OK:
-                print "Loading:", filename
+                print("Loading:", filename)
             else:
                 return False
 

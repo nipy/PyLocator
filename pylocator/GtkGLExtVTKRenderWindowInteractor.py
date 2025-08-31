@@ -14,7 +14,7 @@ from gtk import gdk
 import gtk.gtkgl
 import vtk
 
-from shared import shared
+from .shared import shared
 
 class GtkGLExtVTKRenderWindowInteractor(gtk.gtkgl.DrawingArea):
     """
@@ -86,8 +86,8 @@ class GtkGLExtVTKRenderWindowInteractor(gtk.gtkgl.DrawingArea):
         elif hasattr(self._Iren, attr):
             return getattr(self._Iren, attr)
         else:
-            raise AttributeError, self.__class__.__name__ + \
-                  " has no attribute named " + attr
+            raise AttributeError(self.__class__.__name__ + \
+                  " has no attribute named " + attr)
 
     def CreateTimer(self, obj, event):
         gtk.timeout_add(10, self._Iren.TimerEvent)
@@ -143,7 +143,7 @@ class GtkGLExtVTKRenderWindowInteractor(gtk.gtkgl.DrawingArea):
         return ctrl, shift
 
     def OnButtonDown(self, wid, event):
-        if shared.debug: print "GtkGLExtVTKRenderWindowInteractor.OnButtonDown()"
+        if shared.debug: print("GtkGLExtVTKRenderWindowInteractor.OnButtonDown()")
         """Mouse button pressed."""
         m = self.get_pointer()
         ctrl, shift = self._GetCtrlShift(event)
