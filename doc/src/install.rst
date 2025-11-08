@@ -1,111 +1,59 @@
 Installation
 ============
 
-.. index:: dependencies
-
 Dependencies
--------------
-PyLocator relies on a bunch of libraries:
+------------
 
-* `VTK <http://www.vtk.org>`_: 3d-visualization
-* `nibabel <http://nipy.sourceforge.net/nibabel/>`_: Reading the Nifti-format for MRI data
-* `NumPy <http://www.scipy.org>`_: Sophisticated array-types for Python
-* `GTK+ <http://www.pygtk.org/>`_: For the GUI.
-* `GTK+ OpenGL Extension <http://projects.gnome.org/gtkglext/>`_
+PyLocator now relies on a modern Qt/VTK stack:
 
-On a Debian-like environement, these dependencies can usually be resolved via a simple::
+* `VTK <https://vtk.org>`_ for 3-D visualisation
+* `Nibabel <https://nipy.org/nibabel>`_ for reading NIfTI volumes
+* `NumPy <https://numpy.org>`_ for numerical data handling
+* `PySide6 <https://wiki.qt.io/Qt_for_Python>`_ for the Qt user interface
 
-  sudo apt-get install python-vtk python-nibabel python-numpy python-gtk2 python-gtkglext1
+The recommended way to install these dependencies is via ``pip`` inside a
+Python 3.11 virtual environment::
 
-This should prepare your system for PyLocator. On Windows and OS X, things are a little bit 
-more complicated, but Python distributions like `EPD <http://www.enthought.com/products/epd.php>`_
-or `Python(x,y) <http://www.pythonxy.com/>`_ should be helpful here. The main problem will be to 
-get **gtkgtlext** working. If you have any hints, e.g., binary packages, please let me know.
+  python -m venv .venv
+  source .venv/bin/activate
+  pip install -r requirements.txt
 
-Depending on your configuration, nibabel has to be downloaded separately.
-
-Can you help with detailed instructions for these operating systems? Please tell me!
-
+Running ``pip install -e .`` afterwards exposes the ``pylocator`` console entry
+point and keeps the working copy editable.
 
 How to download
 ---------------
-The source code of PyLocator is kept in a public GIT repository:
 
-http://www.github.com/nipy/PyLocator
+The source code lives on GitHub::
 
-.. index:: repository
-.. index:: source code
+  git clone https://github.com/nipy/PyLocator.git
 
-You can simply clone this repository via::
-
-  git clone git://github.com/nipy/PyLocator.git
-
-There is a binary package for Debian-like systems (Debian, Ubuntu, ...) available. 
-It will make sure that all requirements are installed and add an entry to your 
-applications menu.
-
-.. image:: _static/download_deb.png
-   :align: center
-   :target: http://pylocator.thorstenkranz.de/download/pylocator_1.0_all.deb
-
-It is tested with Ubuntu Oneiric and Natty. If you successfully installed it on 
-other flavours and versions, please let me know.
-
-Alternatively, you can download a tarball that is updated once in a while from
-
-http://pylocator.thorstenkranz.de/download/pylocator_1.0b3.tar.gz
-
-Extract this archive using your preferred archive manager or in a terminal using something like::
-
-  tar xfvz pylocator_1.0b3.tar.gz
+You can use the repository directly for development or installation.
 
 How to install
----------------
-From Debian-package
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Installation of Debian packages should be straight-forward. Usually you just have 
-to double click the downloaded file and confirm the installation. If you prefer to 
-work in a terminal, you can::
-    
-    sudo dpkg -i pylocator_1.0b3_all.deb
-
-That's it!
+--------------
 
 From PyPI
-^^^^^^^^^^^^^^^^^^^^
-PyLocator is registered at PyPI, the Python Package Index. This makes 
-installation easy also for non-debian systems. 
-If you have setuptools installed, simply type::
+^^^^^^^^^
 
-    sudo easy_install PyLocator
+The PyPI package can be installed with::
 
-and the setuptools will do the magic for you.
+  pip install pylocator
 
 From source
-^^^^^^^^^^^^^^^^^^^^
-Once you obtained the source code, enter the PyLocator-directory and type::
+^^^^^^^^^^^
 
-  python setup.py build
-  python setup.py install --user # For per-user installation
-  # or
-  sudo python setup.py install # system-wide installation
+If you are working from a clone simply run::
 
-After these steps, the package *pylocator* should be properly installed. You can then run the program
-by running::
+  pip install -e .
 
-  python ~/.local/lib/python2.?/site-packages/pylocator/pylocator.py
+Afterwards the ``pylocator`` command is available on your ``PATH``::
 
-in case of a per-user installation or::
+  pylocator /path/to/volume.nii.gz
 
-  python /usr/local/lib/python2.?/site-packages/pylocator/pylocator.py
+Binary packages
+---------------
 
-or similar in case of a system-wide installation. Replace the *2.?* by your python version number. 
-
-This solution isn't perfect yet, I'll clean it up soon. Of course you can create some little bash-script 
-that calls this for you and put it into ~/bin/pylocator or similar::
-
-  #! /bin/bash
-  python ~/.local/lib/python2.?/site-packages/pylocator/pylocator.py $@
-
-
-
+The historical Debian packages for the GTK version are no longer maintained.
+Building native packages for the Qt port is on the roadmap; contributions and
+packaging notes are welcome.

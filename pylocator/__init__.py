@@ -1,16 +1,6 @@
-"""
-PyLocator
-=========
+"""Qt-based PyLocator package."""
 
-A program for localisation of EEG-electrodes from CT/MRI-volumes. 
-
-Dependencies:
-python
-numpy
-nibabel
-vtk
-PySide6 (GUI; currently under migration from PyGTK)
-"""
+__all__ = ["__version__"]
 
 __version__ = "1.0"
 
