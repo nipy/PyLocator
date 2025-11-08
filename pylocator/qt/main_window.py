@@ -2,32 +2,24 @@
 
 from __future__ import annotations
 
+from collections import OrderedDict
+
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QAction, QKeySequence
 from PySide6.QtWidgets import (
     QDockWidget,
+    QFormLayout,
+    QGridLayout,
+    QLabel,
     QMainWindow,
+    QSlider,
     QTextEdit,
     QToolBar,
+    QWidget,
 )
-from vtkmodules.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
-from vtkmodules.vtkCommonDataModel import vtkPiecewiseFunction
-from vtkmodules.vtkRenderingCore import (
-    vtkColorTransferFunction,
-    vtkRenderer,
-    vtkVolume,
-    vtkVolumeProperty,
-)
-try:
-    from vtkmodules.vtkRenderingVolumeOpenGL2 import vtkSmartVolumeMapper
-except ImportError:  # pragma: no cover - fallback for alternative VTK builds
-    from vtkmodules.vtkRenderingVolume import vtkSmartVolumeMapper
-
-# VTK requires the OpenGL and interaction backends to be imported explicitly.
-import vtkmodules.vtkInteractionStyle  # noqa: F401  pylint: disable=unused-import
-import vtkmodules.vtkRenderingOpenGL2  # noqa: F401  pylint: disable=unused-import
 
 from ..nifti_loader import NiftiVolume
+from .views import SliceView, VolumeView
 
 
 class MainWindow(QMainWindow):
@@ -38,14 +30,15 @@ class MainWindow(QMainWindow):
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self.setWindowTitle("PyLocator")
-        self.resize(1200, 800)
+        self.resize(1400, 900)
 
         self._current_volume: NiftiVolume | None = None
 
         self._create_actions()
         self._create_toolbar()
-        self._create_vtk_view()
+        self._create_views()
         self._create_info_dock()
+        self._create_slice_controls()
         self.statusBar().showMessage("Ready")
 
     # ------------------------------------------------------------------
@@ -71,16 +64,27 @@ class MainWindow(QMainWindow):
         toolbar.addAction(self.open_action)
         self.addToolBar(toolbar)
 
-    def _create_vtk_view(self) -> None:
-        self._vtk_widget = QVTKRenderWindowInteractor(self)
-        self.setCentralWidget(self._vtk_widget)
-        self._vtk_widget.Initialize()
+    def _create_views(self) -> None:
+        container = QWidget(self)
+        layout = QGridLayout(container)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(2)
 
-        render_window = self._vtk_widget.GetRenderWindow()
-        self._renderer = vtkRenderer()
-        render_window.AddRenderer(self._renderer)
-        self._interactor = render_window.GetInteractor()
-        self._interactor.Initialize()
+        self._slice_views: OrderedDict[str, SliceView] = OrderedDict()
+        for column, orientation in enumerate(("axial", "coronal")):
+            view = SliceView(orientation, container)
+            self._slice_views[orientation] = view
+            layout.addWidget(view.widget, 0, column)
+
+        sagittal_view = SliceView("sagittal", container)
+        self._slice_views["sagittal"] = sagittal_view
+        layout.addWidget(sagittal_view.widget, 1, 0)
+
+        self._volume_view = VolumeView(container)
+        layout.addWidget(self._volume_view.widget, 1, 1)
+
+        container.setLayout(layout)
+        self.setCentralWidget(container)
 
     def _create_info_dock(self) -> None:
         self._info_panel = QTextEdit(self)
@@ -92,42 +96,49 @@ class MainWindow(QMainWindow):
         dock.setWidget(self._info_panel)
         self.addDockWidget(Qt.RightDockWidgetArea, dock)
 
+    def _create_slice_controls(self) -> None:
+        widget = QWidget(self)
+        layout = QFormLayout(widget)
+        layout.setFieldGrowthPolicy(QFormLayout.ExpandingFieldsGrow)
+
+        self._slice_sliders: dict[str, QSlider] = {}
+        for orientation in self._slice_views:
+            label = QLabel(orientation.capitalize(), widget)
+            slider = QSlider(Qt.Horizontal, widget)
+            slider.setObjectName(f"sliceSlider_{orientation}")
+            slider.setMinimum(0)
+            slider.setMaximum(0)
+            slider.setEnabled(False)
+            slider.valueChanged.connect(
+                lambda value, orient=orientation: self._slice_views[orient].set_slice(value)
+            )
+            self._slice_sliders[orientation] = slider
+            layout.addRow(label, slider)
+
+        dock = QDockWidget("Slice controls", self)
+        dock.setObjectName("sliceControlsDock")
+        dock.setWidget(widget)
+        self.addDockWidget(Qt.RightDockWidgetArea, dock)
+        dock.setFloating(False)
+
     # ------------------------------------------------------------------
     # Rendering helpers
     # ------------------------------------------------------------------
     def display_volume(self, volume: NiftiVolume) -> None:
-        """Render *volume* inside the VTK viewport."""
+        """Render *volume* inside the VTK viewports."""
 
         self._current_volume = volume
-        self._renderer.RemoveAllViewProps()
+        self._volume_view.set_volume(volume)
 
-        mapper = vtkSmartVolumeMapper()
-        mapper.SetInputData(volume.image_data)
-
-        min_val, max_val = volume.value_range
-        if max_val - min_val < 1e-5:
-            max_val = min_val + 1.0
-
-        color_tf = vtkColorTransferFunction()
-        color_tf.AddRGBPoint(min_val, 0.0, 0.0, 0.0)
-        color_tf.AddRGBPoint(max_val, 1.0, 1.0, 1.0)
-
-        opacity_tf = vtkPiecewiseFunction()
-        opacity_tf.AddPoint(min_val, 0.0)
-        opacity_tf.AddPoint(max_val, 1.0)
-
-        properties = vtkVolumeProperty()
-        properties.SetColor(color_tf)
-        properties.SetScalarOpacity(opacity_tf)
-        properties.SetInterpolationTypeToLinear()
-
-        actor = vtkVolume()
-        actor.SetMapper(mapper)
-        actor.SetProperty(properties)
-
-        self._renderer.AddVolume(actor)
-        self._renderer.ResetCamera()
-        self._vtk_widget.GetRenderWindow().Render()
+        for orientation, view in self._slice_views.items():
+            geometry = view.set_volume(volume)
+            slider = self._slice_sliders[orientation]
+            slider.blockSignals(True)
+            slider.setEnabled(True)
+            slider.setMinimum(geometry.minimum)
+            slider.setMaximum(geometry.maximum)
+            slider.setValue(geometry.current)
+            slider.blockSignals(False)
 
         self._update_info_panel(volume)
         self.statusBar().showMessage(f"Loaded {volume.path.name}")

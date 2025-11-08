@@ -2,4 +2,7 @@
 
 from __future__ import annotations
 
-__all__: list[str] = []
+from .main_window import MainWindow
+from .views import SliceView, VolumeView
+
+__all__ = ["MainWindow", "SliceView", "VolumeView"]
