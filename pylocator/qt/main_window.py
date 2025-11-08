@@ -18,7 +18,10 @@ from vtkmodules.vtkRenderingCore import (
     vtkVolume,
     vtkVolumeProperty,
 )
-from vtkmodules.vtkRenderingVolume import vtkSmartVolumeMapper
+try:
+    from vtkmodules.vtkRenderingVolumeOpenGL2 import vtkSmartVolumeMapper
+except ImportError:  # pragma: no cover - fallback for alternative VTK builds
+    from vtkmodules.vtkRenderingVolume import vtkSmartVolumeMapper
 
 # VTK requires the OpenGL and interaction backends to be imported explicitly.
 import vtkmodules.vtkInteractionStyle  # noqa: F401  pylint: disable=unused-import
