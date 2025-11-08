@@ -4,10 +4,22 @@ The PyLocator-program
 A little program for localization of EEG-electrodes from MRI-recordings.
 Uses VTK for a neat 3d-interface. 
 
+Installing dependencies
+-----------------------
+
+The project now uses standard ``pip`` tooling. Create and activate a virtual
+environment and install the runtime dependencies with::
+
+    pip install -r requirements.txt
+
+You can then install PyLocator itself in editable mode::
+
+    pip install -e .
+
 Building the docs
 ----------------------
 
-To build the docs you need to have setuptools and sphinx (>=0.5) installed. 
+To build the docs you need to have setuptools and sphinx (>=0.5) installed.
 Run the command::
 
     python setup.py build_sphinx

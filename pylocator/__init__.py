@@ -6,10 +6,10 @@ A program for localisation of EEG-electrodes from CT/MRI-volumes.
 
 Dependencies:
 python
-nibabel
 numpy
+nibabel
 vtk
-pygtk, gtkglext
+PySide6 (GUI; currently under migration from PyGTK)
 """
 
 __version__ = "1.0"

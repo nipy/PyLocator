@@ -1,67 +1,33 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-from distutils.core import setup
-import sys
+from pathlib import Path
+from setuptools import find_packages, setup
 
-import pylocator 
+PROJECT_ROOT = Path(__file__).parent.resolve()
+README = (PROJECT_ROOT / "README").read_text(encoding="utf-8")
 
+about: dict = {}
+with open(PROJECT_ROOT / "pylocator" / "__init__.py", encoding="utf-8") as f:
+    exec(f.read(), about)
 
-# For some commands, use setuptools
-if len(set(('develop', 'sdist', 'release', 'bdist_egg', 'bdist_rpm',
-           'bdist', 'bdist_dumb', 'bdist_wininst', 'install_egg_info',
-           'build_sphinx', 'egg_info', 'easy_install',
-            )).intersection(sys.argv)) > 0:
-    from setupegg import extra_setuptools_args
-
-# extra_setuptools_args is injected by the setupegg.py script, for
-# running the setup with setuptools.
-if not 'extra_setuptools_args' in globals():
-    extra_setuptools_args = dict()
-
-
-setup(name='pylocator',
-      version=pylocator.__version__,
-      summary='Program for the localization of EEG-electrodes.',
-      author='Thorsten Kranz',
-      author_email='thorstenkranz@gmail.com',
-      url='http://pylocator.thorstenkranz.de',
-      description="""
-Program for the localization of EEG-electrodes.
-""",
-      long_description=file('README').read(),
-      license='BSD',
-      classifiers=[
-          'Development Status :: 3 - Alpha',
-          'Environment :: Console',
-          'Intended Audience :: Developers',
-          'Intended Audience :: Science/Research',
-          'Intended Audience :: Education',
-          'License :: OSI Approved :: BSD License',
-          'Operating System :: OS Independent',
-          'Programming Language :: Python',
-          'Topic :: Scientific/Engineering',
-          'Topic :: Utilities',
-      ],
-      platforms='any',
-      package_data={'pylocator': [
-                            'resources/mainWindow.glade',
-                            'resources/pylocator.ico',
-                            'resources/markers.png',
-                            'resources/surfaces.png',
-                            'resources/rois.png',
-                            'resources/screenshots.png',
-                            'resources/editLabel.glade',
-                            'resources/editCoordinates.glade',
-                            'resources/editSettings.glade',
-                            'resources/about.glade',
-                            'resources/camera24.png',
-                            'resources/camera48.png',
-                            ],},
-      packages=[
-          'pylocator', 
-          'pylocator.misc', 
-          'pylocator.tests',
-          ],
-      scripts=['bin/pylocator'],
-      **extra_setuptools_args)
-
+setup(
+    name="pylocator",
+    version=about.get("__version__", "0.0.0"),
+    description="Program for the localization of EEG-electrodes.",
+    long_description=README,
+    long_description_content_type="text/plain",
+    author="Thorsten Kranz",
+    author_email="thorstenkranz@gmail.com",
+    url="http://pylocator.thorstenkranz.de",
+    license="BSD-2-Clause",
+    packages=find_packages(),
+    include_package_data=True,
+    python_requires=">=3.11",
+    install_requires=[
+        "numpy>=1.26",
+        "nibabel>=5.2",
+        "vtk>=9.3",
+        "PySide6>=6.6",
+    ],
+    scripts=["bin/pylocator"],
+)
