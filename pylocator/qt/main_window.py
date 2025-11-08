@@ -11,9 +11,13 @@ from PySide6.QtWidgets import (
     QToolBar,
 )
 from vtkmodules.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
-from vtkmodules.vtkCommonColor import vtkColorTransferFunction
 from vtkmodules.vtkCommonDataModel import vtkPiecewiseFunction
-from vtkmodules.vtkRenderingCore import vtkRenderer, vtkVolume, vtkVolumeProperty
+from vtkmodules.vtkRenderingCore import (
+    vtkColorTransferFunction,
+    vtkRenderer,
+    vtkVolume,
+    vtkVolumeProperty,
+)
 from vtkmodules.vtkRenderingVolume import vtkSmartVolumeMapper
 
 # VTK requires the OpenGL and interaction backends to be imported explicitly.
