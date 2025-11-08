@@ -7,6 +7,10 @@ from dataclasses import dataclass
 from PySide6.QtWidgets import QWidget
 from vtkmodules.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from vtkmodules.vtkCommonDataModel import vtkPiecewiseFunction
+from vtkmodules.vtkInteractionStyle import (
+    vtkInteractorStyleImage,
+    vtkInteractorStyleTrackballCamera,
+)
 from vtkmodules.vtkRenderingCore import (
     vtkColorTransferFunction,
     vtkImageProperty,
@@ -37,7 +41,12 @@ class SliceGeometry:
 class _BaseVTKView:
     """Common helpers for views backed by :class:`QVTKRenderWindowInteractor`."""
 
-    def __init__(self, parent: QWidget | None = None) -> None:
+    def __init__(
+        self,
+        parent: QWidget | None = None,
+        *,
+        interactor_style: type | None = None,
+    ) -> None:
         self.widget = QVTKRenderWindowInteractor(parent)
         self.widget.Initialize()
         self.renderer = vtkRenderer()
@@ -45,6 +54,11 @@ class _BaseVTKView:
         render_window.AddRenderer(self.renderer)
         self._interactor = render_window.GetInteractor()
         self._interactor.Initialize()
+        if interactor_style is not None:
+            self._interactor.SetInteractorStyle(interactor_style())
+        # ``Start`` wires up the Qt event pump to the interactor so user
+        # interactions (mouse rotation, zoom, etc.) are recognised.
+        self.widget.Start()
 
     def render(self) -> None:
         """Trigger a redraw of the underlying VTK window."""
@@ -56,7 +70,7 @@ class VolumeView(_BaseVTKView):
     """3-D volume rendering viewport."""
 
     def __init__(self, parent: QWidget | None = None) -> None:
-        super().__init__(parent)
+        super().__init__(parent, interactor_style=vtkInteractorStyleTrackballCamera)
         self.renderer.SetBackground(0.1, 0.1, 0.1)
 
     def set_volume(self, volume: NiftiVolume) -> None:
@@ -97,7 +111,7 @@ class SliceView(_BaseVTKView):
     """Orthogonal 2-D slice view into the volume."""
 
     def __init__(self, orientation: str, parent: QWidget | None = None) -> None:
-        super().__init__(parent)
+        super().__init__(parent, interactor_style=vtkInteractorStyleImage)
         self.orientation = orientation
         self._volume: NiftiVolume | None = None
         self._mapper = vtkImageSliceMapper()
