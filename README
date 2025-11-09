@@ -1,38 +1,50 @@
-The PyLocator-program
-=====================
+PyLocator
+=========
 
-A little program for localization of EEG-electrodes from MRI-recordings.
-Uses VTK for a neat 3d-interface. 
+PyLocator is a Qt-based visualisation tool for inspecting 3-D NIfTI volumes
+and annotating EEG electrodes.  The modern port replaces the historic PyGTK
+interface with a PySide6/VTK application that runs on contemporary Linux and
+Windows systems.
 
-Building the docs
-----------------------
+Installation
+------------
 
-To build the docs you need to have setuptools and sphinx (>=0.5) installed. 
-Run the command::
+Create and activate a Python 3.11 virtual environment and install the runtime
+dependencies with::
+
+    pip install -r requirements.txt
+
+You can then install PyLocator itself in editable mode while keeping the CLI
+entry point available::
+
+    pip install -e .
+
+Running PyLocator
+-----------------
+
+Once installed you can start the GUI directly from the command line::
+
+    pylocator <path-to-volume.nii.gz>
+
+When no filename is supplied the application starts with an empty viewport and
+provides an **Open…** action to select a NIfTI file.  The status bar and the
+volume information dock show basic metadata such as voxel spacing and the value
+range of the currently loaded dataset.
+
+Documentation
+-------------
+
+The Sphinx documentation that ships with the legacy project is still available
+and can be built with::
 
     python setup.py build_sphinx
 
-The docs are built in the build/sphinx/html directory.
+The generated HTML pages are written to ``doc/build``.
 
+Development notes
+-----------------
 
-Making a source tarball
-----------------------------
-
-To create a source tarball, eg for packaging or distributing, run the
-following command::
-
-    python setup.py sdist
-
-The tarball will be created in the `dist` directory. This command will
-compile the docs, and the resulting tarball can be installed with
-no extra dependencies than the Python standard library. You will need
-setuptool and sphinx.
-
-Making a release and uploading it to PyPI
-------------------------------------------
-
-This command is only run by project manager, to make a release, and
-upload in to PyPI::
-
-    python setup.py sdist bdist_egg register upload
-
+The new Qt port deliberately focuses on volume loading and rendering first.
+Legacy features such as marker editing, surface visualisation and undo/redo
+have not been migrated yet.  Contributions that rebuild these workflows on top
+of the modern architecture are very welcome.

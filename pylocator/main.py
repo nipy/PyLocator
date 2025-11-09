@@ -1,33 +1,36 @@
-#! /usr/bin/python
+"""Application entry points for PyLocator."""
 
-import gtk
-import os.path
-from controller import PyLocatorController
-from shared import shared
+from __future__ import annotations
 
-def run_pylocator(filename=None, surface=None):
-    """main method to run when PyLocator is started"""
-    __global_preparations()
-    controller = PyLocatorController()
-    loadingSuccessful = controller.load_nifti(filename)
-    controller.align_surf_to_planes_view()
-    if loadingSuccessful:
-        controller.window.show()
-        gtk.main()
-
-def __global_preparations():
-    user_dir = __find_userdir()
-    shared.set_file_selection(user_dir)
+from .app import run_app
 
 
-def __find_userdir():
-    userdir = os.path.expanduser("~")
-    try:
-        from win32com.shell import shellcon, shell
-        userdir = shell.SHGetFolderPath(0,shellcon.CSIDL_PERSONAL,0,0)
-    except ImportError:
-        userdir = os.path.expanduser("~")
-    return userdir
+def run_pylocator(filename: str | None = None, surface: str | None = None) -> int:
+    """Launch the Qt-based PyLocator application.
 
-if __name__=="__main__":
-    run_pylocator()
+    Parameters
+    ----------
+    filename:
+        Optional path to a NIfTI file that should be loaded during start-up.
+    surface:
+        Deprecated argument kept for backward compatibility. Surfaces are not
+        yet supported in the Qt port and the value is ignored.
+
+    Returns
+    -------
+    int
+        The Qt application's exit code.
+    """
+
+    # ``surface`` is accepted to keep command-line compatibility with the
+    # legacy GTK application. The modern Qt interface does not yet expose
+    # surface loading, therefore the argument is intentionally unused.
+    _ = surface
+    return run_app(initial_volume=filename)
+
+
+__all__ = ["run_pylocator"]
+
+
+if __name__ == "__main__":  # pragma: no cover - manual entry point
+    raise SystemExit(run_pylocator())

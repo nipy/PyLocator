@@ -1,0 +1,4 @@
+numpy>=1.26
+nibabel>=5.2
+vtk>=9.3
+PySide6>=6.6

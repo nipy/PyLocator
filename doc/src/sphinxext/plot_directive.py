@@ -69,7 +69,7 @@ TODO
 
 """
 
-import sys, os, glob, shutil, imp, warnings, cStringIO, re, textwrap
+import sys, os, glob, shutil, imp, warnings, io, re, textwrap
 
 def setup(app):
     setup.app = app
@@ -137,12 +137,12 @@ def run_code(code, code_path):
     if code_path is not None:
         os.chdir(os.path.dirname(code_path))
     stdout = sys.stdout
-    sys.stdout = cStringIO.StringIO()
+    sys.stdout = io.StringIO()
     try:
         code = unescape_doctest(code)
         ns = {}
-        exec setup.config.plot_pre_code in ns
-        exec code in ns
+        exec(setup.config.plot_pre_code, ns)
+        exec(code, ns)
     finally:
         os.chdir(pwd)
         sys.stdout = stdout
@@ -203,7 +203,7 @@ def makefig(code, code_path, output_dir, output_base, config):
         return i
 
     # We didn't find the files, so build them
-    print "-- Plotting figures %s" % output_base
+    print("-- Plotting figures %s" % output_base)
 
     # Clear between runs
     plt.close('all')
@@ -311,7 +311,7 @@ def run(arguments, content, options, state_machine, state, lineno):
 
     # is it in doctest format?
     is_doctest = contains_doctest(code)
-    if options.has_key('format'):
+    if 'format' in options:
         if options['format'] == 'python':
             is_doctest = False
         else:
@@ -367,7 +367,7 @@ def run(arguments, content, options, state_machine, state, lineno):
         return [sm]
 
 
-    opts = [':%s: %s' % (key, val) for key, val in options.items()
+    opts = [':%s: %s' % (key, val) for key, val in list(options.items())
             if key in ('alt', 'height', 'width', 'scale', 'align', 'class')]
 
     result = jinja.from_string(TEMPLATE).render(

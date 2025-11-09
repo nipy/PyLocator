@@ -1,7 +1,5 @@
-include *.txt *.py
-include pylocator/camera.png pylocator/image_reader.glade
-recursive-include pylocator *.rst *.py
-graft doc
-graft doc/_static
-graft doc/_templates
+include README LICENSE
+recursive-include pylocator *.py
+recursive-include doc *
+exclude doc/build/*
 global-exclude *~ *.swp
