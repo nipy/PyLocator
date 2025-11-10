@@ -50,8 +50,8 @@ def load_nifti_volume(filename: str) -> NiftiVolume:
         raise NiftiLoadError(f"NIfTI file does not exist: {path}")
 
     try:
-        nifti = nib.load(str(path))
-    except (OSError, nib.spatialimages.ImageFileError) as exc:
+        nifti = nib.load(path)
+    except (OSError, nib.spatialimages.ImageDataError) as exc:
         raise NiftiLoadError(f"Failed to open {path}: {exc}") from exc
 
     data = nifti.get_fdata(dtype=np.float32)

@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-import sys
-
+import vtk
+vtk.vtkObject.GlobalWarningDisplayOff()
 from PySide6.QtWidgets import QApplication
-
 from .controller import PyLocatorController
 
 
@@ -43,3 +42,8 @@ def run_app(initial_volume: str | None = None) -> int:
 
 
 __all__ = ["run_app"]
+
+# --- Entry point for running as a script ---
+if __name__ == "__main__":
+    import sys
+    sys.exit(run_app())
