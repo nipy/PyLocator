@@ -19,19 +19,13 @@ from PySide6.QtWidgets import (
     QDockWidget,
     QFormLayout,
     QGridLayout,
-    QHBoxLayout,
     QLabel,
-    QListWidget,
     QMainWindow,
-    QStyle,
     QSlider,
     QTextEdit,
     QToolBar,
-    QToolButton,
-    QVBoxLayout,
     QWidget,
 )
-from PySide6.QtCore import QSize
 
 from ..nifti_loader import NiftiVolume
 from .views import SliceView, VolumeView
@@ -64,81 +58,14 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage("Ready")
 
     def _create_marker_list_panel(self) -> None:
-        from PySide6.QtWidgets import QAbstractItemView
+        from PySide6.QtWidgets import QListWidget, QDockWidget
 
-        container = QWidget(self)
-        vbox = QVBoxLayout(container)
-        vbox.setContentsMargins(6, 6, 6, 6)
-        vbox.setSpacing(6)
-
-        # Marker list widget
-        self._marker_list_widget = QListWidget(container)
+        self._marker_list_widget = QListWidget(self)
         self._marker_list_widget.setObjectName("markerListWidget")
-        self._marker_list_widget.setSelectionMode(QAbstractItemView.ExtendedSelection)
-        self._marker_list_widget.itemSelectionChanged.connect(self._on_marker_selection_changed)
-        vbox.addWidget(self._marker_list_widget)
-
-        # Controls row
-        hbox = QHBoxLayout()
-        hbox.setSpacing(6)
-
-        self._btn_up = QToolButton(container)
-        self._btn_up.setObjectName("markerUpButton")
-        self._btn_up.setToolTip("Move marker up")
-        self._btn_up.setAutoRaise(True)
-        try:
-            pm = self.style().pixelMetric(QStyle.PM_SmallIconSize)
-            self._btn_up.setIconSize(QSize(pm, pm))
-        except Exception:
-            pass
-        try:
-            self._btn_up.setArrowType(Qt.UpArrow)
-        except Exception:
-            pass
-        self._btn_up.clicked.connect(self._move_selected_marker_up)
-        hbox.addWidget(self._btn_up)
-
-        self._btn_down = QToolButton(container)
-        self._btn_down.setObjectName("markerDownButton")
-        self._btn_down.setToolTip("Move marker down")
-        self._btn_down.setAutoRaise(True)
-        try:
-            pm = self.style().pixelMetric(QStyle.PM_SmallIconSize)
-            self._btn_down.setIconSize(QSize(pm, pm))
-        except Exception:
-            pass
-        try:
-            self._btn_down.setArrowType(Qt.DownArrow)
-        except Exception:
-            pass
-        self._btn_down.clicked.connect(self._move_selected_marker_down)
-        hbox.addWidget(self._btn_down)
-
-        self._btn_delete = QToolButton(container)
-        self._btn_delete.setObjectName("markerDeleteButton")
-        self._btn_delete.setToolTip("Delete selected markers")
-        self._btn_delete.setAutoRaise(True)
-        try:
-            pm = self.style().pixelMetric(QStyle.PM_SmallIconSize)
-            self._btn_delete.setIconSize(QSize(pm, pm))
-        except Exception:
-            pass
-        try:
-            self._btn_delete.setIcon(self.style().standardIcon(QStyle.SP_TrashIcon))
-        except Exception:
-            pass
-        self._btn_delete.clicked.connect(self._delete_selected_markers)
-        hbox.addWidget(self._btn_delete)
-
-        hbox.addStretch(1)
-        vbox.addLayout(hbox)
-
-        # Initialize button states
-        self._update_marker_buttons_enabled()
 
         dock = QDockWidget("Markers", self)
         dock.setObjectName("markerListDock")
-        dock.setWidget(container)
+        dock.setWidget(self._marker_list_widget)
         self.addDockWidget(Qt.RightDockWidgetArea, dock)
         dock.setFloating(False)
 
@@ -146,80 +73,15 @@ class MainWindow(QMainWindow):
         marker = Marker(x, y, z)
         self.markers.append(marker)
         self._update_marker_list()
-        self._sync_markers_to_views()
-
-    def _update_marker_list(self) -> None:
-        self._marker_list_widget.clear()
-        for idx, marker in enumerate(self.markers, 1):
-            self._marker_list_widget.addItem(f"#{idx}: ({marker.x}, {marker.y}, {marker.z})")
-        self._update_marker_buttons_enabled()
-
-    def _sync_markers_to_views(self) -> None:
         # Update marker visualization in all views
         for view in self._slice_views.values():
             view.set_markers(self.markers)
         self._volume_view.set_markers(self.markers)
 
-    # ------------------------------------------------------------------
-    # Marker list actions
-    # ------------------------------------------------------------------
-    def _on_marker_selection_changed(self) -> None:
-        self._update_marker_buttons_enabled()
-
-    def _selected_rows(self) -> list[int]:
-        rows = sorted({self._marker_list_widget.row(item) for item in self._marker_list_widget.selectedItems()})
-        return rows
-
-    def _update_marker_buttons_enabled(self) -> None:
-        total = len(self.markers)
-        rows = self._selected_rows()
-        has_sel = len(rows) > 0
-        single = len(rows) == 1
-        # Delete works with multi-select
-        if hasattr(self, "_btn_delete"):
-            self._btn_delete.setEnabled(has_sel)
-        # Up/Down are only meaningful for single selection
-        if hasattr(self, "_btn_up"):
-            self._btn_up.setEnabled(single and rows[0] > 0)
-        if hasattr(self, "_btn_down"):
-            self._btn_down.setEnabled(single and rows[0] < total - 1)
-
-    def _delete_selected_markers(self) -> None:
-        rows = self._selected_rows()
-        if not rows:
-            return
-        # Remove from end to start to preserve indices
-        for r in reversed(rows):
-            if 0 <= r < len(self.markers):
-                del self.markers[r]
-        self._update_marker_list()
-        self._sync_markers_to_views()
-
-    def _move_selected_marker_up(self) -> None:
-        rows = self._selected_rows()
-        if len(rows) != 1:
-            return
-        r = rows[0]
-        if r <= 0 or r >= len(self.markers):
-            return
-        self.markers[r - 1], self.markers[r] = self.markers[r], self.markers[r - 1]
-        self._update_marker_list()
-        # Restore selection at new position
-        self._marker_list_widget.setCurrentRow(r - 1)
-        self._sync_markers_to_views()
-
-    def _move_selected_marker_down(self) -> None:
-        rows = self._selected_rows()
-        if len(rows) != 1:
-            return
-        r = rows[0]
-        if r < 0 or r >= len(self.markers) - 1:
-            return
-        self.markers[r + 1], self.markers[r] = self.markers[r], self.markers[r + 1]
-        self._update_marker_list()
-        # Restore selection at new position
-        self._marker_list_widget.setCurrentRow(r + 1)
-        self._sync_markers_to_views()
+    def _update_marker_list(self) -> None:
+        self._marker_list_widget.clear()
+        for idx, marker in enumerate(self.markers, 1):
+            self._marker_list_widget.addItem(f"#{idx}: ({marker.x}, {marker.y}, {marker.z})")
 
     # ------------------------------------------------------------------
     # Qt UI helpers
