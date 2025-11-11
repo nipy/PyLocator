@@ -36,6 +36,61 @@ logging.basicConfig(level=logging.WARNING)
 from .views import SliceView, VolumeView
 
 
+class GammaSlider(QWidget):
+    valueChanged = Signal(float)
+
+    def __init__(self, parent=None, *, gamma: float = 2.0, initial: float | None = None):
+        super().__init__(parent)
+        self._gamma = float(gamma)
+        layout = QGridLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(6)
+        self.slider = QSlider(Qt.Horizontal, self)
+        self.slider.setMinimum(0)
+        self.slider.setMaximum(100)
+        self._label = QLabel("", self)
+        layout.addWidget(self.slider, 0, 0)
+        layout.addWidget(self._label, 0, 1)
+
+        def on_changed(pos: int) -> None:
+            t = max(0.0, min(1.0, pos / 100.0))
+            v = t ** self._gamma
+            try:
+                self._label.setText(f"{v*100:.1f}%")
+            except Exception:
+                pass
+            self.valueChanged.emit(v)
+
+        self.slider.valueChanged.connect(on_changed)
+        if initial is not None:
+            self.setValue(initial)
+
+    def setValue(self, value: float) -> None:
+        v = max(0.0, min(1.0, float(value)))
+        # Map value in [0,1] to slider position using inverse gamma
+        try:
+            pos = int(round((v ** (1.0 / self._gamma)) * 100.0))
+        except Exception:
+            pos = int(round(v * 100.0))
+        old = self.slider.blockSignals(True)
+        try:
+            self.slider.setValue(pos)
+        finally:
+            self.slider.blockSignals(old)
+        # Manually update label and emit
+        try:
+            self._label.setText(f"{v*100:.1f}%")
+        except Exception:
+            pass
+        self.valueChanged.emit(v)
+
+    def value(self) -> float:
+        t = max(0.0, min(1.0, self.slider.value() / 100.0))
+        try:
+            return t ** self._gamma
+        except Exception:
+            return t
+
 class MainWindow(QMainWindow):
     # Marker management
     markers: List[Marker] = []
@@ -192,22 +247,22 @@ class MainWindow(QMainWindow):
         layout = QFormLayout(widget)
         layout.setFieldGrowthPolicy(QFormLayout.ExpandingFieldsGrow)
 
+        # Show/Hide volume
+        vol_toggle = QCheckBox("Show Volume", widget)
+        vol_toggle.setObjectName("showVolumeCheck")
+        vol_toggle.setChecked(True)
+        vol_toggle.toggled.connect(lambda v: self._volume_view.set_volume_enabled(v))
+        layout.addRow(vol_toggle)
+
         opacity_label = QLabel("Opacity", widget)
-        opacity_slider = QSlider(Qt.Horizontal, widget)
-        opacity_slider.setObjectName("volumeOpacitySlider")
-        opacity_slider.setMinimum(0)
-        opacity_slider.setMaximum(100)
-        opacity_slider.setValue(80)
+        self._vol_opacity = GammaSlider(widget, gamma=2.0, initial=0.8)
+        # Preserve legacy objectName on inner slider for tests/tools
+        self._vol_opacity.slider.setObjectName("volumeOpacitySlider")
+        self._vol_opacity.valueChanged.connect(self._volume_view.set_opacity_factor)
+        layout.addRow(opacity_label, self._vol_opacity)
 
-        def on_opacity_changed(value: int) -> None:
-            factor = value / 100.0
-            self._volume_view.set_opacity_factor(factor)
-
-        opacity_slider.valueChanged.connect(on_opacity_changed)
-        layout.addRow(opacity_label, opacity_slider)
-
-        # Apply initial value
-        self._volume_view.set_opacity_factor(opacity_slider.value() / 100.0)
+        # Apply initial opacity to view via control emit
+        self._vol_opacity.setValue(0.8)
 
         # Marker size (affects 3D spheres and ring radii)
         size_label = QLabel("Marker size", widget)
@@ -294,19 +349,13 @@ class MainWindow(QMainWindow):
         layout.addRow(QLabel("Isovalue", widget), self._iso_value_slider)
         layout.addRow(QLabel("Value", widget), self._iso_value_label)
 
-        # Opacity slider 0..100 -> 0..1
-        self._iso_opacity_slider = QSlider(Qt.Horizontal, widget)
-        self._iso_opacity_slider.setObjectName("isoOpacitySlider")
-        self._iso_opacity_slider.setMinimum(0)
-        self._iso_opacity_slider.setMaximum(100)
-        self._iso_opacity_slider.setValue(60)
-        self._iso_opacity_slider.setEnabled(False)
-
-        def on_iso_opacity_changed(pos: int) -> None:
-            self._volume_view.set_isosurface_opacity(pos / 100.0)
-
-        self._iso_opacity_slider.valueChanged.connect(on_iso_opacity_changed)
-        layout.addRow(QLabel("Opacity", widget), self._iso_opacity_slider)
+        # Opacity control using non-linear slider
+        # Use gamma < 1 for coarser response in the low range
+        self._iso_opacity_control = GammaSlider(widget, gamma=0.7, initial=0.6)
+        self._iso_opacity_control.setEnabled(False)
+        self._iso_opacity_control.slider.setObjectName("isoOpacitySlider")
+        self._iso_opacity_control.valueChanged.connect(self._volume_view.set_isosurface_opacity)
+        layout.addRow(QLabel("Opacity", widget), self._iso_opacity_control)
 
         # Color picker button
         self._iso_color_btn = QPushButton("Color…", widget)
@@ -402,6 +451,16 @@ class MainWindow(QMainWindow):
 
         self._current_volume = volume
         self._volume_view.set_volume(volume)
+        # Apply current show/hide state (default: on)
+        try:
+            show = True
+            # If the checkbox exists, use its value
+            chk = self.findChild(QCheckBox, "showVolumeCheck")
+            if chk is not None:
+                show = chk.isChecked()
+            self._volume_view.set_volume_enabled(show)
+        except Exception:
+            logging.exception("Failed to apply volume visibility state on load")
 
         for orientation, view in self._slice_views.items():
             geometry = view.set_volume(volume)
@@ -431,7 +490,7 @@ class MainWindow(QMainWindow):
         iso_val = vmin + 0.5 * (vmax - vmin)
         self._volume_view.set_isosurface_value(iso_val)
         self._iso_value_label.setText(f"{iso_val:.3g}")
-        self._iso_opacity_slider.setEnabled(True)
+        self._iso_opacity_control.setEnabled(True)
         self._iso_enable.setEnabled(True)
 
     def _on_iso_stats_changed(self, triangles: int, ms: float) -> None:

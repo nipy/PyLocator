@@ -166,6 +166,7 @@ class VolumeView(_BaseVTKView):
         self._volume_property: vtkVolumeProperty | None = None
         self._opacity_tf: vtkPiecewiseFunction | None = None
         self._volume_actor: vtkVolume | None = None
+        self._volume_enabled: bool = True
         self._last_markers: list[Marker] = []
         # Enable event filtering to keep focus highlight in sync
         self._setup_marker_events()
@@ -304,6 +305,11 @@ class VolumeView(_BaseVTKView):
         self._volume_actor = actor
 
         self.renderer.AddVolume(actor)
+        # Apply current visibility setting
+        try:
+            actor.SetVisibility(1 if self._volume_enabled else 0)
+        except Exception:
+            pass
         self.renderer.ResetCamera()
         # Choose a default iso value at mid-range
         try:
@@ -315,6 +321,15 @@ class VolumeView(_BaseVTKView):
         # Rebuild iso-surface if enabled
         self._update_isosurface()
         self.render()
+
+    def set_volume_enabled(self, enabled: bool) -> None:
+        self._volume_enabled = bool(enabled)
+        if self._volume_actor is not None:
+            try:
+                self._volume_actor.SetVisibility(1 if self._volume_enabled else 0)
+            except Exception:
+                logging.exception("VolumeView.set_volume_enabled: failed to set visibility")
+            self.render()
 
     def set_marker_size_factor(self, factor: float) -> None:
         """Set a global size multiplier for 3D marker spheres."""
