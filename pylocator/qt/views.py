@@ -204,9 +204,84 @@ class VolumeView(_BaseVTKView):
         self.render()
 
     def _map_screen_to_voxel(self, x, y):
-        # TODO: Implement mapping from screen to voxel for 3D view
-        # For now, return None (not supported yet)
-        return None
+        # Map widget display coords to a 3D ray in world space and
+        # intersect with the volume's AABB, then convert to voxel coords.
+        if self._volume is None:
+            return None
+        try:
+            rw = self.widget.GetRenderWindow()
+            if rw is None:
+                return None
+            ren = self.renderer
+            # Convert Qt coords (origin top-left) to VTK display (origin bottom-left)
+            h = max(1, int(self.widget.height()))
+            dx = float(x)
+            dy = float(h - 1 - int(y))
+
+            # Near and far world points
+            ren.SetDisplayPoint(dx, dy, 0.0)
+            ren.DisplayToWorld()
+            p0 = ren.GetWorldPoint()
+            if abs(p0[3]) < 1e-9:
+                return None
+            p0 = (p0[0] / p0[3], p0[1] / p0[3], p0[2] / p0[3])
+
+            ren.SetDisplayPoint(dx, dy, 1.0)
+            ren.DisplayToWorld()
+            p1 = ren.GetWorldPoint()
+            if abs(p1[3]) < 1e-9:
+                return None
+            p1 = (p1[0] / p1[3], p1[1] / p1[3], p1[2] / p1[3])
+
+            # Ray direction
+            dirx, diry, dirz = (p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2])
+            # Segment param t in [0,1] goes from near (p0) to far (p1)
+            # Intersect against volume bounds
+            bounds = self._volume.image_data.GetBounds()  # (xmin,xmax, ymin,ymax, zmin,zmax)
+            xmin, xmax, ymin, ymax, zmin, zmax = bounds
+            tmin, tmax = 0.0, 1.0
+            eps = 1e-12
+            for coord, d, bmin, bmax in (
+                (p0[0], dirx, xmin, xmax),
+                (p0[1], diry, ymin, ymax),
+                (p0[2], dirz, zmin, zmax),
+            ):
+                if abs(d) < eps:
+                    if coord < bmin or coord > bmax:
+                        return None
+                    # Parallel axis within slab; continue
+                    continue
+                invd = 1.0 / d
+                t0 = (bmin - coord) * invd
+                t1 = (bmax - coord) * invd
+                if t0 > t1:
+                    t0, t1 = t1, t0
+                if t0 > tmin:
+                    tmin = t0
+                if t1 < tmax:
+                    tmax = t1
+                if tmin > tmax:
+                    return None
+
+            # Hit entry point
+            thit = tmin
+            hx = p0[0] + thit * dirx
+            hy = p0[1] + thit * diry
+            hz = p0[2] + thit * dirz
+
+            # Convert world position to voxel indices
+            sx, sy, sz = self._volume.voxel_size
+            nx, ny, nz = self._volume.shape
+            vx = int(round(hx / sx))
+            vy = int(round(hy / sy))
+            vz = int(round(hz / sz))
+            # Clamp to valid range
+            vx = max(0, min(nx - 1, vx))
+            vy = max(0, min(ny - 1, vy))
+            vz = max(0, min(nz - 1, vz))
+            return (vx, vy, vz)
+        except Exception:
+            return None
 
     def set_volume(self, volume: NiftiVolume) -> None:
         """Render *volume* using VTK's smart volume mapper."""
