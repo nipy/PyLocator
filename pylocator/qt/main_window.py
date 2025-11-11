@@ -19,15 +19,20 @@ from PySide6.QtWidgets import (
     QDockWidget,
     QFormLayout,
     QGridLayout,
+    QCheckBox,
     QLabel,
     QMainWindow,
     QSlider,
     QTextEdit,
     QToolBar,
     QWidget,
+    QPushButton,
+    QColorDialog,
 )
 
 from ..nifti_loader import NiftiVolume
+import logging
+logging.basicConfig(level=logging.WARNING)
 from .views import SliceView, VolumeView
 
 
@@ -54,7 +59,13 @@ class MainWindow(QMainWindow):
         self._create_info_dock()
         self._create_slice_controls()
         self._create_volume_controls()
+        self._create_isosurface_controls()
         self._create_marker_list_panel()
+        # Wire iso-surface stats once
+        try:
+            self._volume_view.iso_stats_changed.connect(self._on_iso_stats_changed)
+        except Exception:
+            logging.exception("Failed to connect iso_stats_changed signal")
         self.statusBar().showMessage("Ready")
 
     def _create_marker_list_panel(self) -> None:
@@ -235,6 +246,86 @@ class MainWindow(QMainWindow):
         self.addDockWidget(Qt.RightDockWidgetArea, dock)
         dock.setFloating(False)
 
+    def _create_isosurface_controls(self) -> None:
+        widget = QWidget(self)
+        layout = QFormLayout(widget)
+        layout.setFieldGrowthPolicy(QFormLayout.ExpandingFieldsGrow)
+
+        # Enable toggle
+        self._iso_enable = QCheckBox("Enable IsoSurface", widget)
+        self._iso_enable.setObjectName("isoEnableCheck")
+        self._iso_enable.setChecked(False)
+        self._iso_enable.toggled.connect(lambda v: self._volume_view.set_isosurface_enabled(v))
+        layout.addRow(self._iso_enable)
+
+
+        # Isovalue slider (mapped 0..1000 -> value_range)
+        self._iso_value_slider = QSlider(Qt.Horizontal, widget)
+        self._iso_value_slider.setObjectName("isoValueSlider")
+        self._iso_value_slider.setMinimum(0)
+        self._iso_value_slider.setMaximum(1000)
+        self._iso_value_slider.setEnabled(False)
+
+        self._iso_value_label = QLabel("—", widget)
+        self._iso_value_label.setObjectName("isoValueLabel")
+
+        def on_iso_value_changed(pos: int) -> None:
+            if not self._current_volume:
+                return
+            vmin, vmax = self._current_volume.value_range
+            t = max(0.0, min(1.0, pos / 1000.0))
+            value = vmin + t * (vmax - vmin)
+            self._volume_view.set_isosurface_value(value)
+            self._iso_value_label.setText(f"{value:.3g}")
+            # update stats as in-progress
+            if hasattr(self, "_iso_tri_label"):
+                self._iso_tri_label.setText("…")
+            if hasattr(self, "_iso_time_label"):
+                self._iso_time_label.setText("…")
+
+        self._iso_value_slider.valueChanged.connect(on_iso_value_changed)
+        layout.addRow(QLabel("Isovalue", widget), self._iso_value_slider)
+        layout.addRow(QLabel("Value", widget), self._iso_value_label)
+
+        # Opacity slider 0..100 -> 0..1
+        self._iso_opacity_slider = QSlider(Qt.Horizontal, widget)
+        self._iso_opacity_slider.setObjectName("isoOpacitySlider")
+        self._iso_opacity_slider.setMinimum(0)
+        self._iso_opacity_slider.setMaximum(100)
+        self._iso_opacity_slider.setValue(60)
+        self._iso_opacity_slider.setEnabled(False)
+
+        def on_iso_opacity_changed(pos: int) -> None:
+            self._volume_view.set_isosurface_opacity(pos / 100.0)
+
+        self._iso_opacity_slider.valueChanged.connect(on_iso_opacity_changed)
+        layout.addRow(QLabel("Opacity", widget), self._iso_opacity_slider)
+
+        # Color picker button
+        self._iso_color_btn = QPushButton("Color…", widget)
+        self._iso_color_btn.setObjectName("isoColorButton")
+        def on_pick_color() -> None:
+            col = QColorDialog.getColor(parent=self)
+            if col.isValid():
+                self._volume_view.set_isosurface_color(col.redF(), col.greenF(), col.blueF())
+        self._iso_color_btn.clicked.connect(on_pick_color)
+        layout.addRow(self._iso_color_btn)
+
+        # Stats
+        self._iso_tri_label = QLabel("—", widget)
+        self._iso_tri_label.setObjectName("isoTrianglesLabel")
+        layout.addRow(QLabel("Triangles", widget), self._iso_tri_label)
+
+        self._iso_time_label = QLabel("—", widget)
+        self._iso_time_label.setObjectName("isoTimeLabel")
+        layout.addRow(QLabel("Time (ms)", widget), self._iso_time_label)
+
+        dock = QDockWidget("IsoSurface", self)
+        dock.setObjectName("isoSurfaceDock")
+        dock.setWidget(widget)
+        self.addDockWidget(Qt.RightDockWidgetArea, dock)
+        dock.setFloating(False)
+
     # ------------------------------------------------------------------
     # Rendering helpers
     # ------------------------------------------------------------------
@@ -259,8 +350,33 @@ class MainWindow(QMainWindow):
             view.set_markers(self.markers)
         self._volume_view.set_markers(self.markers)
 
-        self._update_info_panel(volume)
-        self.statusBar().showMessage(f"Loaded {volume.path.name}")
+
+        # Init IsoSurface controls based on volume range
+        vmin, vmax = volume.value_range
+        # Set slider to mid by default
+        mid = int(round(0.5 * 1000))
+        self._iso_value_slider.blockSignals(True)
+        self._iso_value_slider.setEnabled(True)
+        self._iso_value_slider.setValue(mid)
+        self._iso_value_slider.blockSignals(False)
+        # Apply value to view and label
+        iso_val = vmin + 0.5 * (vmax - vmin)
+        self._volume_view.set_isosurface_value(iso_val)
+        self._iso_value_label.setText(f"{iso_val:.3g}")
+        self._iso_opacity_slider.setEnabled(True)
+        self._iso_enable.setEnabled(True)
+
+    def _on_iso_stats_changed(self, triangles: int, ms: float) -> None:
+        try:
+            self._iso_tri_label.setText(str(triangles))
+            self._iso_time_label.setText(f"{ms:.1f}")
+        except Exception:
+            logging.exception("Failed updating iso-surface stats labels")
+        # Optional: brief status update without referencing volume
+        try:
+            self.statusBar().showMessage(f"IsoSurface: {triangles} tris, {ms:.1f} ms")
+        except Exception:
+            logging.exception("Failed to update status bar message for iso-surface stats")
 
     # ------------------------------------------------------------------
     # Info panel helpers

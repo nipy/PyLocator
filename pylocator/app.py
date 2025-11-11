@@ -5,7 +5,10 @@ from __future__ import annotations
 import vtk
 vtk.vtkObject.GlobalWarningDisplayOff()
 from PySide6.QtWidgets import QApplication
-from .controller import PyLocatorController
+try:
+    from .controller import PyLocatorController
+except ImportError:
+    from pylocator.controller import PyLocatorController
 
 
 def _get_application() -> tuple[QApplication, bool]:

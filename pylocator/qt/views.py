@@ -9,6 +9,8 @@ from .main_window import Marker
 from dataclasses import dataclass
 
 from PySide6.QtWidgets import QWidget, QFrame, QVBoxLayout
+import logging
+logging.basicConfig(level=logging.WARNING)
 import math
 from vtkmodules.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from vtkmodules.vtkCommonDataModel import vtkPiecewiseFunction
@@ -30,6 +32,12 @@ from vtkmodules.vtkRenderingCore import (
     vtkPolyDataMapper,
     vtkPropPicker,
 )
+from vtkmodules.vtkFiltersCore import vtkFlyingEdges3D
+try:
+    from vtkmodules.vtkFiltersCore import vtkMarchingCubes
+except Exception:  # pragma: no cover
+    vtkMarchingCubes = None
+from vtkmodules.vtkFiltersCore import vtkPolyDataNormals
 
 try:
     from vtkmodules.vtkRenderingVolumeOpenGL2 import vtkSmartVolumeMapper
@@ -88,11 +96,11 @@ class _BaseVTKView(QObject):
         try:
             self.widget.installEventFilter(self)
         except Exception:
-            pass
+            logging.exception("Failed to install event filter on VTK widget")
         try:
             self.frame.installEventFilter(self)
         except Exception:
-            pass
+            logging.exception("Failed to install event filter on frame")
 
     def eventFilter(self, obj, event):
         # Only handle events for our widget
@@ -108,7 +116,7 @@ class _BaseVTKView(QObject):
                 self.widget.setFocus(Qt.MouseFocusReason)
                 self.set_active_frame(True)
             except Exception:
-                pass
+                logging.exception("Failed to set focus on VTK widget")
         # Key press: add marker if 'i' is pressed
         elif event.type() == event.Type.KeyPress:
             if event.key() == Qt.Key_I and self._last_mouse_voxel:
@@ -143,6 +151,8 @@ class _BaseVTKView(QObject):
 
 class VolumeView(_BaseVTKView):
     """3-D volume rendering viewport."""
+    # triangles, elapsed_ms
+    iso_stats_changed = Signal(int, float)
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent, interactor_style=vtkInteractorStyleTrackballCamera)
@@ -160,12 +170,19 @@ class VolumeView(_BaseVTKView):
         self._setup_marker_events()
         self.set_active_frame(False)
         # Use the main renderer for both volume and marker spheres
+        # Iso-surface state
+        self._iso_enabled: bool = False
+        self._iso_value: float | None = None
+        self._iso_color: tuple[float, float, float] = (0.2, 0.8, 0.8)
+        self._iso_opacity: float = 0.6
+        self._iso_actor: vtkActor | None = None
 
     def set_markers(self, markers):
         # Cache last markers for UI-driven re-rendering
         try:
             self._last_markers = list(markers)
         except Exception:
+            logging.exception("VolumeView.set_markers: failed to copy markers; resetting cache")
             self._last_markers = []
         # Remove previous marker actors
         for actor in getattr(self, '_marker_actors', []):
@@ -200,7 +217,7 @@ class VolumeView(_BaseVTKView):
         try:
             self.renderer.ResetCameraClippingRange()
         except Exception:
-            pass
+            logging.exception("VolumeView: ResetCameraClippingRange failed after marker update")
         self.render()
 
     def _map_screen_to_voxel(self, x, y):
@@ -281,6 +298,7 @@ class VolumeView(_BaseVTKView):
             vz = max(0, min(nz - 1, vz))
             return (vx, vy, vz)
         except Exception:
+            logging.exception("VolumeView._map_screen_to_voxel failed")
             return None
 
     def set_volume(self, volume: NiftiVolume) -> None:
@@ -320,6 +338,15 @@ class VolumeView(_BaseVTKView):
 
         self.renderer.AddVolume(actor)
         self.renderer.ResetCamera()
+        # Choose a default iso value at mid-range
+        try:
+            vmin, vmax = volume.value_range
+            self._iso_value = float(vmin + 0.5 * (vmax - vmin))
+        except Exception:
+            logging.exception("VolumeView.set_volume: failed to compute default iso value")
+            self._iso_value = None
+        # Rebuild iso-surface if enabled
+        self._update_isosurface()
         self.render()
 
     def set_marker_size_factor(self, factor: float) -> None:
@@ -338,6 +365,108 @@ class VolumeView(_BaseVTKView):
         self._opacity_tf.AddPoint(min_val, 0.0)
         self._opacity_tf.AddPoint(max_val, self._opacity_factor)
         self.render()
+
+    # ---------------------------
+    # Iso-surface controls
+    # ---------------------------
+    def set_isosurface_enabled(self, enabled: bool) -> None:
+        self._iso_enabled = bool(enabled)
+        self._update_isosurface()
+
+    def set_isosurface_value(self, value: float) -> None:
+        try:
+            self._iso_value = float(value)
+        except Exception:
+            logging.exception("VolumeView.set_isosurface_value: invalid value")
+            return
+        self._update_isosurface()
+
+    def set_isosurface_opacity(self, opacity: float) -> None:
+        self._iso_opacity = max(0.0, min(1.0, float(opacity)))
+        if self._iso_actor is not None:
+            try:
+                self._iso_actor.GetProperty().SetOpacity(self._iso_opacity)
+            except Exception:
+                logging.exception("VolumeView.set_isosurface_opacity: failed to set opacity")
+            self.render()
+
+    def set_isosurface_color(self, r: float, g: float, b: float) -> None:
+        self._iso_color = (max(0.0, min(1.0, float(r))),
+                           max(0.0, min(1.0, float(g))),
+                           max(0.0, min(1.0, float(b))))
+        if self._iso_actor is not None:
+            try:
+                self._iso_actor.GetProperty().SetColor(*self._iso_color)
+            except Exception:
+                logging.exception("VolumeView.set_isosurface_color: failed to set color")
+            self.render()
+
+    def _update_isosurface(self) -> None:
+        # Remove previous actor if disabling or not ready
+        if not self._iso_enabled or self._volume is None or self._iso_value is None:
+            if self._iso_actor is not None:
+                try:
+                    self.renderer.RemoveActor(self._iso_actor)
+                except Exception:
+                    logging.exception("VolumeView: failed to remove iso-surface actor")
+                self._iso_actor = None
+            self.render()
+            return
+        # Synchronous extraction with basic stats
+        try:
+            import time
+            t0 = time.perf_counter()
+            image = self._volume.image_data
+            try:
+                contour = vtkFlyingEdges3D()
+                contour.SetInputData(image)
+                contour.SetValue(0, float(self._iso_value))
+                contour.ComputeNormalsOff()
+            except Exception:
+                logging.exception("FlyingEdges failed; falling back to MarchingCubes")
+                if vtkMarchingCubes is None:
+                    return
+                contour = vtkMarchingCubes()
+                contour.SetInputData(image)
+                contour.SetValue(0, float(self._iso_value))
+                contour.ComputeNormalsOff()
+            normals = vtkPolyDataNormals()
+            normals.SetInputConnection(contour.GetOutputPort())
+            normals.SetFeatureAngle(60.0)
+            normals.SplittingOff()
+            normals.ConsistencyOn()
+            normals.Update()
+            poly = normals.GetOutput()
+            mapper = vtkPolyDataMapper()
+            mapper.SetInputData(poly)
+            # Ensure actor color is used instead of scalar coloring
+            try:
+                mapper.ScalarVisibilityOff()
+            except Exception:
+                logging.exception("VolumeView: failed to disable scalar visibility on iso mapper")
+            actor = self._iso_actor or vtkActor()
+            actor.SetMapper(mapper)
+            actor.GetProperty().SetColor(*self._iso_color)
+            actor.GetProperty().SetOpacity(self._iso_opacity)
+            if self._iso_actor is None:
+                self.renderer.AddActor(actor)
+                self._iso_actor = actor
+            try:
+                self.renderer.ResetCameraClippingRange()
+            except Exception:
+                logging.exception("VolumeView: ResetCameraClippingRange failed after iso update")
+            # Emit stats
+            try:
+                tris = int(poly.GetNumberOfPolys()) if hasattr(poly, 'GetNumberOfPolys') else 0
+                ms = (time.perf_counter() - t0) * 1000.0
+                self.iso_stats_changed.emit(tris, ms)
+            except Exception:
+                logging.exception("VolumeView: failed to emit iso-stats")
+        finally:
+            self.render()
+
+
+# Background worker removed; synchronous extraction only
 
 
 class SliceView(_BaseVTKView):
@@ -381,7 +510,7 @@ class SliceView(_BaseVTKView):
         try:
             base_radius *= float(self._marker_size_factor)
         except Exception:
-            pass
+            logging.exception("SliceView.set_markers: invalid _marker_size_factor; using base radius")
         for marker in markers:
             # World center of the stored marker
             mx, my, mz = [m * s for m, s in zip((marker.x, marker.y, marker.z), spacing)]
@@ -428,6 +557,7 @@ class SliceView(_BaseVTKView):
                 try:
                     lw = max(1, int(round(2 * float(self._ring_thickness))))
                 except Exception:
+                    logging.exception("SliceView.set_markers: invalid _ring_thickness; using default")
                     lw = 2
             actor.GetProperty().SetLineWidth(lw)
             actor.GetProperty().SetOpacity(1.0)
