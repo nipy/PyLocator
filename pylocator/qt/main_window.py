@@ -61,6 +61,9 @@ class MainWindow(QMainWindow):
         self._create_volume_controls()
         self._create_isosurface_controls()
         self._create_marker_list_panel()
+        self._create_view_menu()
+        # Arrange default dock layout: controls on top, info below
+        self._reset_dock_layout()
         # Wire iso-surface stats once
         try:
             self._volume_view.iso_stats_changed.connect(self._on_iso_stats_changed)
@@ -79,6 +82,7 @@ class MainWindow(QMainWindow):
         dock.setWidget(self._marker_list_widget)
         self.addDockWidget(Qt.RightDockWidgetArea, dock)
         dock.setFloating(False)
+        self._dock_markers = dock
 
     def add_marker(self, x: int, y: int, z: int) -> None:
         marker = Marker(x, y, z)
@@ -151,6 +155,7 @@ class MainWindow(QMainWindow):
         dock.setObjectName("volumeInfoDock")
         dock.setWidget(self._info_panel)
         self.addDockWidget(Qt.RightDockWidgetArea, dock)
+        self._dock_info = dock
 
     def _create_slice_controls(self) -> None:
         widget = QWidget(self)
@@ -180,6 +185,7 @@ class MainWindow(QMainWindow):
         dock.setWidget(widget)
         self.addDockWidget(Qt.RightDockWidgetArea, dock)
         dock.setFloating(False)
+        self._dock_slice = dock
 
     def _create_volume_controls(self) -> None:
         widget = QWidget(self)
@@ -245,6 +251,7 @@ class MainWindow(QMainWindow):
         dock.setWidget(widget)
         self.addDockWidget(Qt.RightDockWidgetArea, dock)
         dock.setFloating(False)
+        self._dock_volume = dock
 
     def _create_isosurface_controls(self) -> None:
         widget = QWidget(self)
@@ -325,6 +332,67 @@ class MainWindow(QMainWindow):
         dock.setWidget(widget)
         self.addDockWidget(Qt.RightDockWidgetArea, dock)
         dock.setFloating(False)
+        self._dock_iso = dock
+
+    # ------------------------------------------------------------------
+    # View menu and dock layout
+    # ------------------------------------------------------------------
+    def _create_view_menu(self) -> None:
+        view_menu = self.menuBar().addMenu("&View")
+
+        def add_toggle(title: str, dock: QDockWidget):
+            act = view_menu.addAction(title)
+            act.setCheckable(True)
+            act.setChecked(dock.isVisible())
+            act.toggled.connect(dock.setVisible)
+            try:
+                dock.visibilityChanged.connect(act.setChecked)
+            except Exception:
+                pass
+            return act
+
+        # Controls first
+        add_toggle("Slice controls", self._dock_slice)
+        add_toggle("Volume controls", self._dock_volume)
+        add_toggle("IsoSurface", self._dock_iso)
+        add_toggle("Markers", self._dock_markers)
+        view_menu.addSeparator()
+        # Info panels
+        add_toggle("Volume information", self._dock_info)
+        view_menu.addSeparator()
+
+        reset_action = view_menu.addAction("Reset Layout")
+        reset_action.setShortcut("Ctrl+R")
+        reset_action.triggered.connect(self._reset_dock_layout)
+
+    def _reset_dock_layout(self) -> None:
+        # Ensure docks are visible and stacked: controls first (top), then info below
+        docks = [
+            getattr(self, name, None)
+            for name in ("_dock_slice", "_dock_volume", "_dock_iso", "_dock_markers", "_dock_info")
+        ]
+        docks = [d for d in docks if d is not None]
+        if not docks:
+            return
+        for d in docks:
+            try:
+                d.setFloating(False)
+                d.setVisible(True)
+            except Exception:
+                pass
+        # Re-add and split to enforce order
+        anchor = docks[0]
+        try:
+            self.addDockWidget(Qt.RightDockWidgetArea, anchor)
+        except Exception:
+            pass
+        prev = anchor
+        for d in docks[1:]:
+            try:
+                self.splitDockWidget(prev, d, Qt.Vertical)
+            except Exception:
+                pass
+            prev = d
 
     # ------------------------------------------------------------------
     # Rendering helpers
